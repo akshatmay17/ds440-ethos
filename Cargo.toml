@@ -7,6 +7,10 @@ authors = ["Group 2 Nittany Street"]
 license = "Unlicense"
 
 [[bin]]
+name = "ethos"
+path = "src/bin/ethos.rs"
+
+[[bin]]
 name = "tbox"
 path = "src/bin/tbox.rs"
 

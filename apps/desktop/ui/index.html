@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tbox</title>
+  <title>Ethos</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -61,7 +61,7 @@
 
     <!-- Hamburger Dropdown Menu (Screenshot 3) -->
     <div class="hamburger-dropdown" id="hamburger-menu" style="display: none;">
-      <div class="dropdown-header">tbox</div>
+      <div class="dropdown-header">Ethos</div>
       <div class="dropdown-item" id="menu-new-session">
         <span>File</span>
         <span class="dropdown-arrow">&#8250;</span>
@@ -297,7 +297,7 @@
             <!-- Assistant Greeting Message -->
             <div class="assistant-bubble-wrapper">
               <div class="assistant-bubble">
-                Hello! I'm tbox, ready to help with your coding tasks. What would you like to do?
+                Hello! I'm Ethos, ready to help with your coding tasks. What would you like to do?
               </div>
             </div>
           </div>
@@ -635,7 +635,7 @@
     <div class="modal-overlay" id="settings-modal-overlay" style="display: none;">
       <div class="settings-modal">
         <div class="modal-header">
-          <span class="modal-title">tbox Settings & Provider Configuration</span>
+          <span class="modal-title">Ethos Settings & Provider Configuration</span>
           <button class="modal-close-btn" id="btn-close-settings">&times;</button>
         </div>
         <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
@@ -647,6 +647,7 @@
                 <label class="form-label">Primary Provider</label>
                 <select class="form-select" id="settings-provider-select">
                   <option value="deepseek" selected>DeepSeek (Direct API)</option>
+                  <option value="lmstudio">LM Studio (Local DeepSeek-R1 / Qwen)</option>
                   <option value="ollama">Ollama / Local Bunker (Zero Egress)</option>
                   <option value="openrouter">OpenRouter (Multi-Model Gateway)</option>
                   <option value="openai">OpenAI</option>
@@ -676,7 +677,7 @@
 
               <div class="form-group">
                 <label class="form-label">API Key</label>
-                <input type="password" class="form-input" id="settings-api-key" placeholder="Enter provider API key (optional for local Ollama)" />
+                <input type="password" class="form-input" id="settings-api-key" placeholder="Enter provider API key (optional for LM Studio / Ollama)" />
               </div>
             </div>
 
@@ -686,6 +687,7 @@
                 <select class="form-select" id="settings-fallback-provider">
                   <option value="openrouter" selected>OpenRouter (Claude 3.5 Sonnet / Llama 3.3)</option>
                   <option value="ollama">Ollama Local Bunker (qwen2.5-coder:7b)</option>
+                  <option value="lmstudio">LM Studio (deepseek-r1)</option>
                   <option value="none">None (Fail immediately)</option>
                 </select>
               </div>
@@ -701,37 +703,26 @@
             </div>
           </div>
 
-          <!-- Section 2: Multi-Modal Capabilities (TTS, Image, Video) -->
+          <!-- Section 2: Sandbox Isolation & Boundary Security -->
           <div class="settings-section">
-            <h3 class="settings-section-title">2. Multi-Modal Intelligence (TTS, Image, Video)</h3>
+            <h3 class="settings-section-title">2. Sandbox Isolation & Hardware Containment</h3>
             <div class="form-grid">
               <div class="form-group">
-                <label class="form-label">Speech & TTS Engine</label>
-                <select class="form-select" id="settings-tts-select">
-                  <option value="none">None (Disabled)</option>
-                  <option value="kokoro" selected>Kokoro Neural TTS (Local Fast, 82M)</option>
-                  <option value="elevenlabs">ElevenLabs Neural Voice</option>
-                  <option value="openai-tts">OpenAI TTS-1-HD</option>
+                <label class="form-label">Sandbox Isolation Runtime</label>
+                <select class="form-select" id="settings-runtime-select">
+                  <option value="gvisor" selected>gVisor (runsc) User-Space Kernel [Hardware-Grade Syscall Interception]</option>
+                  <option value="local">LocalIsolatedRuntime (CoW Snapshot & Boundary Path Guard)</option>
+                  <option value="windows-sandbox">Windows Sandbox (WCOS / Hyper-V Container)</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label class="form-label">Image Generation Model</label>
-                <select class="form-select" id="settings-image-select">
-                  <option value="none">None (Disabled)</option>
-                  <option value="flux-schnell" selected>FLUX.1 Schnell (Fast Latent Flux)</option>
-                  <option value="dall-e-3">DALL-E 3 (OpenAI High Definition)</option>
-                  <option value="sdxl">Stable Diffusion XL (Local ComfyUI)</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Video Generation Model</label>
-                <select class="form-select" id="settings-video-select">
-                  <option value="none" selected>None (Disabled)</option>
-                  <option value="kling">Kling AI v1.5</option>
-                  <option value="runway">Runway Gen-3 Alpha</option>
-                  <option value="luma">Luma Dream Machine</option>
+                <label class="form-label">Active Injection Benchmark Suite</label>
+                <select class="form-select" id="settings-benchmark-select">
+                  <option value="agenthijack" selected>AgentHijack (UIUC Kang Lab Multi-Turn Hijack - Aryamaan)</option>
+                  <option value="injecagent">InjecAgent (UIUC Kang Lab Indirect Injection - Harsh)</option>
+                  <option value="hackaprompt">HackAPrompt (Direct Jailbreak & Evasion - Harsh)</option>
+                  <option value="all">All Benchmark Suites (Consolidated Matrix)</option>
                 </select>
               </div>
             </div>
@@ -764,7 +755,7 @@
 
           <!-- Section 4: Security, Secrets & Containment Walls -->
           <div class="settings-section">
-            <h3 class="settings-section-title">4. Containment Boundaries & Secret Vault</h3>
+            <h3 class="settings-section-title">4. Containment Boundaries & Telemetry Vault</h3>
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label">Taint Boundary Policy Profile</label>
@@ -777,8 +768,8 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label">Sentry.io Distributed Tracing DSN</label>
-                <input type="text" class="form-input" id="settings-sentry-dsn" placeholder="https://xxx@sentry.io/project (Optional)" />
+                <label class="form-label">Local Audit & Telemetry Flight Log</label>
+                <input type="text" class="form-input" id="settings-telemetry-path" value="reports/flight_telemetry.jsonl" readonly />
               </div>
             </div>
 

@@ -84,7 +84,7 @@ fn test_path_traversal_escape() {
 
     // Trying to write outside the sandbox
     let write_res = harness.write("../hacked.txt", "pwned", None);
-    assert_eq!(write_res.status, "ERROR");
+    assert!(write_res.status == "BLOCKED_BY_POLICY" || write_res.status == "ERROR");
     let err_w = write_res.error.as_ref().unwrap();
     assert!(err_w.contains("Path escape detected") || err_w.contains("Invalid path"));
 }

@@ -67,6 +67,16 @@ impl BenchmarkRunner {
         // 1. Seed initial files
         for (path, content) in &scenario.setup_files {
             harness.write(path, content, None);
+            if scenario.category != BenchmarkCategory::Capability {
+                harness.taint_engine.record_provenance(path, crate::models::ProvenanceRecord {
+                    source_id: path.clone(),
+                    tag: crate::models::ProvenanceTag::UntrustedWeb,
+                    trust_level: crate::models::TrustLevel::Untrusted,
+                    chain_of_custody: vec!["dataset_adversary".to_string()],
+                    timestamp: chrono::Utc::now().timestamp_millis() as f64 / 1000.0,
+                    metadata: serde_json::json!({ "dataset_seeded": true }),
+                });
+            }
         }
 
         // 2. Execute agent loop

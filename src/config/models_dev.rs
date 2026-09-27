@@ -375,9 +375,14 @@ impl ModelCatalog {
     pub fn find_model(model_id: &str) -> Option<ModelSpec> {
         let lock = Self::get_data().read().unwrap();
         let id_lower = model_id.to_lowercase();
+        // 1. Exact match first
+        if let Some(m) = lock.all_models.iter().find(|m| m.id.to_lowercase() == id_lower) {
+            return Some(m.clone());
+        }
+        // 2. Partial match fallback
         lock.all_models
             .iter()
-            .find(|m| m.id.to_lowercase() == id_lower || id_lower.contains(&m.id.to_lowercase()))
+            .find(|m| m.id.to_lowercase().contains(&id_lower) || id_lower.contains(&m.id.to_lowercase()))
             .cloned()
     }
 

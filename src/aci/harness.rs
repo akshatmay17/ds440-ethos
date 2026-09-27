@@ -127,6 +127,27 @@ impl ACIHarness {
 
     pub fn write(&mut self, path: &str, content: &str, source_ids: Option<Vec<String>>) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
+        let ouroboros = crate::walls::ouroboros::OuroborosWall::new();
+        if let Err(e) = ouroboros.check_write(path, content) {
+            let reason = e.to_string();
+            self.log_event("POLICY_BLOCK", "write", serde_json::json!({ "path": path, "reason": reason }));
+            return ToolResult {
+                call_id,
+                tool_name: "write".to_string(),
+                status: "BLOCKED_BY_POLICY".to_string(),
+                output: serde_json::Value::Null,
+                error: Some(format!("Policy violation: {}", reason)),
+                provenance: None,
+                policy_decision: Some(crate::models::PolicyDecision {
+                    allowed: false,
+                    rule_id: Some("OUROBOROS-WALL".to_string()),
+                    action: "write".to_string(),
+                    reason,
+                    taint_records: vec![],
+                }),
+            };
+        }
+
         let sources = source_ids.as_deref().unwrap_or(&[]);
         let decision = self.taint_engine.evaluate_path_policy("write", path, sources);
         if !decision.allowed {
@@ -174,15 +195,32 @@ impl ACIHarness {
                     policy_decision: None,
                 }
             }
-            Err(e) => ToolResult {
-                call_id,
-                tool_name: "write".to_string(),
-                status: "ERROR".to_string(),
-                output: serde_json::Value::Null,
-                error: Some(e.to_string()),
-                provenance: None,
-                policy_decision: None,
-            },
+            Err(e) => {
+                let err_msg = e.to_string();
+                let is_escape = err_msg.contains("Path escape") || err_msg.contains("Absolute paths not allowed");
+                if is_escape {
+                    self.log_event("POLICY_BLOCK", "write", serde_json::json!({ "path": path, "reason": err_msg }));
+                }
+                ToolResult {
+                    call_id,
+                    tool_name: "write".to_string(),
+                    status: if is_escape { "BLOCKED_BY_POLICY".to_string() } else { "ERROR".to_string() },
+                    output: serde_json::Value::Null,
+                    error: Some(err_msg.clone()),
+                    provenance: None,
+                    policy_decision: if is_escape {
+                        Some(crate::models::PolicyDecision {
+                            allowed: false,
+                            rule_id: Some("SANDBOX-ESCAPE-GUARD".to_string()),
+                            action: "write".to_string(),
+                            reason: err_msg,
+                            taint_records: vec![],
+                        })
+                    } else {
+                        None
+                    },
+                }
+            }
         }
     }
 
@@ -194,6 +232,27 @@ impl ACIHarness {
         source_ids: Option<Vec<String>>,
     ) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
+        let ouroboros = crate::walls::ouroboros::OuroborosWall::new();
+        if let Err(e) = ouroboros.check_write(path, replacement_content) {
+            let reason = e.to_string();
+            self.log_event("POLICY_BLOCK", "edit_block", serde_json::json!({ "path": path, "reason": reason }));
+            return ToolResult {
+                call_id,
+                tool_name: "edit_block".to_string(),
+                status: "BLOCKED_BY_POLICY".to_string(),
+                output: serde_json::Value::Null,
+                error: Some(format!("Policy violation: {}", reason)),
+                provenance: None,
+                policy_decision: Some(crate::models::PolicyDecision {
+                    allowed: false,
+                    rule_id: Some("OUROBOROS-WALL".to_string()),
+                    action: "edit_block".to_string(),
+                    reason,
+                    taint_records: vec![],
+                }),
+            };
+        }
+
         let sources = source_ids.as_deref().unwrap_or(&[]);
         let decision = self.taint_engine.evaluate_path_policy("write", path, sources);
         if !decision.allowed {
@@ -552,6 +611,14 @@ impl ACIHarness {
                     if self.runtime.file_exists(clean) && !referenced_files.contains(&clean.to_string()) {
                         referenced_files.push(clean.to_string());
                     }
+                }
+            }
+        }
+
+        if action == "network_egress" || action == "file_delete" {
+            for t in self.taint_engine.list_tainted_resources() {
+                if !referenced_files.contains(&t) {
+                    referenced_files.push(t);
                 }
             }
         }

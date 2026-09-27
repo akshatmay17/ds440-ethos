@@ -3,9 +3,10 @@
 
 // Built-in models.dev catalog fallback
 const DEFAULT_MODELS = [
-  { id: "deepseek-v4-pro", name: "DeepSeek V4 Pro", provider: "deepseek", context: 1000000 },
+  { id: "deepseek-r1", name: "DeepSeek R1 (LM Studio Local)", provider: "lmstudio", context: 65536 },
   { id: "deepseek-r1:8b", name: "DeepSeek R1 Distill 8B", provider: "ollama", context: 65536 },
   { id: "qwen2.5-coder:7b", name: "Qwen 2.5 Coder 7B", provider: "ollama", context: 32768 },
+  { id: "deepseek-v4-pro", name: "DeepSeek V4 Pro", provider: "deepseek", context: 1000000 },
   { id: "gpt-4o", name: "GPT-4o (Omni Frontier)", provider: "openai", context: 128000 },
   { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet v2", provider: "anthropic", context: 200000 },
   { id: "anthropic/claude-3.5-sonnet", name: "OpenRouter: Claude 3.5 Sonnet", provider: "openrouter", context: 200000 }
@@ -27,7 +28,7 @@ const state = {
     title: "Test conversation",
     messages: [
       { role: "user", content: "test", id: "msg_08968da5f001RW28Oh60AlBzsx", time: "Sep 9, 2026, 11:42 PM" },
-      { role: "assistant", content: "Hello! I'm tbox, ready to help with your coding tasks. What would you like to do?", time: "Sep 9, 2026, 11:42 PM" }
+      { role: "assistant", content: "Hello! I'm Ethos, ready to help with your coding tasks. What would you like to do?", time: "Sep 9, 2026, 11:42 PM" }
     ],
     tokens: {
       input: 8283,
@@ -455,9 +456,17 @@ document.addEventListener("DOMContentLoaded", () => {
   if (providerSel) {
     providerSel.addEventListener("change", async (e) => {
       const pId = e.target.value;
-      const matched = allProvidersCatalog.find(p => p.id === pId);
-      if (matched && matched.default_api) {
-        document.getElementById("settings-api-url").value = matched.default_api;
+      if (pId === "lmstudio") {
+        document.getElementById("settings-api-url").value = "http://localhost:1234/v1";
+      } else if (pId === "ollama") {
+        document.getElementById("settings-api-url").value = "http://localhost:11434/v1";
+      } else if (pId === "deepseek") {
+        document.getElementById("settings-api-url").value = "https://api.deepseek.com/v1";
+      } else {
+        const matched = allProvidersCatalog.find(p => p.id === pId);
+        if (matched && matched.default_api) {
+          document.getElementById("settings-api-url").value = matched.default_api;
+        }
       }
       try {
         const res = await fetch(`/v1/models?provider=${encodeURIComponent(pId)}`);
