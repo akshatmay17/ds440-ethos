@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# TaintBox / Aegis Linux Build & Packaging Script
-# Builds tbox CLI and bundles native Linux .deb and .AppImage via Tauri v2
+# Ethos Linux Build & Packaging Script
+# Builds ethos / tbox CLI and bundles native Linux .deb and .AppImage via Tauri v2
 
 set -euo pipefail
 
@@ -9,7 +9,7 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist/linux"
 
 echo "============================================================"
-echo "  Linux Build & Package Generator"
+echo "  Ethos Linux Build & Package Generator"
 echo "============================================================"
 
 # 1. Verify Rust
@@ -23,13 +23,14 @@ mkdir -p "$DIST_DIR"
 
 # 2. Build CLI & Daemon
 echo ""
-echo "[1/3] Building Standalone CLI & Daemon (tbox)..."
+echo "[1/3] Building Standalone CLI & Daemon (ethos & tbox)..."
 cd "$ROOT_DIR"
-cargo build --release --bin tbox --bin taintbox
+cargo build --release --bin ethos --bin tbox --bin taintbox
+cp "target/release/ethos" "$DIST_DIR/ethos"
 cp "target/release/tbox" "$DIST_DIR/tbox"
 cp "target/release/taintbox" "$DIST_DIR/taintbox"
-chmod +x "$DIST_DIR/tbox" "$DIST_DIR/taintbox"
-echo "  -> CLI compiled to $DIST_DIR/tbox"
+chmod +x "$DIST_DIR/ethos" "$DIST_DIR/tbox" "$DIST_DIR/taintbox"
+echo "  -> CLI compiled to $DIST_DIR/ethos & $DIST_DIR/tbox"
 
 # 3. Check Tauri CLI
 echo ""

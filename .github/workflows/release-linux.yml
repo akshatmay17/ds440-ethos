@@ -72,11 +72,12 @@ jobs:
 
       - name: Build Core CLI & Daemon (x86_64-unknown-linux-gnu)
         run: |
-          cargo build --release --target x86_64-unknown-linux-gnu --bin tbox --bin taintbox
+          cargo build --release --target x86_64-unknown-linux-gnu --bin ethos --bin tbox --bin taintbox
           mkdir -p dist/linux
+          cp target/x86_64-unknown-linux-gnu/release/ethos dist/linux/ethos
           cp target/x86_64-unknown-linux-gnu/release/tbox dist/linux/tbox
           cp target/x86_64-unknown-linux-gnu/release/taintbox dist/linux/taintbox
-          chmod +x dist/linux/tbox dist/linux/taintbox
+          chmod +x dist/linux/ethos dist/linux/tbox dist/linux/taintbox
 
       - name: Install Tauri CLI
         run: |
@@ -95,7 +96,8 @@ jobs:
       - name: Create Portable Tarball & Checksums
         working-directory: dist/linux
         run: |
-          tar -czf "tbox-linux-x86_64-cli.tar.gz" tbox taintbox
+          tar -czf "ethos-linux-x86_64-cli.tar.gz" ethos tbox taintbox
+          cp ethos-linux-x86_64-cli.tar.gz tbox-linux-x86_64-cli.tar.gz
           rm -f SHA256SUMS.txt
           for f in *; do
             if [ -f "$f" ]; then
@@ -108,7 +110,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: tbox-linux-release-x86_64
+          name: ethos-linux-release-x86_64
           path: dist/linux/*
           if-no-files-found: error
 

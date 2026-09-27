@@ -1,5 +1,5 @@
-# TaintBox Windows Build & Packaging Script
-# Compiles tbox.exe CLI and generates WiX MSI & NSIS Setup.exe installers via Tauri v2
+# Ethos Windows Build & Packaging Script
+# Compiles ethos.exe / tbox.exe CLI and generates WiX MSI & NSIS Setup.exe installers via Tauri v2
 
 param(
     [switch]$SkipCli = $false,
@@ -9,7 +9,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "  TaintBox Windows Build & Installer Generator" -ForegroundColor Cyan
+Write-Host "  Ethos Windows Build & Installer Generator" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 
 # 1. Verify Rust Toolchain
@@ -23,13 +23,14 @@ New-Item -ItemType Directory -Force -Path $DistDir | Out-Null
 
 # 2. Build CLI & Daemon Binaries
 if (-not $SkipCli) {
-    Write-Host "`n[1/3] Building Standalone CLI & Daemon (tbox.exe)..." -ForegroundColor Yellow
+    Write-Host "`n[1/3] Building Standalone CLI & Daemon (ethos.exe & tbox.exe)..." -ForegroundColor Yellow
     Push-Location (Join-Path $PSScriptRoot "..")
     try {
-        cargo build --release --bin tbox --bin taintbox
+        cargo build --release --bin ethos --bin tbox --bin taintbox
+        Copy-Item "target\release\ethos.exe" -Destination "$DistDir\ethos.exe" -Force
         Copy-Item "target\release\tbox.exe" -Destination "$DistDir\tbox.exe" -Force
         Copy-Item "target\release\taintbox.exe" -Destination "$DistDir\taintbox.exe" -Force
-        Write-Host "  -> CLI compiled to $DistDir\tbox.exe" -ForegroundColor Green
+        Write-Host "  -> CLI compiled to $DistDir\ethos.exe & $DistDir\tbox.exe" -ForegroundColor Green
     } finally {
         Pop-Location
     }
@@ -68,8 +69,8 @@ if (-not $SkipDesktop) {
 
 # 4. Package CLI Zip & Generate Checksums
 Write-Host "`n[3/3] Generating Checksums & Portable Zip..." -ForegroundColor Yellow
-if ((Test-Path "$DistDir\tbox.exe") -and (Test-Path "$DistDir\taintbox.exe")) {
-    Compress-Archive -Path "$DistDir\tbox.exe", "$DistDir\taintbox.exe" -DestinationPath "$DistDir\tbox-windows-x64-cli.zip" -Force
+if (Test-Path "$DistDir\ethos.exe") {
+    Compress-Archive -Path "$DistDir\ethos.exe", "$DistDir\tbox.exe", "$DistDir\taintbox.exe" -DestinationPath "$DistDir\ethos-windows-x64-cli.zip" -Force
 }
 
 $SumFile = "$DistDir\SHA256SUMS.txt"

@@ -65,9 +65,9 @@ jobs:
             .
             apps/desktop/src-tauri
 
-      - name: Build Core TaintBox CLI & Daemon
+      - name: Build Core Ethos CLI & Daemon
         run: |
-          cargo build --release --target ${{ matrix.target }} --bin tbox --bin taintbox
+          cargo build --release --target ${{ matrix.target }} --bin ethos --bin tbox --bin taintbox
 
       - name: Install Tauri CLI
         run: |
@@ -83,9 +83,10 @@ jobs:
           mkdir -p dist/macos
 
           # 1. Standalone CLI & Daemon Binaries
+          cp "target/${{ matrix.target }}/release/ethos" "dist/macos/ethos-${{ matrix.arch }}"
           cp "target/${{ matrix.target }}/release/tbox" "dist/macos/tbox-${{ matrix.arch }}"
           cp "target/${{ matrix.target }}/release/taintbox" "dist/macos/taintbox-${{ matrix.arch }}"
-          chmod +x dist/macos/tbox-${{ matrix.arch }} dist/macos/taintbox-${{ matrix.arch }}
+          chmod +x dist/macos/ethos-${{ matrix.arch }} dist/macos/tbox-${{ matrix.arch }} dist/macos/taintbox-${{ matrix.arch }}
 
           # 2. Collect Tauri Bundle Outputs (.dmg and .app)
           BUNDLE_DIR="apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle"
@@ -97,12 +98,13 @@ jobs:
               APP_PATH=$(find "$BUNDLE_DIR/macos" -name "*.app" -maxdepth 1 -type d | head -n 1)
               if [ -n "$APP_PATH" ]; then
                   echo "Packaging application bundle: $APP_PATH"
-                  tar -czf "dist/macos/TaintBox-mac-${{ matrix.arch }}.app.tar.gz" -C "$(dirname "$APP_PATH")" "$(basename "$APP_PATH")"
+                  tar -czf "dist/macos/Ethos-mac-${{ matrix.arch }}.app.tar.gz" -C "$(dirname "$APP_PATH")" "$(basename "$APP_PATH")"
               fi
           fi
 
           # 3. Create CLI Portable Tarball
-          tar -czf "dist/macos/tbox-mac-${{ matrix.arch }}-cli.tar.gz" -C dist/macos "tbox-${{ matrix.arch }}" "taintbox-${{ matrix.arch }}"
+          tar -czf "dist/macos/ethos-mac-${{ matrix.arch }}-cli.tar.gz" -C dist/macos "ethos-${{ matrix.arch }}" "tbox-${{ matrix.arch }}" "taintbox-${{ matrix.arch }}"
+          cp "dist/macos/ethos-mac-${{ matrix.arch }}-cli.tar.gz" "dist/macos/tbox-mac-${{ matrix.arch }}-cli.tar.gz"
 
           # 4. Generate SHA256 Checksums
           cd dist/macos
@@ -119,7 +121,7 @@ jobs:
       - name: Upload Artifacts to Workflow Run
         uses: actions/upload-artifact@v4
         with:
-          name: taintbox-macos-${{ matrix.arch }}-dist
+          name: ethos-macos-${{ matrix.arch }}-dist
           path: dist/macos/*
           if-no-files-found: error
 
