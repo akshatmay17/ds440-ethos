@@ -123,8 +123,18 @@ impl SandboxRuntime for LocalIsolatedRuntime {
     }
 
     fn execute_command(&self, program: &str, args: &[String]) -> (i32, String, String) {
-        let mut cmd = Command::new(program);
-        cmd.args(args);
+        #[cfg(target_os = "windows")]
+        let mut cmd = {
+            let mut c = Command::new("cmd");
+            c.arg("/c").arg(program).args(args);
+            c
+        };
+        #[cfg(not(target_os = "windows"))]
+        let mut cmd = {
+            let mut c = Command::new(program);
+            c.args(args);
+            c
+        };
         cmd.current_dir(&self.root_path);
 
         match cmd.output() {

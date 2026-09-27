@@ -1,0 +1,141 @@
+name: Windows Release & Installer (MSI + Setup.exe)
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release Tag (e.g. v0.1.0)"
+        required: false
+        default: "v0.1.0"
+        type: string
+      create_release:
+        description: "Publish to GitHub Releases"
+        required: false
+        default: true
+        type: boolean
+      draft:
+        description: "Create as Draft Release"
+        required: false
+        default: false
+        type: boolean
+      prerelease:
+        description: "Mark as Pre-release"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-windows:
+    name: Build Windows MSI & Setup Installer
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+            apps/desktop/src-tauri
+
+      - name: Build Core TaintBox CLI & Daemon (x86_64-pc-windows-msvc)
+        run: |
+          cargo build --release --target x86_64-pc-windows-msvc --bin tbox --bin taintbox
+
+      - name: Install Tauri CLI
+        run: |
+          cargo install tauri-cli --version "^2.0.0" --locked
+
+      - name: Build Desktop Application, WiX MSI & NSIS Setup Installer
+        working-directory: apps/desktop
+        run: |
+          cargo tauri build --target x86_64-pc-windows-msvc
+
+      - name: Stage Release Artifacts & Generate Checksums
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist/windows
+
+          # 1. Copy Standalone CLI & Daemon Binaries
+          Copy-Item "target/x86_64-pc-windows-msvc/release/tbox.exe" -Destination "dist/windows/tbox.exe"
+          Copy-Item "target/x86_64-pc-windows-msvc/release/taintbox.exe" -Destination "dist/windows/taintbox.exe"
+
+          # 2. Collect Tauri Bundle Outputs (MSI and NSIS Setup)
+          $bundleBase = "apps/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle"
+          if (Test-Path $bundleBase) {
+              # WiX MSI Packages
+              Get-ChildItem -Path "$bundleBase/msi/*.msi" -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+                  Copy-Item $_.FullName -Destination "dist/windows/$($_.Name)"
+                  Write-Host "Collected MSI Installer: $($_.Name)"
+              }
+              # NSIS Setup Executables
+              Get-ChildItem -Path "$bundleBase/nsis/*setup*.exe" -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+                  Copy-Item $_.FullName -Destination "dist/windows/$($_.Name)"
+                  Write-Host "Collected NSIS Setup: $($_.Name)"
+              }
+          }
+
+          # 3. Create Portable Zip of CLI Binaries
+          Compress-Archive -Path "dist/windows/tbox.exe", "dist/windows/taintbox.exe" -DestinationPath "dist/windows/tbox-windows-x64-cli.zip" -Force
+
+          # 4. Generate SHA256 Checksums for all release assets
+          Get-ChildItem "dist/windows" -File | Where-Object { $_.Name -ne "SHA256SUMS.txt" } | ForEach-Object {
+              $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
+              "$hash  $($_.Name)" | Out-File -FilePath "dist/windows/SHA256SUMS.txt" -Append -Encoding ascii
+          }
+
+          Write-Host "=== Staged Release Files ==="
+          Get-ChildItem "dist/windows"
+
+      - name: Upload Artifacts to Workflow Run
+        uses: actions/upload-artifact@v4
+        with:
+          name: taintbox-windows-x64-dist
+          path: dist/windows/*
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || inputs.create_release == true
+        with:
+          tag_name: ${{ inputs.release_tag || github.ref_name }}
+          name: "TaintBox ${{ inputs.release_tag || github.ref_name }} (Windows Release)"
+          draft: ${{ inputs.draft || false }}
+          prerelease: ${{ inputs.prerelease || false }}
+          files: |
+            dist/windows/*.msi
+            dist/windows/*setup*.exe
+            dist/windows/*.zip
+            dist/windows/SHA256SUMS.txt
+          body: |
+            # TaintBox Windows Release (${{ inputs.release_tag || github.ref_name }})
+
+            ### 📦 Windows Package Downloads
+            - **WiX MSI Installer**: Enterprise-grade Windows Installer package (`.msi`)
+            - **NSIS Setup Executable**: Full setup wizard with desktop & start menu shortcuts (`-setup.exe`)
+            - **Portable CLI & Daemon**: Standalone `tbox.exe` & `taintbox.exe` command-line runtime (`.zip`)
+
+            ### 🔐 Integrity & Verification
+            Verify the SHA-256 checksums before installing:
+            ```powershell
+            Get-FileHash <filename> -Algorithm SHA256
+            ```
+            Compare with the values in `SHA256SUMS.txt`.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

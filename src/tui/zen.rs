@@ -22,23 +22,24 @@ use crate::aci::ACIHarness;
 use crate::config::user_config::UserConfig;
 use crate::models::{ProvenanceRecord, ProvenanceTag, TrustLevel};
 
-// Cyber Obsidian Theme
-pub const COLOR_BG: Color = Color::Rgb(13, 14, 18);
-pub const COLOR_CARD_BG: Color = Color::Rgb(20, 22, 28);
-pub const COLOR_BORDER: Color = Color::Rgb(38, 42, 54);
-pub const COLOR_WHITE: Color = Color::Rgb(241, 245, 249);
-pub const COLOR_MUTED: Color = Color::Rgb(148, 163, 184);
-pub const COLOR_DIM: Color = Color::Rgb(100, 116, 139);
-pub const COLOR_CYAN: Color = Color::Rgb(56, 189, 248);
-pub const COLOR_BLUE: Color = Color::Rgb(59, 130, 246);
-pub const COLOR_GREEN: Color = Color::Rgb(52, 211, 153);
-pub const COLOR_RED: Color = Color::Rgb(248, 113, 113);
-pub const COLOR_AMBER: Color = Color::Rgb(251, 191, 36);
+// OpenCode OC-2 Canonical Design System
+pub const COLOR_BG: Color = Color::Rgb(28, 28, 28);       // #1C1C1C - Surface Base
+pub const COLOR_CARD_BG: Color = Color::Rgb(35, 35, 35);  // #232323 - Raised Surface
+pub const COLOR_BORDER: Color = Color::Rgb(40, 40, 40);   // #282828 - Subtle Hairline Border
+pub const COLOR_WHITE: Color = Color::Rgb(237, 237, 237); // #EDEDED - Strong Text
+pub const COLOR_MUTED: Color = Color::Rgb(112, 112, 112); // #707070 - Muted Text
+pub const COLOR_DIM: Color = Color::Rgb(80, 80, 80);      // #505050 - Faint Text
+pub const COLOR_PEACH: Color = Color::Rgb(250, 178, 131); // #FAB283 - OpenCode Signature Warm Peach Accent
+pub const COLOR_CYAN: Color = Color::Rgb(147, 233, 246);  // #93E9F6 - Syntax Constant
+pub const COLOR_BLUE: Color = Color::Rgb(3, 76, 255);     // #034CFF - Interactive Action
+pub const COLOR_GREEN: Color = Color::Rgb(18, 201, 5);    // #12C905 - Success / Diff Add
+pub const COLOR_RED: Color = Color::Rgb(252, 83, 58);     // #FC533A - Error / Diff Delete
+pub const COLOR_AMBER: Color = Color::Rgb(252, 213, 58);  // #FCD53A - Warning
 
-pub const COLOR_DIFF_DEL_BG: Color = Color::Rgb(55, 20, 25);
-pub const COLOR_DIFF_DEL_FG: Color = Color::Rgb(248, 113, 113);
-pub const COLOR_DIFF_ADD_BG: Color = Color::Rgb(15, 45, 30);
-pub const COLOR_DIFF_ADD_FG: Color = Color::Rgb(52, 211, 153);
+pub const COLOR_DIFF_DEL_BG: Color = Color::Rgb(45, 18, 20);
+pub const COLOR_DIFF_DEL_FG: Color = Color::Rgb(252, 83, 58);
+pub const COLOR_DIFF_ADD_BG: Color = Color::Rgb(14, 38, 18);
+pub const COLOR_DIFF_ADD_FG: Color = Color::Rgb(18, 201, 5);
 
 pub const SETUP_POLICIES: &[(&str, &str)] = &[
     ("Standard", "Blocks unauthorized writes & unallowlisted egress on untrusted data"),
@@ -89,13 +90,12 @@ pub fn disable_quick_edit() {}
 
 #[cfg(windows)]
 pub fn get_clipboard_text() -> Option<String> {
-    use std::ffi::CStr;
     use std::os::raw::c_void;
     type HANDLE = *mut c_void;
     type BOOL = i32;
     type UINT = u32;
 
-    const CF_TEXT: UINT = 1;
+    const CF_UNICODETEXT: UINT = 13;
 
     #[link(name = "user32")]
     extern "system" {
@@ -105,17 +105,22 @@ pub fn get_clipboard_text() -> Option<String> {
     }
 
     extern "system" {
-        fn GlobalLock(hMem: HANDLE) -> *mut u8;
+        fn GlobalLock(hMem: HANDLE) -> *mut u16;
         fn GlobalUnlock(hMem: HANDLE) -> BOOL;
     }
 
     unsafe {
         if OpenClipboard(std::ptr::null_mut()) != 0 {
-            let handle = GetClipboardData(CF_TEXT);
+            let handle = GetClipboardData(CF_UNICODETEXT);
             if !handle.is_null() {
                 let ptr = GlobalLock(handle);
                 if !ptr.is_null() {
-                    let text = CStr::from_ptr(ptr as *const _).to_string_lossy().into_owned();
+                    let mut len = 0;
+                    while *ptr.add(len) != 0 {
+                        len += 1;
+                    }
+                    let slice = std::slice::from_raw_parts(ptr, len);
+                    let text = String::from_utf16_lossy(slice);
                     let _ = GlobalUnlock(handle);
                     let _ = CloseClipboard();
                     return Some(text);
@@ -124,12 +129,103 @@ pub fn get_clipboard_text() -> Option<String> {
             let _ = CloseClipboard();
         }
     }
+
+    if let Ok(output) = std::process::Command::new("powershell")
+        .args(["-NoProfile", "-NonInteractive", "-Command", "Get-Clipboard"])
+        .output()
+    {
+        if output.status.success() {
+            if let Ok(s) = String::from_utf8(output.stdout) {
+                return Some(s.trim_end_matches("\r\n").trim_end_matches('\n').to_string());
+            }
+        }
+    }
+
     None
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 pub fn get_clipboard_text() -> Option<String> {
+    let output = std::process::Command::new("pbpaste").output().ok()?;
+    if output.status.success() {
+        String::from_utf8(output.stdout).ok()
+    } else {
+        None
+    }
+}
+
+#[cfg(all(not(windows), not(target_os = "macos")))]
+pub fn get_clipboard_text() -> Option<String> {
+    if let Ok(output) = std::process::Command::new("wl-paste").output() {
+        if output.status.success() {
+            if let Ok(s) = String::from_utf8(output.stdout) {
+                return Some(s);
+            }
+        }
+    }
+    if let Ok(output) = std::process::Command::new("xclip").args(["-selection", "clipboard", "-o"]).output() {
+        if output.status.success() {
+            if let Ok(s) = String::from_utf8(output.stdout) {
+                return Some(s);
+            }
+        }
+    }
     None
+}
+
+pub fn set_clipboard_text(text: &str) -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        use std::io::Write;
+        if let Ok(mut child) = std::process::Command::new("pbcopy")
+            .stdin(std::process::Stdio::piped())
+            .spawn()
+        {
+            if let Some(mut stdin) = child.stdin.take() {
+                let _ = stdin.write_all(text.as_bytes());
+            }
+            return child.wait().map(|s| s.success()).unwrap_or(false);
+        }
+    }
+    #[cfg(windows)]
+    {
+        use std::io::Write;
+        if let Ok(mut child) = std::process::Command::new("clip")
+            .stdin(std::process::Stdio::piped())
+            .spawn()
+        {
+            if let Some(mut stdin) = child.stdin.take() {
+                let _ = stdin.write_all(text.as_bytes());
+            }
+            return child.wait().map(|s| s.success()).unwrap_or(false);
+        }
+    }
+    #[cfg(all(not(windows), not(target_os = "macos")))]
+    {
+        use std::io::Write;
+        if let Ok(mut child) = std::process::Command::new("wl-copy")
+            .stdin(std::process::Stdio::piped())
+            .spawn()
+        {
+            if let Some(mut stdin) = child.stdin.take() {
+                let _ = stdin.write_all(text.as_bytes());
+            }
+            if child.wait().map(|s| s.success()).unwrap_or(false) {
+                return true;
+            }
+        }
+        if let Ok(mut child) = std::process::Command::new("xclip")
+            .args(["-selection", "clipboard"])
+            .stdin(std::process::Stdio::piped())
+            .spawn()
+        {
+            if let Some(mut stdin) = child.stdin.take() {
+                let _ = stdin.write_all(text.as_bytes());
+            }
+            return child.wait().map(|s| s.success()).unwrap_or(false);
+        }
+    }
+    false
 }
 
 fn format_number_commas(n: usize) -> String {
@@ -222,6 +318,15 @@ pub struct ZenApp {
     pub palette_selected: usize,
     pub palette_commands: Vec<PaletteCommand>,
 
+    // Inline Slash Autocomplete Dock
+    pub slash_popup_open: bool,
+    pub slash_query: String,
+    pub slash_selected: usize,
+
+    // Leader Key Mode & Layout
+    pub leader_active: bool,
+    pub sidebar_visible: bool,
+
     // Setup Wizard Modal
     pub setup_open: bool,
     pub setup_step: usize, // 0: Provider, 1: Endpoint URL, 2: API Key, 3: Model, 4: Policy Profile
@@ -299,6 +404,11 @@ impl ZenApp {
             palette_open: false,
             palette_query: String::new(),
             palette_selected: 0,
+            slash_popup_open: false,
+            slash_query: String::new(),
+            slash_selected: 0,
+            leader_active: false,
+            sidebar_visible: true,
             palette_commands: vec![
                 PaletteCommand {
                     name: "/attack m365_sox_invoice_reconcile".to_string(),
@@ -417,10 +527,49 @@ impl ZenApp {
             return;
         }
 
+        // 1. Leader Key Mode (ctrl+x)
+        if self.leader_active {
+            self.leader_active = false;
+            match key.code {
+                KeyCode::Char('m') => {
+                    self.open_setup_modal();
+                    return;
+                }
+                KeyCode::Char('b') => {
+                    self.sidebar_visible = !self.sidebar_visible;
+                    return;
+                }
+                KeyCode::Char('s') => {
+                    self.execute_command_str("/walls");
+                    return;
+                }
+                KeyCode::Char('t') => {
+                    self.execute_command_str("/taint");
+                    return;
+                }
+                KeyCode::Char('q') => {
+                    self.should_quit = true;
+                    return;
+                }
+                KeyCode::Char('n') => {
+                    self.execute_command_str("/clear");
+                    return;
+                }
+                _ => {}
+            }
+        }
+
+        if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('x') {
+            self.leader_active = true;
+            return;
+        }
+
+        // 2. Command Palette (ctrl+p)
         if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('p') {
             self.palette_open = !self.palette_open;
             self.palette_query.clear();
             self.palette_selected = 0;
+            self.slash_popup_open = false;
             return;
         }
 
@@ -465,9 +614,45 @@ impl ZenApp {
             return;
         }
 
+        // 3. Inline Floating Slash Autocomplete Intercept
+        if self.slash_popup_open {
+            match key.code {
+                KeyCode::Esc => {
+                    self.slash_popup_open = false;
+                    return;
+                }
+                KeyCode::Up => {
+                    if self.slash_selected > 0 {
+                        self.slash_selected -= 1;
+                    }
+                    return;
+                }
+                KeyCode::Down => {
+                    let matching_len = self.get_matching_slash_commands().len();
+                    if matching_len > 0 && self.slash_selected + 1 < matching_len {
+                        self.slash_selected += 1;
+                    }
+                    return;
+                }
+                KeyCode::Tab | KeyCode::Enter => {
+                    let matching = self.get_matching_slash_commands();
+                    if let Some(cmd) = matching.get(self.slash_selected) {
+                        self.input_buffer = format!("{} ", cmd.name);
+                        self.cursor_position = self.input_buffer.len();
+                        self.slash_popup_open = false;
+                    }
+                    return;
+                }
+                _ => {}
+            }
+        }
+
+        // 4. Standard Input & Motion Navigation
         match key.code {
             KeyCode::Esc => {
-                if self.is_running {
+                if self.slash_popup_open {
+                    self.slash_popup_open = false;
+                } else if self.is_running {
                     self.is_running = false;
                     self.agent_rx = None;
                     self.feed.push(FeedItem::AgentMessage {
@@ -506,11 +691,13 @@ impl ZenApp {
                     let clean = clip.replace('\r', "");
                     self.input_buffer.insert_str(self.cursor_position, &clean);
                     self.cursor_position += clean.len();
+                    self.update_slash_state();
                 }
             }
             KeyCode::Char('u') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 self.input_buffer.clear();
                 self.cursor_position = 0;
+                self.update_slash_state();
             }
             KeyCode::Char('w') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 if self.cursor_position > 0 {
@@ -522,7 +709,12 @@ impl ZenApp {
                     };
                     self.input_buffer.drain(new_pos..self.cursor_position);
                     self.cursor_position = new_pos;
+                    self.update_slash_state();
                 }
+            }
+            KeyCode::Char('k') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                self.input_buffer.truncate(self.cursor_position);
+                self.update_slash_state();
             }
             KeyCode::Char('a') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 self.cursor_position = 0;
@@ -530,19 +722,33 @@ impl ZenApp {
             KeyCode::Char('e') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 self.cursor_position = self.input_buffer.len();
             }
+            // Multiline insertion (Shift+Enter, Alt+Enter, or Ctrl+J)
+            KeyCode::Enter if key.modifiers.contains(KeyModifiers::SHIFT) || key.modifiers.contains(KeyModifiers::ALT) => {
+                self.input_buffer.insert(self.cursor_position, '\n');
+                self.cursor_position += 1;
+                self.update_slash_state();
+            }
+            KeyCode::Char('j') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                self.input_buffer.insert(self.cursor_position, '\n');
+                self.cursor_position += 1;
+                self.update_slash_state();
+            }
             KeyCode::Char(c) if !key.modifiers.contains(KeyModifiers::CONTROL) => {
                 self.input_buffer.insert(self.cursor_position, c);
                 self.cursor_position += 1;
+                self.update_slash_state();
             }
             KeyCode::Backspace => {
                 if self.cursor_position > 0 && !self.input_buffer.is_empty() {
                     self.input_buffer.remove(self.cursor_position - 1);
                     self.cursor_position -= 1;
+                    self.update_slash_state();
                 }
             }
             KeyCode::Delete => {
                 if self.cursor_position < self.input_buffer.len() {
                     self.input_buffer.remove(self.cursor_position);
+                    self.update_slash_state();
                 }
             }
             KeyCode::Left => {
@@ -562,6 +768,7 @@ impl ZenApp {
                 self.cursor_position = self.input_buffer.len();
             }
             KeyCode::Enter => {
+                self.slash_popup_open = false;
                 let prompt = self.input_buffer.trim().to_string();
                 if !prompt.is_empty() {
                     self.input_buffer.clear();
@@ -581,6 +788,38 @@ impl ZenApp {
             self.palette_commands
                 .iter()
                 .filter(|c| c.name.to_lowercase().contains(&q) || c.desc.to_lowercase().contains(&q))
+                .cloned()
+                .collect()
+        }
+    }
+
+    pub fn update_slash_state(&mut self) {
+        if self.input_buffer.starts_with('/') && !self.input_buffer.contains(' ') {
+            self.slash_popup_open = true;
+            let end = self.cursor_position.min(self.input_buffer.len());
+            self.slash_query = self.input_buffer[1..end].to_string();
+            let matching_len = self.get_matching_slash_commands().len();
+            if self.slash_selected >= matching_len {
+                self.slash_selected = 0;
+            }
+        } else {
+            self.slash_popup_open = false;
+            self.slash_query.clear();
+            self.slash_selected = 0;
+        }
+    }
+
+    pub fn get_matching_slash_commands(&self) -> Vec<PaletteCommand> {
+        let q = self.slash_query.trim().to_lowercase();
+        if q.is_empty() {
+            self.palette_commands.clone()
+        } else {
+            self.palette_commands
+                .iter()
+                .filter(|c| {
+                    let cmd_name = c.name.strip_prefix('/').unwrap_or(&c.name).to_lowercase();
+                    cmd_name.contains(&q) || c.desc.to_lowercase().contains(&q)
+                })
                 .cloned()
                 .collect()
         }
@@ -1560,9 +1799,9 @@ impl ZenApp {
         frame.render_widget(Clear, modal_rect);
 
         let modal_block = Block::default()
-            .title(Span::styled(" TaintBox Setup Wizard (/setup) ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)))
+            .title(Span::styled(" TaintBox Setup Wizard (/setup) ", Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD)))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(COLOR_CYAN))
+            .border_style(Style::default().fg(COLOR_PEACH))
             .style(Style::default().bg(COLOR_CARD_BG));
         frame.render_widget(modal_block, modal_rect);
 
@@ -1600,7 +1839,7 @@ impl ZenApp {
             if i == self.setup_step {
                 step_spans.push(Span::styled(
                     format!("[{}]", name),
-                    Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD),
+                    Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD),
                 ));
             } else if i < self.setup_step {
                 step_spans.push(Span::styled(
@@ -1628,9 +1867,9 @@ impl ZenApp {
             0 => {
                 let filtered = self.get_filtered_providers();
                 body_lines.push(Line::from(vec![
-                    Span::styled("Search Provider: ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
+                    Span::styled("Search Provider: ", Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD)),
                     Span::styled(&self.setup_provider_query, Style::default().fg(COLOR_WHITE)),
-                    Span::styled("█", Style::default().fg(COLOR_CYAN)),
+                    Span::styled("█", Style::default().fg(COLOR_PEACH)),
                     Span::styled(format!("  ({}/{} providers available)", filtered.len(), self.setup_providers_cache.len()), Style::default().fg(COLOR_DIM)),
                 ]));
                 body_lines.push(Line::from(""));
@@ -1647,7 +1886,7 @@ impl ZenApp {
                         let abs_i = start + rel_i;
                         let is_sel = abs_i == self.setup_provider_idx;
                         let (prefix, style) = if is_sel {
-                            ("▶ ", Style::default().fg(COLOR_WHITE).bg(COLOR_BLUE).add_modifier(Modifier::BOLD))
+                            ("▶ ", Style::default().fg(COLOR_BG).bg(COLOR_PEACH).add_modifier(Modifier::BOLD))
                         } else {
                             ("  ", Style::default().fg(COLOR_MUTED))
                         };
@@ -1656,7 +1895,7 @@ impl ZenApp {
                             Span::styled(prefix, style),
                             Span::styled(format!("{:<22} ", prov.name), style),
                             Span::styled(format!("({:<12}) ", prov.id), Style::default().fg(COLOR_DIM)),
-                            Span::styled(format!("[{} models]{}", prov.model_count, pop_badge), Style::default().fg(if prov.is_popular { COLOR_CYAN } else { COLOR_DIM })),
+                            Span::styled(format!("[{} models]{}", prov.model_count, pop_badge), Style::default().fg(if prov.is_popular { COLOR_PEACH } else { COLOR_DIM })),
                         ]));
                     }
                 }
@@ -1666,14 +1905,14 @@ impl ZenApp {
                 body_lines.push(Line::from(Span::styled("Configure API Endpoint URL:", Style::default().fg(COLOR_WHITE).add_modifier(Modifier::BOLD))));
                 body_lines.push(Line::from(""));
                 body_lines.push(Line::from(vec![
-                    Span::styled("URL: ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
+                    Span::styled("URL: ", Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD)),
                     Span::styled(&self.setup_input_buffer, Style::default().fg(COLOR_WHITE)),
-                    Span::styled("█", Style::default().fg(COLOR_CYAN)),
+                    Span::styled("█", Style::default().fg(COLOR_PEACH)),
                 ]));
                 body_lines.push(Line::from(""));
                 let default_ep = crate::config::models_dev::ModelCatalog::get_default_endpoint(&self.config.provider);
                 body_lines.push(Line::from(Span::styled(format!("Default endpoint for '{}':", self.config.provider), Style::default().fg(COLOR_DIM))));
-                body_lines.push(Line::from(Span::styled(format!("  • {}", default_ep), Style::default().fg(COLOR_CYAN))));
+                body_lines.push(Line::from(Span::styled(format!("  • {}", default_ep), Style::default().fg(COLOR_PEACH))));
                 footer_help = "Type or edit URL, [Enter] confirm, [Esc] cancel";
             }
             2 => {
@@ -1690,9 +1929,9 @@ impl ZenApp {
                     format!("{}...{}", &self.setup_input_buffer[..3], &self.setup_input_buffer[self.setup_input_buffer.len() - 3..])
                 };
                 body_lines.push(Line::from(vec![
-                    Span::styled("Key: ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
+                    Span::styled("Key: ", Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD)),
                     Span::styled(masked, Style::default().fg(COLOR_WHITE)),
-                    Span::styled("█", Style::default().fg(COLOR_CYAN)),
+                    Span::styled("█", Style::default().fg(COLOR_PEACH)),
                 ]));
                 body_lines.push(Line::from(""));
                 let env_vars = crate::config::models_dev::ModelCatalog::get_env_vars_for_provider(&self.config.provider);
@@ -1711,9 +1950,9 @@ impl ZenApp {
             3 => {
                 let filtered = self.get_filtered_models();
                 body_lines.push(Line::from(vec![
-                    Span::styled("Search Model: ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
+                    Span::styled("Search Model: ", Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD)),
                     Span::styled(&self.setup_model_query, Style::default().fg(COLOR_WHITE)),
-                    Span::styled("█", Style::default().fg(COLOR_CYAN)),
+                    Span::styled("█", Style::default().fg(COLOR_PEACH)),
                     Span::styled(format!("  ({}/{} models for {})", filtered.len(), self.setup_models_cache.len(), self.config.provider), Style::default().fg(COLOR_DIM)),
                 ]));
                 body_lines.push(Line::from(""));
@@ -1730,7 +1969,7 @@ impl ZenApp {
                         let abs_i = start + rel_i;
                         let is_sel = abs_i == self.setup_model_idx;
                         let (prefix, style) = if is_sel {
-                            ("▶ ", Style::default().fg(COLOR_WHITE).bg(COLOR_BLUE).add_modifier(Modifier::BOLD))
+                            ("▶ ", Style::default().fg(COLOR_BG).bg(COLOR_PEACH).add_modifier(Modifier::BOLD))
                         } else {
                             ("  ", Style::default().fg(COLOR_MUTED))
                         };
@@ -1881,16 +2120,28 @@ impl ZenApp {
         let bg_block = Block::default().style(Style::default().bg(COLOR_BG));
         frame.render_widget(bg_block, area);
 
-        let main_cols = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([
-                Constraint::Percentage(76),
-                Constraint::Percentage(24),
-            ])
-            .split(area);
+        let main_cols = if self.sidebar_visible {
+            Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                    Constraint::Percentage(76),
+                    Constraint::Percentage(24),
+                ])
+                .split(area)
+        } else {
+            Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                    Constraint::Percentage(100),
+                    Constraint::Percentage(0),
+                ])
+                .split(area)
+        };
 
         self.draw_left_panel(frame, main_cols[0]);
-        self.draw_right_sidebar(frame, main_cols[1]);
+        if self.sidebar_visible {
+            self.draw_right_sidebar(frame, main_cols[1]);
+        }
 
         if self.setup_open {
             self.draw_setup_modal(frame, area);
@@ -1910,6 +2161,76 @@ impl ZenApp {
 
         self.draw_feed(frame, rows[0]);
         self.draw_input_dock(frame, rows[1]);
+        if self.slash_popup_open && !self.setup_open && !self.palette_open {
+            self.draw_slash_autocomplete(frame, rows[1]);
+        }
+    }
+
+    fn draw_slash_autocomplete(&self, frame: &mut Frame, dock_area: Rect) {
+        let matching = self.get_matching_slash_commands();
+        if matching.is_empty() {
+            return;
+        }
+
+        let max_items = 6;
+        let visible_count = matching.len().min(max_items) as u16;
+        let popup_h = visible_count + 2;
+        let popup_w = dock_area.width;
+        let popup_y = dock_area.y.saturating_sub(popup_h);
+        let popup_rect = Rect::new(dock_area.x, popup_y, popup_w, popup_h);
+
+        frame.render_widget(Clear, popup_rect);
+
+        let block = Block::default()
+            .title(Span::styled(
+                " Slash Commands (↑/↓ navigate, Tab/Enter complete, Esc dismiss) ",
+                Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD),
+            ))
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(COLOR_PEACH))
+            .style(Style::default().bg(COLOR_CARD_BG));
+        frame.render_widget(block, popup_rect);
+
+        let inner = Rect {
+            x: popup_rect.x + 1,
+            y: popup_rect.y + 1,
+            width: popup_rect.width.saturating_sub(2),
+            height: popup_rect.height.saturating_sub(2),
+        };
+
+        let scroll_start = if self.slash_selected >= max_items {
+            self.slash_selected - max_items + 1
+        } else {
+            0
+        };
+
+        let mut lines = Vec::new();
+        for (rel_i, cmd) in matching.iter().skip(scroll_start).take(max_items).enumerate() {
+            let abs_i = scroll_start + rel_i;
+            let is_sel = abs_i == self.slash_selected;
+            let (prefix, style_name, style_desc) = if is_sel {
+                (
+                    "▶ ",
+                    Style::default().fg(COLOR_BG).bg(COLOR_PEACH).add_modifier(Modifier::BOLD),
+                    Style::default().fg(COLOR_BG).bg(COLOR_PEACH),
+                )
+            } else {
+                (
+                    "  ",
+                    Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD),
+                    Style::default().fg(COLOR_MUTED),
+                )
+            };
+
+            lines.push(Line::from(vec![
+                Span::styled(prefix, style_name),
+                Span::styled(format!("{:<36} ", cmd.name), style_name),
+                Span::styled(&cmd.desc, style_desc),
+            ]));
+        }
+
+        let p = Paragraph::new(lines);
+        frame.render_widget(p, inner);
     }
 
     fn draw_feed(&self, frame: &mut Frame, area: Rect) {
@@ -2079,19 +2400,31 @@ impl ZenApp {
             ])
             .split(area);
 
-        let header_line = Line::from(vec![
-            Span::styled("■ ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
-            Span::styled(format!("{} ", self.agent_mode), Style::default().fg(COLOR_WHITE).add_modifier(Modifier::BOLD)),
-            Span::styled("· ", Style::default().fg(COLOR_DIM)),
-            Span::styled(&self.model_name, Style::default().fg(COLOR_DIM)),
-        ]);
-        let header = Paragraph::new(header_line);
+        let header_spans = if self.leader_active {
+            vec![
+                Span::styled("⚡ LEADER (ctrl+x): ", Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD)),
+                Span::styled("m: models  s: walls  b: sidebar  n: clear  q: exit", Style::default().fg(COLOR_WHITE)),
+            ]
+        } else {
+            vec![
+                Span::styled("■ ", Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD)),
+                Span::styled(format!("{} ", self.agent_mode), Style::default().fg(COLOR_WHITE).add_modifier(Modifier::BOLD)),
+                Span::styled("· ", Style::default().fg(COLOR_DIM)),
+                Span::styled(&self.model_name, Style::default().fg(COLOR_DIM)),
+            ]
+        };
+        let header = Paragraph::new(Line::from(header_spans));
         frame.render_widget(header, dock_chunks[0]);
 
         let input_rect = dock_chunks[1];
+        let border_color = if self.leader_active || self.slash_popup_open {
+            COLOR_PEACH
+        } else {
+            COLOR_BORDER
+        };
         let card_bg = Block::default()
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(COLOR_BORDER))
+            .border_style(Style::default().fg(border_color))
             .style(Style::default().bg(COLOR_CARD_BG));
         frame.render_widget(card_bg, input_rect);
 
@@ -2104,8 +2437,8 @@ impl ZenApp {
 
         let display_text = if self.input_buffer.is_empty() {
             vec![
-                Span::styled("│ ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
-                Span::styled("█ ", Style::default().fg(COLOR_CYAN)),
+                Span::styled("│ ", Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD)),
+                Span::styled("█ ", Style::default().fg(COLOR_PEACH)),
                 Span::styled(
                     "Ask anything, / for commands, @ for context...",
                     Style::default().fg(COLOR_DIM),
@@ -2114,9 +2447,9 @@ impl ZenApp {
         } else {
             let (before, after) = self.input_buffer.split_at(self.cursor_position);
             vec![
-                Span::styled("│ ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
+                Span::styled("│ ", Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD)),
                 Span::styled(before, Style::default().fg(COLOR_WHITE)),
-                Span::styled("█", Style::default().fg(COLOR_CYAN)),
+                Span::styled("█", Style::default().fg(COLOR_PEACH)),
                 Span::styled(after, Style::default().fg(COLOR_WHITE)),
             ]
         };
@@ -2128,7 +2461,7 @@ impl ZenApp {
             let progress_chars = ["■■■■░░░░", "░■■■■░░░", "░░■■■■░░", "░░░■■■■░", "░░░░■■■■"];
             let p_bar = progress_chars[(self.progress_ticks / 4) % progress_chars.len()];
             vec![
-                Span::styled(format!("{} ", p_bar), Style::default().fg(COLOR_CYAN)),
+                Span::styled(format!("{} ", p_bar), Style::default().fg(COLOR_PEACH)),
                 Span::styled("esc", Style::default().fg(COLOR_WHITE).add_modifier(Modifier::BOLD)),
                 Span::styled(" interrupt", Style::default().fg(COLOR_DIM)),
             ]
@@ -2146,10 +2479,12 @@ impl ZenApp {
         };
 
         let footer_right = vec![
+            Span::styled("ctrl+x", Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD)),
+            Span::styled(" leader   ", Style::default().fg(COLOR_DIM)),
             Span::styled("tab", Style::default().fg(COLOR_WHITE).add_modifier(Modifier::BOLD)),
-            Span::styled(" switch agent   ", Style::default().fg(COLOR_DIM)),
+            Span::styled(" agent   ", Style::default().fg(COLOR_DIM)),
             Span::styled("ctrl+p", Style::default().fg(COLOR_WHITE).add_modifier(Modifier::BOLD)),
-            Span::styled(" commands", Style::default().fg(COLOR_DIM)),
+            Span::styled(" palette", Style::default().fg(COLOR_DIM)),
         ];
 
         let footer_cols = Layout::default()
@@ -2265,9 +2600,9 @@ impl ZenApp {
         frame.render_widget(Clear, modal_rect);
 
         let modal_block = Block::default()
-            .title(Span::styled(" Command Palette (ctrl+p) ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)))
+            .title(Span::styled(" Command Palette (ctrl+p) ", Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD)))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(COLOR_BLUE))
+            .border_style(Style::default().fg(COLOR_PEACH))
             .style(Style::default().bg(COLOR_CARD_BG));
         frame.render_widget(modal_block, modal_rect);
 
@@ -2284,9 +2619,9 @@ impl ZenApp {
             .split(inner);
 
         let search_line = Line::from(vec![
-            Span::styled("> ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
+            Span::styled("> ", Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD)),
             Span::styled(&self.palette_query, Style::default().fg(COLOR_WHITE)),
-            Span::styled("█", Style::default().fg(COLOR_CYAN)),
+            Span::styled("█", Style::default().fg(COLOR_PEACH)),
         ]);
         let search_p = Paragraph::new(search_line);
         frame.render_widget(search_p, chunks[0]);
@@ -2302,8 +2637,8 @@ impl ZenApp {
             let (prefix, style_name, style_desc) = if is_sel {
                 (
                     "▶ ",
-                    Style::default().fg(COLOR_WHITE).bg(COLOR_BLUE).add_modifier(Modifier::BOLD),
-                    Style::default().fg(COLOR_WHITE).bg(COLOR_BLUE),
+                    Style::default().fg(COLOR_BG).bg(COLOR_PEACH).add_modifier(Modifier::BOLD),
+                    Style::default().fg(COLOR_BG).bg(COLOR_PEACH),
                 )
             } else {
                 (

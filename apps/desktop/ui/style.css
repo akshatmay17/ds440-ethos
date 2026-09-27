@@ -1,22 +1,24 @@
-/* OpenCode 1:1 Pixel-Perfect Theme for TBox */
+/* OpenCode OC-2 Canonical Design System for TaintBox */
 :root {
-  --bg-base: #101010;
-  --bg-weak: #18191d;
-  --bg-card: #16171a;
-  --bg-card-hover: #1c1e23;
-  --bg-input: #16171b;
-  --border-subtle: #202227;
-  --border-card: #262830;
-  --border-focus: #3b82f6;
-  --text-main: #f1f2f6;
-  --text-muted: #9497a5;
-  --text-dim: #606370;
-  --text-faint: #3f424c;
-  --accent-blue: #3b82f6;
-  --accent-cyan: #38bdf8;
-  --accent-green: #22c55e;
-  --accent-amber: #f59e0b;
-  --accent-red: #ef4444;
+  --bg-base: #1C1C1C;
+  --bg-weak: #232323;
+  --bg-card: #232323;
+  --bg-card-hover: #2A2A2A;
+  --bg-input: #1C1C1C;
+  --border-subtle: #282828;
+  --border-card: #282828;
+  --border-focus: #FAB283;
+  --text-main: #EDEDED;
+  --text-muted: #A8A8A8;
+  --text-dim: #686868;
+  --text-faint: #444444;
+  --accent-peach: #FAB283;
+  --accent-peach-hover: #EDA779;
+  --accent-blue: #63B3ED;
+  --accent-cyan: #FAB283;
+  --accent-green: #48BB78;
+  --accent-amber: #F6AD55;
+  --accent-red: #F56565;
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: "Cascadia Code", "JetBrains Mono", Consolas, "Courier New", monospace;
 }
@@ -189,6 +191,15 @@ html, body {
 .window-ctrl.close:hover {
   background: #e81123;
   color: #fff;
+}
+
+/* macOS Native Window Styling & Traffic Light Offset */
+body.is-macos .window-ctrl {
+  display: none !important;
+}
+
+body.is-macos .titlebar-left {
+  padding-left: 74px;
 }
 
 /* Main Viewport Container */
@@ -1113,7 +1124,7 @@ html, body {
 }
 
 .kanban-card:hover {
-  border-color: #3b82f6;
+  border-color: var(--accent-peach);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }

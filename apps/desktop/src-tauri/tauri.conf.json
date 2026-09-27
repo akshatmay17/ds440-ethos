@@ -17,7 +17,9 @@
         "resizable": true,
         "fullscreen": false,
         "decorations": true,
-        "theme": "Dark"
+        "theme": "Dark",
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
       }
     ],
     "security": {
@@ -27,11 +29,28 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "shortDescription": "A Taint-Tracked Sandbox Runtime & Desktop Dashboard",
+    "longDescription": "TaintBox is a sandboxed runtime and agent-computer interface with taint analysis, live policy guardrails, and telemetry dashboard.",
+    "copyright": "Copyright © 2026 Group 2 Nittany Street",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.15",
+      "signingIdentity": null,
+      "entitlements": null
+    },
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      },
+      "wix": {
+        "language": ["en-US"]
+      }
+    }
   }
 }

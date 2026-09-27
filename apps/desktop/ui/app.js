@@ -40,10 +40,9 @@ const state = {
     lastActivity: "Sep 9, 2026, 11:42 PM"
   },
   sessions: [
-    { id: "stat-380-qmd", title: "Running stat 380 QMD with minimal fixes", project: "Default Project" },
-    { id: "stat-380-pdf", title: "Solve Stat 380 PDF and create QMD", project: "Default Project" },
-    { id: "proj-4-desktop", title: "Solve project 4 in C:\\Users\\harsh\\Desktop\\454", project: "Default Project" },
-    { id: "pluely-install", title: "Installing pluely from Telegram Desktop", project: "Default Project" }
+    { id: "audit-sandbox", title: "Sandbox security audit & taint flow analysis", project: "Default Project" },
+    { id: "eval-bench", title: "ExploitBench defense evaluation suite", project: "Default Project" },
+    { id: "harness-agent", title: "Autonomous agent tool execution & walls", project: "Default Project" }
   ]
 };
 
@@ -613,3 +612,67 @@ if (originalSaveBtn) {
 
 // Call on init
 loadAdvancedSettings();
+
+// Platform Detection & macOS Native Enhancements
+const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0 || navigator.userAgent.toUpperCase().indexOf("MAC") >= 0;
+if (isMac) {
+  document.body.classList.add("is-macos");
+  document.querySelectorAll("[title]").forEach(el => {
+    el.title = el.title.replace(/Ctrl\+/gi, "⌘");
+  });
+}
+
+// Window Controls (Tauri or Browser)
+document.querySelectorAll(".window-ctrl").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const isClose = btn.classList.contains("close");
+    const title = btn.getAttribute("title") || "";
+    if (window.__TAURI__?.window) {
+      try {
+        const win = window.__TAURI__.window.getCurrentWindow ? window.__TAURI__.window.getCurrentWindow() : window.__TAURI__.window.appWindow;
+        if (isClose) {
+          await win.close();
+        } else if (title.includes("Minimize")) {
+          await win.minimize();
+        } else if (title.includes("Maximize")) {
+          await win.toggleMaximize();
+        }
+        return;
+      } catch (e) {
+        console.warn("Tauri window control error:", e);
+      }
+    }
+    if (isClose) {
+      if (confirm("Close TaintBox session?")) {
+        window.close();
+      }
+    }
+  });
+});
+
+// Global Keyboard Accelerators (Cross-Platform Cmd/Ctrl)
+document.addEventListener("keydown", (e) => {
+  const mod = isMac ? e.metaKey : e.ctrlKey;
+  if (mod && e.key.toLowerCase() === "t") {
+    e.preventDefault();
+    setView("welcome");
+  } else if (mod && e.key.toLowerCase() === "p") {
+    e.preventDefault();
+    setView(state.activeView === "sessions" ? "welcome" : "sessions");
+  } else if (mod && e.key.toLowerCase() === "m") {
+    e.preventDefault();
+    state.menuOpen = !state.menuOpen;
+    hamburgerMenu.style.display = state.menuOpen ? "block" : "none";
+  } else if (mod && e.key === ",") {
+    e.preventDefault();
+    settingsModal.style.display = "flex";
+    populateModelsSelect();
+  } else if (e.key === "Escape") {
+    if (settingsModal.style.display === "flex") {
+      settingsModal.style.display = "none";
+    } else if (state.menuOpen) {
+      state.menuOpen = false;
+      hamburgerMenu.style.display = "none";
+    }
+  }
+});

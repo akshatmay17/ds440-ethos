@@ -18,13 +18,13 @@ use ratatui::{
 use crate::config::providers::ProviderManager;
 use crate::metrics::MetricsCollector;
 
-pub const COLOR_BG: Color = Color::Rgb(13, 17, 23);
-pub const COLOR_BORDER: Color = Color::Rgb(48, 54, 61);
-pub const COLOR_CYAN: Color = Color::Rgb(88, 166, 255);
-pub const COLOR_GREEN: Color = Color::Rgb(63, 185, 80);
-pub const COLOR_AMBER: Color = Color::Rgb(240, 136, 62);
-pub const COLOR_RED: Color = Color::Rgb(248, 81, 73);
-pub const COLOR_DIM: Color = Color::Rgb(139, 148, 158);
+pub const COLOR_BG: Color = Color::Rgb(28, 28, 28);       // #1C1C1C
+pub const COLOR_BORDER: Color = Color::Rgb(40, 40, 40);   // #282828
+pub const COLOR_CYAN: Color = Color::Rgb(250, 178, 131);  // #FAB283 (OC-2 Peach brand)
+pub const COLOR_GREEN: Color = Color::Rgb(72, 187, 120);  // #48BB78
+pub const COLOR_AMBER: Color = Color::Rgb(246, 173, 85);  // #F6AD55
+pub const COLOR_RED: Color = Color::Rgb(245, 101, 101);   // #F56565
+pub const COLOR_DIM: Color = Color::Rgb(168, 168, 168);   // #A8A8A8
 
 pub struct TuiApp {
     pub selected_tab: usize,

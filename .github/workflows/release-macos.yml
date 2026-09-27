@@ -1,0 +1,152 @@
+name: macOS Release & Bundle (.DMG + .APP)
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release Tag (e.g. v0.1.0)"
+        required: false
+        default: "v0.1.0"
+        type: string
+      create_release:
+        description: "Publish to GitHub Releases"
+        required: false
+        default: true
+        type: boolean
+      draft:
+        description: "Create as Draft Release"
+        required: false
+        default: false
+        type: boolean
+      prerelease:
+        description: "Mark as Pre-release"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-macos:
+    name: Build macOS DMG & App (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            arch: arm64
+            target: aarch64-apple-darwin
+          - os: macos-13
+            arch: x64
+            target: x86_64-apple-darwin
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+          workspaces: |
+            .
+            apps/desktop/src-tauri
+
+      - name: Build Core TaintBox CLI & Daemon
+        run: |
+          cargo build --release --target ${{ matrix.target }} --bin tbox --bin taintbox
+
+      - name: Install Tauri CLI
+        run: |
+          cargo install tauri-cli --version "^2.0.0" --locked
+
+      - name: Build Desktop Application (.app and .dmg)
+        working-directory: apps/desktop
+        run: |
+          cargo tauri build --target ${{ matrix.target }}
+
+      - name: Stage macOS Release Artifacts & Generate Checksums
+        run: |
+          mkdir -p dist/macos
+
+          # 1. Standalone CLI & Daemon Binaries
+          cp "target/${{ matrix.target }}/release/tbox" "dist/macos/tbox-${{ matrix.arch }}"
+          cp "target/${{ matrix.target }}/release/taintbox" "dist/macos/taintbox-${{ matrix.arch }}"
+          chmod +x dist/macos/tbox-${{ matrix.arch }} dist/macos/taintbox-${{ matrix.arch }}
+
+          # 2. Collect Tauri Bundle Outputs (.dmg and .app)
+          BUNDLE_DIR="apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle"
+          if [ -d "$BUNDLE_DIR" ]; then
+              # Copy DMG installers
+              find "$BUNDLE_DIR/dmg" -name "*.dmg" -exec cp {} dist/macos/ \; 2>/dev/null || true
+              
+              # Create .app.tar.gz for raw application bundle
+              APP_PATH=$(find "$BUNDLE_DIR/macos" -name "*.app" -maxdepth 1 -type d | head -n 1)
+              if [ -n "$APP_PATH" ]; then
+                  echo "Packaging application bundle: $APP_PATH"
+                  tar -czf "dist/macos/TaintBox-mac-${{ matrix.arch }}.app.tar.gz" -C "$(dirname "$APP_PATH")" "$(basename "$APP_PATH")"
+              fi
+          fi
+
+          # 3. Create CLI Portable Tarball
+          tar -czf "dist/macos/tbox-mac-${{ matrix.arch }}-cli.tar.gz" -C dist/macos "tbox-${{ matrix.arch }}" "taintbox-${{ matrix.arch }}"
+
+          # 4. Generate SHA256 Checksums
+          cd dist/macos
+          for file in *; do
+              if [ -f "$file" ] && [ "$file" != "SHA256SUMS.txt" ]; then
+                  shasum -a 256 "$file" >> SHA256SUMS.txt
+              fi
+          done
+          cd ../..
+
+          echo "=== Staged macOS Files ==="
+          ls -la dist/macos
+
+      - name: Upload Artifacts to Workflow Run
+        uses: actions/upload-artifact@v4
+        with:
+          name: taintbox-macos-${{ matrix.arch }}-dist
+          path: dist/macos/*
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || inputs.create_release == true
+        with:
+          tag_name: ${{ inputs.release_tag || github.ref_name }}
+          name: "TaintBox ${{ inputs.release_tag || github.ref_name }} (macOS Release)"
+          draft: ${{ inputs.draft || false }}
+          prerelease: ${{ inputs.prerelease || false }}
+          files: |
+            dist/macos/*.dmg
+            dist/macos/*.tar.gz
+            dist/macos/SHA256SUMS.txt
+          body: |
+            # TaintBox macOS Release (${{ inputs.release_tag || github.ref_name }})
+
+            ### 🍏 macOS Package Downloads
+            - **Apple Silicon (M1/M2/M3/M4 - arm64)**: DMG installer & `.app.tar.gz` bundle
+            - **Intel (x86_64)**: DMG installer & `.app.tar.gz` bundle
+            - **CLI & Daemon**: Standalone `tbox` & `taintbox` binaries for terminal
+
+            ### 🔐 Verification
+            Verify SHA-256 checksums before opening:
+            ```bash
+            shasum -a 256 <filename>
+            ```
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

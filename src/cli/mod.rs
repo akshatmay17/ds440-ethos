@@ -106,7 +106,13 @@ pub fn open_browser(url: &str) {
             .args(["/c", "start", url])
             .spawn();
     }
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
+    {
+        let _ = std::process::Command::new("open")
+            .arg(url)
+            .spawn();
+    }
+    #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
     {
         let _ = std::process::Command::new("xdg-open")
             .arg(url)
