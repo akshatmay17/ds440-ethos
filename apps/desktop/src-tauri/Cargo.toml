@@ -1,7 +1,7 @@
 [package]
-name = "taintbox-desktop"
+name = "ethos-desktop"
 version = "0.1.0"
-description = "TaintBox Desktop Application (Tauri v2 Shell)"
+description = "Ethos Desktop Application (Tauri v2 Shell)"
 edition = "2021"
 
 [build-dependencies]

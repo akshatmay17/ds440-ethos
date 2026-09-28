@@ -178,7 +178,7 @@ async fn static_ui_handler(uri: axum::http::Uri) -> impl IntoResponse {
         }
     }
 
-    // 2. Embedded fallback (allows running TaintBox.exe from any directory)
+    // 2. Embedded fallback (allows running ethos.exe from any directory)
     match target {
         "index.html" => (
             StatusCode::OK,

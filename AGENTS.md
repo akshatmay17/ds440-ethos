@@ -125,7 +125,7 @@ All tools and runtime modifications must strictly adhere to these invariants:
 1. **Path Canonicalization & Symlink Escape Guard**:
    All filesystem paths pass through `resolve_path()` to ensure they remain inside the sandbox root. Relative traversal attempts (`../`) and directory symlink escapes return an immediate `BLOCKED_BY_POLICY` error.
 2. **Safe Destructive Rewind Marker**:
-   `restore_snapshot()` must verify the presence of the `.taintbox_sandbox` marker file before touching or deleting files in any directory.
+   `restore_snapshot()` must verify the presence of the `.ethos_sandbox` (or legacy `.taintbox_sandbox`) marker file before touching or deleting files in any directory.
 3. **Shell Wrapper Inspection**:
    Any invocation of shell interpreters (`bash`, `sh`, `cmd`, `powershell`) with `-c` or `-Command` arguments must be inspected for network egress (`curl`, `wget`) and file deletion (`rm`, `del`).
 4. **Untrusted Web & File Quarantine**:

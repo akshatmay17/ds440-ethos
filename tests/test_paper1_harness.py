@@ -2,7 +2,7 @@
 
 import tempfile
 import pytest
-from taintbox.eval.paper1_harness import (
+from ethos.eval.paper1_harness import (
     BenchmarkTask,
     CapabilityHarnessRunner,
     InterfaceCondition,

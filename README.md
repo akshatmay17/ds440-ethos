@@ -94,7 +94,7 @@ All engineering tasks belong strictly to **Harsh Rathi**.
 ### 4.1 Completed & Verified (Sprint 1 Production)
 - [x] **Ethos Primary Binary (`src/bin/ethos.rs`)**: Standalone binary with `ethos` command line interface, retaining `tbox` as fully functional alias.
 - [x] **Pure Rust ACI Harness (`src/aci/harness.rs`)**: 1-indexed `view_lines`, exact `edit_block`, pure-Rust `search_files`, `grep`, `fetch` with untrusted tagging, shell wrapper `-c` interceptor, and `fold_output` token compression.
-- [x] **Snapshot & Rewind (`src/runtime/base.rs`)**: SHA-256 state hashing, CoW directory snapshotting, and safe destructive rollback guarded by `.taintbox_sandbox` marker.
+- [x] **Snapshot & Rewind (`src/runtime/base.rs`)**: SHA-256 state hashing, CoW directory snapshotting, and safe destructive rollback guarded by `.ethos_sandbox` marker (with `.taintbox_sandbox` legacy compatibility).
 - [x] **gVisor Syscall Isolation Runtime (`src/runtime/gvisor.rs`)**: Application-kernel user-space sandbox detection on Linux and WSL2 (`runsc`) with seamless `LocalIsolatedRuntime` fallback.
 - [x] **Causal DAG State Tree (`src/aci/state_tree.rs`)**: Immutable branching history allowing Tree-of-Thought backtracking (`create_branch`, `switch_branch`, `commit`).
 - [x] **Taint Provenance Engine (`src/taint/`)**: Bitmask severity tracking (`Trusted`, `Internal`, `Untrusted`, `Hostile`), worst-severity propagation, sensitive path protection (`.env`, `id_rsa`), and network egress allowlisting.
@@ -177,14 +177,14 @@ To protect engineering velocity and ensure a publication-grade paper:
 │                     SANDBOX RUNTIME & PERSISTENCE                           │
 │   - Google gVisor (runsc) User-Space Kernel Syscall Interception (Linux/WSL)│
 │   - LocalIsolatedRuntime (Path canonicalization, Symlink traversal guards)  │
-│   - Snapshot CoW Store with .taintbox_sandbox marker safety verification    │
+│   - Snapshot CoW Store with .ethos_sandbox marker safety verification       │
 │   - PostgreSQL 16 & In-Process Session State Manager                        │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Invariants Every Agent & Developer Must Obey:
 1. **Path Canonicalization & Symlink Escape Guard**: All filesystem operations must resolve through `resolve_path()` and verify that the canonicalized path starts with the sandbox root directory. Traversal escapes (`../`) and symlink escapes return an immediate `BLOCKED_BY_POLICY`.
-2. **Safe Destructive Rewind Marker**: `restore_snapshot()` must verify the presence of the `.taintbox_sandbox` marker file before touching or deleting files.
+2. **Safe Destructive Rewind Marker**: `restore_snapshot()` must verify the presence of the `.ethos_sandbox` (or `.taintbox_sandbox`) marker file before touching or deleting files.
 3. **Shell Wrapper Mapping**: Any invocation of shell interpreters (`bash`, `sh`, `cmd`, `powershell`) must be mapped to `exec_privileged` with `-c` command argument inspection.
 4. **Untrusted Egress Quarantine**: Downloads via `fetch()` are permanently labeled `UntrustedWeb`. Tainted data cannot be passed into network egress commands (`curl`, `wget`) without explicit allowlisting.
 5. **Ouroboros Test Protection**: Any attempt to edit or delete test suites triggers `OuroborosWall` and is blocked immediately.

@@ -56,7 +56,7 @@ if [ -d "$BUNDLE_BASE" ]; then
     APP_PATH=$(find "$BUNDLE_BASE/macos" -name "*.app" -maxdepth 1 -type d | head -n 1)
     if [ -n "$APP_PATH" ]; then
         cp -R "$APP_PATH" "$DIST_DIR/"
-        tar -czf "$DIST_DIR/TaintBox-mac.app.tar.gz" -C "$(dirname "$APP_PATH")" "$(basename "$APP_PATH")"
+        tar -czf "$DIST_DIR/Ethos-mac.app.tar.gz" -C "$(dirname "$APP_PATH")" "$(basename "$APP_PATH")"
         echo "  -> Packaged $(basename "$APP_PATH")"
     fi
 fi

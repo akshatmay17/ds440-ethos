@@ -1,8 +1,8 @@
 """Unit tests for Paper 2 Defense Study Evaluator."""
 
 import pytest
-from taintbox.eval.injection_corpus import AttackFamily, AttackSample
-from taintbox.eval.paper2_defense import (
+from ethos.eval.injection_corpus import AttackFamily, AttackSample
+from ethos.eval.paper2_defense import (
     DefenseConfiguration,
     DefenseEvaluator,
     DefenseMetrics,
@@ -14,12 +14,12 @@ def test_defense_configurations_exist():
     assert len(configs) == 4
     assert DefenseConfiguration.BASELINE in configs
     assert DefenseConfiguration.HARDENED in configs
-    assert DefenseConfiguration.TAINTBOX in configs
+    assert DefenseConfiguration.ethos in configs
     assert DefenseConfiguration.FULL in configs
 
 
-def test_taintbox_blocks_attack_on_untrusted_input():
-    evaluator = DefenseEvaluator(config=DefenseConfiguration.TAINTBOX)
+def test_ethos_blocks_attack_on_untrusted_input():
+    evaluator = DefenseEvaluator(config=DefenseConfiguration.ethos)
 
     sample = AttackSample(
         id="TEST-001",
@@ -31,7 +31,7 @@ def test_taintbox_blocks_attack_on_untrusted_input():
     )
 
     result = evaluator.evaluate_attack_sample(sample)
-    # Under TaintBox, the attack must be blocked
+    # Under ethos, the attack must be blocked
     assert result.compromised is False
     assert result.blocked_by_policy is True
 
@@ -55,7 +55,7 @@ def test_baseline_permits_simulated_attack_execution():
 
 
 def test_benign_utility_not_blocked():
-    evaluator = DefenseEvaluator(config=DefenseConfiguration.TAINTBOX)
+    evaluator = DefenseEvaluator(config=DefenseConfiguration.ethos)
 
     benign_task = {
         "task_name": "Write notes",

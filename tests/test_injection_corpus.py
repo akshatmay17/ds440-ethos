@@ -1,7 +1,7 @@
 """Unit tests for the injection corpus and synthetic attack generators (Paper 2 evaluation)."""
 
 import pytest
-from taintbox.eval.injection_corpus import (
+from ethos.eval.injection_corpus import (
     AttackFamily,
     AttackSample,
     InjectionCorpus,

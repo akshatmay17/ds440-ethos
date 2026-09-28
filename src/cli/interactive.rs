@@ -31,7 +31,7 @@ impl InteractiveHarness {
     pub fn print_banner(&self) {
         let root = self.harness.root_dir().unwrap_or_else(|| PathBuf::from("."));
         println!("\n╔══════════════════════════════════════════════════════════════════════╗");
-        println!("║  ⚡ TAINTBOX HARNESS (tbox v0.1.0)                                   ║");
+        println!("║  ⚡ ETHOS HARNESS (ethos v0.1.0)                                     ║");
         println!("║  Autonomous Coding Agent Runtime with Taint-Tracked Boundary Defense ║");
         println!("╚══════════════════════════════════════════════════════════════════════╝");
         println!("  • Provider : {} ({})", self.config.provider, self.config.api_url);
@@ -47,7 +47,7 @@ impl InteractiveHarness {
         self.print_banner();
 
         loop {
-            print!("tbox > ");
+            print!("ethos > ");
             io::stdout().flush()?;
 
             let mut input = String::new();
@@ -64,7 +64,7 @@ impl InteractiveHarness {
                 let parts: Vec<&str> = input.split_whitespace().collect();
                 match parts[0] {
                     "/exit" | "/quit" | "/q" => {
-                        println!("Exiting TaintBox harness. Goodbye!");
+                        println!("Exiting Ethos harness. Goodbye!");
                         break;
                     }
                     "/help" => {
@@ -153,7 +153,7 @@ impl InteractiveHarness {
     }
 
     fn print_help(&self) {
-        println!("\nAvailable tbox commands:");
+        println!("\nAvailable ethos commands:");
         println!("  /help              Show this help reference");
         println!("  /init              Analyze repository, index files, check/create AGENTS.md, surface taint");
         println!("  /setup             Reconfigure LLM provider, API credentials, or model");
@@ -164,7 +164,7 @@ impl InteractiveHarness {
         println!("  /reset             Spin up a fresh, clean virtual sandbox");
         println!("  /rewind            Revert sandbox files to previous checkpoint");
         println!("  /clear             Clear terminal screen");
-        println!("  /exit, /quit       Exit tbox\n");
+        println!("  /exit, /quit       Exit ethos\n");
     }
 
     fn show_sandbox(&mut self) {

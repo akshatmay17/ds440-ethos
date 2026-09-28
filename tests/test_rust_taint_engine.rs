@@ -1,5 +1,5 @@
-use taintbox::models::{ProvenanceRecord, ProvenanceTag, TrustLevel};
-use taintbox::taint::TaintEngine;
+use ethos::models::{ProvenanceRecord, ProvenanceTag, TrustLevel};
+use ethos::taint::TaintEngine;
 
 #[test]
 fn test_record_and_retrieve_provenance() {

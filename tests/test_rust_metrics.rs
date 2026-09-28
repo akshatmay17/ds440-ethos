@@ -1,5 +1,5 @@
-use taintbox::metrics::MetricsCollector;
-use taintbox::models::AuditEvent;
+use ethos::metrics::MetricsCollector;
+use ethos::models::AuditEvent;
 
 #[test]
 fn test_metrics_collector_recording_and_summary() {

@@ -2,8 +2,8 @@
 
 import tempfile
 import pytest
-from taintbox.aci.harness import ACIHarness
-from taintbox.models import TrustLevel
+from ethos.aci.harness import ACIHarness
+from ethos.models import TrustLevel
 
 
 @pytest.fixture
@@ -13,12 +13,12 @@ def harness():
 
 
 def test_write_and_read(harness: ACIHarness):
-    write_res = harness.write("notes.txt", "TaintBox test execution")
+    write_res = harness.write("notes.txt", "ethos test execution")
     assert write_res.status == "SUCCESS"
 
     read_res = harness.read("notes.txt")
     assert read_res.status == "SUCCESS"
-    assert read_res.output == "TaintBox test execution"
+    assert read_res.output == "ethos test execution"
     assert read_res.provenance.trust_level == TrustLevel.INTERNAL
 
 

@@ -1,6 +1,6 @@
-﻿use std::collections::HashMap;
-use taintbox::aci::agent_loop::{AgentMessage, AgentStepAction, LlmDriver};
-use taintbox::aci::benchmark::{
+use std::collections::HashMap;
+use ethos::aci::agent_loop::{AgentMessage, AgentStepAction, LlmDriver};
+use ethos::aci::benchmark::{
     BenchmarkCategory, BenchmarkRunner, BenchmarkScenario,
 };
 

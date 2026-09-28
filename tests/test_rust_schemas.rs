@@ -1,4 +1,4 @@
-use taintbox::aci::schemas::get_all_tool_definitions;
+use ethos::aci::schemas::get_all_tool_definitions;
 
 #[test]
 fn test_export_openai_tool_definitions() {

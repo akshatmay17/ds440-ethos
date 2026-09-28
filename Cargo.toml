@@ -1,10 +1,11 @@
 [package]
-name = "taintbox"
+name = "ethos"
 version = "0.1.0"
 edition = "2021"
-description = "A Taint-Tracked Sandbox Runtime and Agent-Computer Interface for AI Agents"
+description = "Ethos: A Taint-Tracked Sandbox Runtime and Agent-Computer Interface for AI Agents"
 authors = ["Group 2 Nittany Street"]
 license = "Unlicense"
+default-run = "ethos"
 
 [[bin]]
 name = "ethos"

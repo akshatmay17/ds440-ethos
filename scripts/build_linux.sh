@@ -62,7 +62,7 @@ fi
 
 # 5. Package Portable Tarball
 cd "$DIST_DIR"
-tar -czf "tbox-linux-x64-cli.tar.gz" tbox taintbox
+tar -czf "ethos-linux-x64-cli.tar.gz" ethos tbox taintbox
 
 # 6. Generate Checksums
 rm -f SHA256SUMS.txt

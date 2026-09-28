@@ -1,4 +1,4 @@
-# TaintBox Runtime Environment Configuration
+# Ethos Runtime Environment Configuration
 version: "1.0"
 runtime:
   default_backend: "isolated_process"  # options: isolated_process, docker, gvisor
@@ -7,12 +7,12 @@ runtime:
   cpu_quota: 2.0
 
 storage:
-  snapshot_dir: ".taintbox/snapshots"
+  snapshot_dir: ".ethos/snapshots"
   max_snapshots_per_session: 50
   prune_strategy: "lru"
 
 telemetry:
   sink: "jsonl"
-  log_dir: ".taintbox/telemetry"
+  log_dir: ".ethos/telemetry"
   log_level: "INFO"
   record_full_traces: true

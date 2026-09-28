@@ -1,4 +1,4 @@
-# Default TaintBox Security Policy
+# Default Ethos Security Policy
 version: "1.0"
 policy_name: "default_strict_boundary"
 description: "Deny untrusted data propagation into privileged actions without explicit authorization"

@@ -1,4 +1,4 @@
-use taintbox::config::providers::ProviderManager;
+use ethos::config::providers::ProviderManager;
 
 #[test]
 fn test_provider_manager_defaults_and_updates() {
@@ -46,7 +46,7 @@ fn test_provider_manager_defaults_and_updates() {
 
 #[test]
 fn test_models_dev_catalog_lookup() {
-    use taintbox::config::models_dev::ModelCatalog;
+    use ethos::config::models_dev::ModelCatalog;
 
     let ollama_models = ModelCatalog::get_models_for_provider("ollama");
     assert!(!ollama_models.is_empty());

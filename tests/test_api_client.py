@@ -3,20 +3,20 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from taintbox.api.client import TaintBoxClient
-from taintbox.api.server import app, session_manager
+from ethos.api.client import ethosClient
+from ethos.api.server import app, session_manager
 
 
 @pytest.fixture
 def client_sdk():
     session_manager.clear_all()
     with TestClient(app) as test_c:
-        sdk = TaintBoxClient(client=test_c)
+        sdk = ethosClient(client=test_c)
         yield sdk
     session_manager.clear_all()
 
 
-def test_sdk_full_workflow(client_sdk: TaintBoxClient):
+def test_sdk_full_workflow(client_sdk: ethosClient):
     # 1. Create sandbox
     sid = client_sdk.create_sandbox("sdk-workflow")
     assert sid.startswith("sbx_")

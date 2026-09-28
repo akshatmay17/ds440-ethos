@@ -1,4 +1,4 @@
--- TaintBox PostgreSQL Schema Initialization
+-- Ethos PostgreSQL Schema Initialization
 
 CREATE TABLE IF NOT EXISTS sandboxes (
     id VARCHAR(64) PRIMARY KEY,

@@ -1,9 +1,9 @@
-"""TDD Test Suite for TaintBox Production REST API Gateway (Phase 1)."""
+"""TDD Test Suite for ethos Production REST API Gateway (Phase 1)."""
 
 import pytest
 from fastapi.testclient import TestClient
 
-from taintbox.api.server import app, session_manager
+from ethos.api.server import app, session_manager
 
 
 @pytest.fixture
@@ -54,7 +54,7 @@ def test_api_tool_write_and_read(client: TestClient):
     # Write file
     write_res = client.post(
         f"/v1/sandboxes/{sid}/tools/write",
-        json={"path": "hello.txt", "content": "Hello from TaintBox API"},
+        json={"path": "hello.txt", "content": "Hello from ethos API"},
     )
     assert write_res.status_code == 200
     assert write_res.json()["status"] == "SUCCESS"
@@ -66,7 +66,7 @@ def test_api_tool_write_and_read(client: TestClient):
     )
     assert read_res.status_code == 200
     assert read_res.json()["status"] == "SUCCESS"
-    assert read_res.json()["output"] == "Hello from TaintBox API"
+    assert read_res.json()["output"] == "Hello from ethos API"
 
 
 def test_api_fetch_and_policy_block(client: TestClient):

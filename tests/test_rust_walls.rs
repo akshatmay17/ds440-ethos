@@ -1,4 +1,4 @@
-﻿use taintbox::walls::{
+use ethos::walls::{
     estop::EmergencyStop,
     halluscan::HalluScan,
     ouroboros::OuroborosWall,

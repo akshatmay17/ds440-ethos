@@ -1,4 +1,4 @@
-use taintbox::aci::ACIHarness;
+use ethos::aci::ACIHarness;
 
 #[test]
 fn test_edit_block_success() {

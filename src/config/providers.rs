@@ -77,7 +77,7 @@ impl Default for PostgresConfig {
     fn default() -> Self {
         Self {
             url: std::env::var("DATABASE_URL")
-                .unwrap_or_else(|_| "postgres://postgres:postgres@localhost:5432/taintbox".to_string()),
+                .unwrap_or_else(|_| "postgres://postgres:postgres@localhost:5432/ethos".to_string()),
             max_connections: 5,
             status: "configured".to_string(),
         }

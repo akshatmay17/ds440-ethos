@@ -1,7 +1,7 @@
-use taintbox::aci::ACIHarness;
-use taintbox::models::{ProvenanceRecord, ProvenanceTag, TrustLevel};
-use taintbox::taint::policy::{PolicyProfile, TaintPolicyConfig};
-use taintbox::taint::TaintEngine;
+use ethos::aci::ACIHarness;
+use ethos::models::{ProvenanceRecord, ProvenanceTag, TrustLevel};
+use ethos::taint::policy::{PolicyProfile, TaintPolicyConfig};
+use ethos::taint::TaintEngine;
 
 #[test]
 fn test_policy_profile_strict_blocks_all_untrusted_writes() {

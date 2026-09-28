@@ -25,7 +25,7 @@ impl LocalIsolatedRuntime {
     pub fn new<P: AsRef<Path>>(root_dir: P) -> anyhow::Result<Self> {
         let root = root_dir.as_ref().to_path_buf();
         fs::create_dir_all(&root)?;
-        let snapshots = root.join(".taintbox_snapshots");
+        let snapshots = root.join(".ethos_snapshots");
         fs::create_dir_all(&snapshots)?;
         Ok(Self {
             root_path: root,
@@ -179,15 +179,16 @@ impl SandboxRuntime for LocalIsolatedRuntime {
         }
 
         // Destructive rewind safety guard
-        let marker = self.root_path.join(".taintbox_sandbox");
-        if !marker.exists() {
-            return Err(anyhow::anyhow!("Destructive rewind refused: root path is not a sandbox created by ACIHarness (missing .taintbox_sandbox)"));
+        let marker = self.root_path.join(".ethos_sandbox");
+        let legacy_marker = self.root_path.join(".taintbox_sandbox");
+        if !marker.exists() && !legacy_marker.exists() {
+            return Err(anyhow::anyhow!("Destructive rewind refused: root path is not a sandbox created by ACIHarness (missing .ethos_sandbox)"));
         }
 
-        // Clean current files (except snapshots directory and marker)
+        // Clean current files (except snapshots directory and markers)
         for entry in fs::read_dir(&self.root_path)?.flatten() {
             let path = entry.path();
-            if path == self.snapshots_dir || path == marker {
+            if path == self.snapshots_dir || path == marker || path == legacy_marker || path == self.root_path.join(".taintbox_snapshots") {
                 continue;
             }
             if path.is_dir() {

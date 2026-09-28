@@ -4,8 +4,8 @@ use axum::{
 };
 use tower::ServiceExt;
 
-use taintbox::api::routes::{create_router, AppState};
-use taintbox::store::SessionManager;
+use ethos::api::routes::{create_router, AppState};
+use ethos::store::SessionManager;
 
 #[tokio::test]
 async fn test_lab_scenarios_listing() {

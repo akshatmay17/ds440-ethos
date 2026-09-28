@@ -28,7 +28,8 @@ impl ACIHarness {
         let runtime = LocalIsolatedRuntime::new(&temp_dir)?;
         
         // Marker file for restore_snapshot safety
-        std::fs::write(temp_dir.join(".taintbox_sandbox"), "test sandbox")?;
+        std::fs::write(temp_dir.join(".ethos_sandbox"), "ethos sandbox")?;
+        let _ = std::fs::write(temp_dir.join(".taintbox_sandbox"), "ethos sandbox");
 
         Ok(Self {
             runtime: Box::new(runtime),
@@ -519,7 +520,7 @@ impl ACIHarness {
             match fetch_res {
                 Ok(text) => text,
                 Err(e) => {
-                    format!("<!-- [TaintBox Web Fetch] Offline simulated content for {} ({}) -->\nUntrusted web payload for evaluation.", url, e)
+                    format!("<!-- [Ethos Web Fetch] Offline simulated content for {} ({}) -->\nUntrusted web payload for evaluation.", url, e)
                 }
             }
         };
@@ -778,7 +779,7 @@ impl ACIHarness {
                 "Pre-existing [Verified Clean]".to_string()
             }
         } else {
-            let template = "# AGENTS.md - TaintBox Autonomous Agent Workspace\n\n\
+            let template = "# AGENTS.md - Ethos Autonomous Agent Workspace\n\n\
                 ## Core Rules & Guardrails\n\
                 1. Always inspect files and verify dependencies before modifications.\n\
                 2. Untrusted external files and web fetches are quarantined in the Taint Ledger.\n\

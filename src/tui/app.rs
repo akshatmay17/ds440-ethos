@@ -114,7 +114,7 @@ impl TuiApp {
 
         // 1. Logo / Title
         let logo = Paragraph::new(Line::from(vec![
-            Span::styled("⚡ TAINTBOX ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
+            Span::styled("⚡ ETHOS ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
             Span::styled("v0.1.0", Style::default().fg(COLOR_DIM)),
         ]))
         .block(
@@ -290,7 +290,7 @@ impl TuiApp {
                 Cell::from("---"),
                 Cell::from("SYSTEM_READY"),
                 Cell::from("engine"),
-                Cell::from("TaintBox daemon online. Waiting for agent activity or harness executions..."),
+                Cell::from("Ethos daemon online. Waiting for agent activity or harness executions..."),
             ])]
         } else {
             events
@@ -560,7 +560,7 @@ impl TuiApp {
             Line::from(Span::styled("PAPER 1: ACI CAPABILITY CURVE", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD))),
             Line::from(format!("Task Solve Rate: {:.1}%", summary.benchmark_solve_rate * 100.0)),
             Line::from("Baseline (Vanilla Prompt): 38.2%"),
-            Line::from("TaintBox Harness Enhanced: 82.5% (+44.3% lift)"),
+            Line::from("Ethos Harness Enhanced: 82.5% (+44.3% lift)"),
         ])
         .block(
             Block::default()

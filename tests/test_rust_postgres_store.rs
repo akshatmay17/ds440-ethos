@@ -1,4 +1,4 @@
-use taintbox::models::{AuditEvent, SnapshotMetadata};
+use ethos::models::{AuditEvent, SnapshotMetadata};
 
 #[test]
 fn test_postgres_schema_compiles_and_parses() {

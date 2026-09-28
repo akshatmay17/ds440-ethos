@@ -1,4 +1,4 @@
-/* OpenCode OC-2 Canonical Design System for TaintBox */
+/* OpenCode OC-2 Canonical Design System for Ethos */
 :root {
   --bg-base: #1C1C1C;
   --bg-weak: #232323;
@@ -221,7 +221,7 @@ body.is-macos .titlebar-left {
   height: calc(100vh - 38px);
 }
 
-/* Big Block-Font Watermark: tbox */
+/* Big Block-Font Watermark: Ethos */
 .watermark-container {
   position: absolute;
   top: 36%;

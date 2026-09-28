@@ -117,7 +117,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') || inputs.create_release == true
         with:
           tag_name: ${{ inputs.release_tag || github.ref_name }}
-          name: "TaintBox ${{ inputs.release_tag || github.ref_name }} (Windows Release)"
+          name: "Ethos ${{ inputs.release_tag || github.ref_name }} (Windows Release)"
           draft: ${{ inputs.draft || false }}
           prerelease: ${{ inputs.prerelease || false }}
           files: |
@@ -126,12 +126,12 @@ jobs:
             dist/windows/*.zip
             dist/windows/SHA256SUMS.txt
           body: |
-            # TaintBox Windows Release (${{ inputs.release_tag || github.ref_name }})
+            # Ethos Windows Release (${{ inputs.release_tag || github.ref_name }})
 
             ### 📦 Windows Package Downloads
             - **WiX MSI Installer**: Enterprise-grade Windows Installer package (`.msi`)
             - **NSIS Setup Executable**: Full setup wizard with desktop & start menu shortcuts (`-setup.exe`)
-            - **Portable CLI & Daemon**: Standalone `tbox.exe` & `taintbox.exe` command-line runtime (`.zip`)
+            - **Portable CLI & Daemon**: Standalone `ethos.exe`, `tbox.exe` & `taintbox.exe` command-line runtime (`.zip`)
 
             ### 🔐 Integrity & Verification
             Verify the SHA-256 checksums before installing:

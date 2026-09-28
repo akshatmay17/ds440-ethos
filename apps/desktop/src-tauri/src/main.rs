@@ -1,11 +1,10 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::path::{Path, PathBuf};
 use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::Manager;
 
 #[derive(Default)]
 struct AppState {
@@ -149,12 +148,16 @@ fn parse_wsl_list_output(raw_bytes: &[u8]) -> Vec<WslDistroInfo> {
 
 fn try_spawn_sidecar() -> Option<Child> {
     let sidecar_candidates = [
+        "ethos",
         "tbox",
         "taintbox",
+        "./ethos",
         "./tbox",
         "./taintbox",
+        "target/release/ethos",
         "target/release/tbox",
         "target/release/taintbox",
+        "target/debug/ethos",
         "target/debug/tbox",
         "target/debug/taintbox",
     ];
@@ -200,13 +203,15 @@ fn main() {
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::Destroyed = event {
                 let state = window.state::<AppState>();
+                let mut child_to_kill = None;
                 if let Ok(mut lock) = state.sidecar_process.lock() {
-                    if let Some(mut child) = lock.take() {
-                        let _ = child.kill();
-                    }
+                    child_to_kill = lock.take();
+                }
+                if let Some(mut child) = child_to_kill {
+                    let _ = child.kill();
                 }
             }
         })
         .run(tauri::generate_context!())
-        .expect("error while running TaintBox desktop application");
+        .expect("error while running Ethos desktop application");
 }

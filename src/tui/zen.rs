@@ -361,7 +361,7 @@ impl ZenApp {
             .as_ref()
             .and_then(|h| h.root_dir())
             .map(|p| p.to_string_lossy().to_string())
-            .unwrap_or_else(|| "~/tbox/sandbox".to_string());
+            .unwrap_or_else(|| "~/ethos/sandbox".to_string());
 
         let baseline_snap = if let Some(h) = &mut harness {
             h.snapshot("baseline_clean").ok().map(|m| m.snapshot_id)
@@ -394,7 +394,7 @@ impl ZenApp {
             ],
             todos: Vec::new(),
             workspace_path: ws_path,
-            version_tag: "tbox 0.1.0".to_string(),
+            version_tag: "ethos 0.1.0".to_string(),
             agent_mode: "Build".to_string(),
             model_name: model,
             input_buffer: String::new(),
@@ -472,7 +472,7 @@ impl ZenApp {
                 },
                 PaletteCommand {
                     name: "/exit".to_string(),
-                    desc: "Safely shutdown TaintBox".to_string(),
+                    desc: "Safely shutdown Ethos".to_string(),
                 },
             ],
             setup_open: false,
@@ -502,7 +502,7 @@ impl ZenApp {
     pub fn initialize_welcome_banner(&mut self) {
         self.feed.push(FeedItem::AgentMessage {
             text: format!(
-                "⚡ TaintBox Zen Harness v0.1.0 initialized | Sandbox: {}",
+                "⚡ Ethos Zen Harness v0.1.0 initialized | Sandbox: {}",
                 self.workspace_path
             ),
         });
@@ -1021,7 +1021,7 @@ impl ZenApp {
             self.open_setup_modal();
         } else if cmd == "/help" {
             self.feed.push(FeedItem::AgentMessage {
-                text: "✨ TaintBox Command Reference:\n  /connect - Connect any models.dev provider (Ollama, OpenAI, Gemini, Anthropic, Groq, etc.)\n  /setup   - Interactive provider, endpoint, API key, model & policy wizard\n  /models  - View or switch active models (/models --refresh to sync models.dev)\n  /init    - Index workspace and check/create AGENTS.md\n  /walls   - Inspect containment wall status (PromptInject, E-Stop, HalluScan)\n  /taint   - View active bitmask taint tracking ledger\n  /diff    - Inspect modified sandbox files\n  /attack  - Stage an adversarial injection scenario\n  /rewind  - Revert sandbox filesystem to clean baseline snapshot\n  /clear   - Clear terminal feed\n  /exit    - Safely shutdown TaintBox\n  ctrl+p   - Open Command Palette\n  tab      - Cycle agent mode (Build / Plan / Review / Audit)".to_string(),
+                text: "✨ Ethos Command Reference:\n  /connect - Connect any models.dev provider (Ollama, OpenAI, Gemini, Anthropic, Groq, etc.)\n  /setup   - Interactive provider, endpoint, API key, model & policy wizard\n  /models  - View or switch active models (/models --refresh to sync models.dev)\n  /init    - Index workspace and check/create AGENTS.md\n  /walls   - Inspect containment wall status (PromptInject, E-Stop, HalluScan)\n  /taint   - View active bitmask taint tracking ledger\n  /diff    - Inspect modified sandbox files\n  /attack  - Stage an adversarial injection scenario\n  /rewind  - Revert sandbox filesystem to clean baseline snapshot\n  /clear   - Clear terminal feed\n  /exit    - Safely shutdown Ethos\n  ctrl+p   - Open Command Palette\n  tab      - Cycle agent mode (Build / Plan / Review / Audit)".to_string(),
             });
         } else if cmd == "/clear" {
             self.feed.clear();
@@ -1103,7 +1103,7 @@ impl ZenApp {
     }
 
     pub fn build_turn_messages(&self, prompt: &str) -> Vec<serde_json::Value> {
-        let system_msg = "You are an autonomous AI software engineer in an isolated TaintBox sandbox runtime.\n\
+        let system_msg = "You are an autonomous AI software engineer in an isolated Ethos sandbox runtime.\n\
             Available tools: read, write, edit_block, view_lines, search_files, grep, exec, fetch, rewind, observe.\n\
             Format tool calls using <tool_call>{\"name\": \"tool_name\", \"arguments\": {...}}</tool_call>.\n\
             Respond concisely and call tools to complete the task.";
@@ -1253,7 +1253,7 @@ impl ZenApp {
     pub fn execute_real_agent_turn(&mut self, prompt: &str) {
         self.is_running = true;
 
-        let system_msg = "You are an autonomous AI software engineer in an isolated TaintBox sandbox runtime.\n\
+        let system_msg = "You are an autonomous AI software engineer in an isolated Ethos sandbox runtime.\n\
             Available tools: read, write, edit_block, view_lines, search_files, grep, exec, fetch, rewind, observe.\n\
             Format tool calls using <tool_call>{\"name\": \"tool_name\", \"arguments\": {...}}</tool_call>.\n\
             Respond concisely and call tools to complete the task.";
@@ -1515,7 +1515,7 @@ impl ZenApp {
                 output: format!("Total {} artifacts cataloged in virtual sandbox.", files),
             });
         } else if lower.contains("read") || lower.contains("parse") || lower.contains("verify") || lower.contains("invoice") {
-            let target_file = if let Some(t) = harness.taint_engine.list_tainted_resources().into_iter().find(|p| !p.starts_with(".taintbox_snapshots")) {
+            let target_file = if let Some(t) = harness.taint_engine.list_tainted_resources().into_iter().find(|p| !p.starts_with(".ethos_snapshots") && !p.starts_with(".taintbox_snapshots")) {
                 t
             } else {
                 "invoice_reconciliation_2026_Q3.txt".to_string()
@@ -1799,7 +1799,7 @@ impl ZenApp {
         frame.render_widget(Clear, modal_rect);
 
         let modal_block = Block::default()
-            .title(Span::styled(" TaintBox Setup Wizard (/setup) ", Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD)))
+            .title(Span::styled(" Ethos Setup Wizard (/setup) ", Style::default().fg(COLOR_PEACH).add_modifier(Modifier::BOLD)))
             .borders(Borders::ALL)
             .border_style(Style::default().fg(COLOR_PEACH))
             .style(Style::default().bg(COLOR_CARD_BG));

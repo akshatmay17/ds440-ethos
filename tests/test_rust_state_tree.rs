@@ -1,4 +1,4 @@
-use taintbox::aci::state_tree::StateTree;
+use ethos::aci::state_tree::StateTree;
 
 #[test]
 fn test_state_tree_initialization() {

@@ -1,5 +1,5 @@
-use taintbox::aci::ACIHarness;
-use taintbox::models::TrustLevel;
+use ethos::aci::ACIHarness;
+use ethos::models::TrustLevel;
 
 #[test]
 fn test_write_and_read() {

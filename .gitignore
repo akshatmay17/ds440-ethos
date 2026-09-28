@@ -412,11 +412,15 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Environment and local TaintBox state
+# Environment and local Ethos state
 .env
 .env.*
 !.env.example
+.ethos/
+.ethos_snapshots/
 .taintbox/
+.taintbox_snapshots/
 target/
+apps/desktop/src-tauri/gen/
 *.exe
 *.pdb

@@ -128,7 +128,7 @@ impl AgentLoop {
         driver: &dyn LlmDriver,
         task: &str,
     ) -> anyhow::Result<AgentRunResult> {
-        let system_prompt = "You are an autonomous AI software & security agent in an isolated TaintBox sandbox runtime.\n\
+        let system_prompt = "You are an autonomous AI software & security agent in an isolated Ethos sandbox runtime.\n\
             Available tools: read, write, view_lines, edit_block, search_files, grep, fetch, exec, snapshot, rewind, observe.\n\
             When calling a tool, output a <tool_call>{\"name\": \"...\", \"arguments\": {...}}</tool_call> block.\n\
             When finished, output your final conclusion.".to_string();

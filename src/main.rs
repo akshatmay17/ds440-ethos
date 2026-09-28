@@ -9,5 +9,5 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    taintbox::cli::run_cli().await
+    ethos::cli::run_cli().await
 }

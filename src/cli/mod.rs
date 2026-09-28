@@ -138,7 +138,7 @@ async fn run_app(port: u16) -> anyhow::Result<()> {
     let browser_url = format!("http://localhost:{}", port);
 
     println!("============================================================");
-    println!("  TAINTBOX v0.1.0 - Cyber Dark Sandbox & ACI Harness");
+    println!("  ETHOS v0.1.0 - Cyber Dark Sandbox & ACI Harness");
     println!("  Listening on: http://{}", addr);
     println!("  Opening browser dashboard: {}", browser_url);
     println!("  Press Ctrl+C to stop the harness server.");

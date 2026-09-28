@@ -128,7 +128,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag_name.outputs.tag }}
-          name: "Release ${{ steps.tag_name.outputs.tag }} (Linux)"
+          name: "Ethos ${{ steps.tag_name.outputs.tag }} (Linux Release)"
           draft: ${{ github.event.inputs.draft == 'true' }}
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}
           files: |

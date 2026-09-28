@@ -1,8 +1,8 @@
 """Unit tests for the TaintEngine."""
 
 import pytest
-from taintbox.models import ProvenanceRecord, ProvenanceTag, TrustLevel
-from taintbox.taint.engine import TaintEngine
+from ethos.models import ProvenanceRecord, ProvenanceTag, TrustLevel
+from ethos.taint.engine import TaintEngine
 
 
 def test_record_and_retrieve_provenance():

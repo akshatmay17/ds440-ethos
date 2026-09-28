@@ -1,19 +1,19 @@
-# TaintBox Harness Stress Test: AI Attack Data Sources & Benchmark Specification
+# Ethos Harness Stress Test: AI Attack Data Sources & Benchmark Specification
 
 > **DS 440 Capstone — Group 2 (Nittany Street)**  
 > **Compiled**: September 9, 2026  
-> **Target Runtime**: TaintBox (Pure-Rust Sandbox & ACI Harness)  
-> **Evaluation Engine**: `taintbox eval` / `POST /v1/lab/execute`  
+> **Target Runtime**: Ethos (Pure-Rust Sandbox & ACI Harness)  
+> **Evaluation Engine**: `ethos eval` / `POST /v1/lab/execute`  
 
 ---
 
 ## 1. Executive Summary & Attack Class Taxonomy
 
-TaintBox is evaluated against 7 distinct adversarial attack classes spanning direct, indirect, multi-turn, evasion, tool/MCP poisoning, and agent hijacking vectors. Each attack family is mapped to **MITRE ATLAS (Adversarial Threat Landscape for AI Systems)** and defended by TaintBox's layered security architecture:
+Ethos is evaluated against 7 distinct adversarial attack classes spanning direct, indirect, multi-turn, evasion, tool/MCP poisoning, and agent hijacking vectors. Each attack family is mapped to **MITRE ATLAS (Adversarial Threat Landscape for AI Systems)** and defended by Ethos's layered security architecture:
 
 ```
 +-----------------------------------------------------------------------------------+
-|                            TAINTBOX DEFENSE PERIMETER                             |
+|                              ETHOS DEFENSE PERIMETER                              |
 +-----------------------------------------------------------------------------------+
 |  1. PromptInjectScanner: Heuristic & regex scanner for injection patterns        |
 |  2. Taint Ledger: Bitmask provenance tracking across all tool outputs & files     |
@@ -28,7 +28,7 @@ TaintBox is evaluated against 7 distinct adversarial attack classes spanning dir
 
 ## 2. Attack Corpus Catalog & Source Registry
 
-| Attack Class | Corpus / Benchmark | Source & Coordinates | License | Verification Status | Target TaintBox Wall | MITRE ATLAS Technique |
+| Attack Class | Corpus / Benchmark | Source & Coordinates | License | Verification Status | Target Ethos Wall | MITRE ATLAS Technique |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **1. Indirect Prompt Injection** | **AgentDojo** | [github.com/eth-sri/agentdojo](https://github.com/eth-sri/agentdojo) | Apache-2.0 | `[V]` Live Repo | Boundary Policy + Taint Ledger | `AML.T0051` LLM Prompt Injection |
 | | **InjecAgent** | [github.com/uiuc-kang-lab/InjecAgent](https://github.com/uiuc-kang-lab/InjecAgent) | Academic | `[V]` 1,054 test cases, 62K samples | Boundary Policy + Egress Gate | `AML.T0051`, `AML.T0053` Exfiltration |
@@ -59,7 +59,7 @@ TaintBox is evaluated against 7 distinct adversarial attack classes spanning dir
 ### Round 1: Baseline Compromise Rate
 - **Target**: `deepset/prompt-injections` + `hackaprompt` + `mosscap`
 - **Execution**: Run agent with boundary defense disabled (`--policy-profile AuditOnly`) vs enabled (`--policy-profile Strict`).
-- **Metric**: Compromise Rate reduction ($CR_{unprotected} \rightarrow CR_{taintbox}$).
+- **Metric**: Compromise Rate reduction ($CR_{unprotected} \rightarrow CR_{ethos}$).
 
 ### Round 2: Indirect Injection & M365 Exfiltration Vector
 - **Target**: `AgentDojo` + `InjecAgent` email & web-fetch vectors.
@@ -68,7 +68,7 @@ TaintBox is evaluated against 7 distinct adversarial attack classes spanning dir
 
 ### Round 3: Evasion & Obfuscated Payloads
 - **Target**: `Mindgard` base64/homoglyph samples + `HarmBench` delimiter injections.
-- **Execution**: Payloads bypass token-level scanners, but **TaintBox's runtime provenance tracking** flags the data stream as `TrustLevel::Untrusted` regardless of payload string formatting.
+- **Execution**: Payloads bypass token-level scanners, but **Ethos's runtime provenance tracking** flags the data stream as `TrustLevel::Untrusted` regardless of payload string formatting.
 - **Metric**: Zero bypasses via taint tracking even if lexical regex scanner score degrades.
 
 ### Round 4: Tool & MCP Poisoning

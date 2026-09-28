@@ -281,7 +281,15 @@ impl ModelCatalog {
         let home = std::env::var("USERPROFILE")
             .or_else(|_| std::env::var("HOME"))
             .unwrap_or_else(|_| ".".to_string());
-        PathBuf::from(home).join(".taintbox").join("models_dev_cache.json")
+        let ethos_path = PathBuf::from(&home).join(".ethos").join("models_dev_cache.json");
+        if ethos_path.exists() {
+            return ethos_path;
+        }
+        let legacy_path = PathBuf::from(&home).join(".taintbox").join("models_dev_cache.json");
+        if legacy_path.exists() {
+            return legacy_path;
+        }
+        ethos_path
     }
 
     fn init_catalog() -> RwLock<ModelCatalogData> {
@@ -432,7 +440,7 @@ impl ModelCatalog {
 
         let resp = client
             .get(MODELS_DEV_URL)
-            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TaintBox/0.1.0")
+            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Ethos/0.1.0")
             .send()
             .await?;
 

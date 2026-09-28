@@ -1,7 +1,7 @@
-use taintbox::aci::agent_loop::{
+use ethos::aci::agent_loop::{
     parse_tool_call, AgentLoop, AgentMessage, AgentStepAction, AgentStopReason, LlmDriver,
 };
-use taintbox::aci::ACIHarness;
+use ethos::aci::ACIHarness;
 
 struct ScriptedDriver {
     actions: std::sync::Mutex<Vec<AgentStepAction>>,

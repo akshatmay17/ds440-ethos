@@ -1,4 +1,4 @@
-//! Core data schemas and domain types for TaintBox.
+//! Core data schemas and domain types for Ethos.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

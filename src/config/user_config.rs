@@ -31,7 +31,15 @@ impl UserConfig {
         let home = std::env::var("USERPROFILE")
             .or_else(|_| std::env::var("HOME"))
             .unwrap_or_else(|_| ".".to_string());
-        PathBuf::from(home).join(".taintbox").join("config.json")
+        let ethos_path = PathBuf::from(&home).join(".ethos").join("config.json");
+        if ethos_path.exists() {
+            return ethos_path;
+        }
+        let legacy_path = PathBuf::from(&home).join(".taintbox").join("config.json");
+        if legacy_path.exists() {
+            return legacy_path;
+        }
+        ethos_path
     }
 
     pub fn load() -> Option<Self> {
@@ -121,10 +129,10 @@ impl UserConfig {
     }
 }
 
-/// Interactive onboarding and configuration wizard for tbox
+/// Interactive onboarding and configuration wizard for ethos
 pub fn run_setup_wizard() -> anyhow::Result<UserConfig> {
     println!("\n╔══════════════════════════════════════════════════════════════════════╗");
-    println!("║                 TAINTBOX HARNESS: AGENT SETUP WIZARD                 ║");
+    println!("║                   ETHOS HARNESS: AGENT SETUP WIZARD                  ║");
     println!("║       Configure LLM provider, API credentials, and boundary policy   ║");
     println!("╚══════════════════════════════════════════════════════════════════════╝\n");
 

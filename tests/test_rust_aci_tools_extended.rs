@@ -1,4 +1,4 @@
-use taintbox::aci::ACIHarness;
+use ethos::aci::ACIHarness;
 
 #[test]
 fn test_view_lines_formats_with_line_numbers() {

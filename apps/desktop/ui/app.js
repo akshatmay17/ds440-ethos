@@ -1,5 +1,8 @@
-// tbox 1:1 Desktop Web Application Controller
+// Ethos 1:1 Desktop Web Application Controller
 // Drives exact OpenCode UI, models.dev live import, and reactive context inspection
+
+const getPref = (key, fallback) => localStorage.getItem("ethos_" + key) || localStorage.getItem("tbox_" + key) || fallback;
+const setPref = (key, val) => { localStorage.setItem("ethos_" + key, val); };
 
 // Built-in models.dev catalog fallback
 const DEFAULT_MODELS = [
@@ -17,10 +20,10 @@ const state = {
   activeView: "welcome", // 'welcome', 'sessions', 'conversation'
   menuOpen: false,
   inspectorOpen: true,
-  provider: localStorage.getItem("tbox_provider") || "deepseek",
-  apiUrl: localStorage.getItem("tbox_api_url") || "https://api.deepseek.com/v1",
-  apiKey: localStorage.getItem("tbox_api_key") || "",
-  model: localStorage.getItem("tbox_model") || "DeepSeek V4 Pro",
+  provider: getPref("provider", "deepseek"),
+  apiUrl: getPref("api_url", "https://api.deepseek.com/v1"),
+  apiKey: getPref("api_key", ""),
+  model: getPref("model", "DeepSeek V4 Pro"),
   contextLimit: 1000000,
   modelsCatalog: [...DEFAULT_MODELS],
   activeSession: {
@@ -210,7 +213,7 @@ function handleSendPrompt(inputEl) {
         newMsg,
         {
           role: "assistant",
-          content: `I'll help you with "${text}". Running inside isolated TaintBox sandbox.`,
+          content: `I'll help you with "${text}". Running inside isolated Ethos sandbox.`,
           time: now
         }
       ],
@@ -385,7 +388,7 @@ document.addEventListener("DOMContentLoaded", () => {
         title: title,
         messages: [
           { role: "user", content: "Solve issues in this project repository", id: `msg_${Math.random().toString(36).substr(2, 18)}`, time: "Sep 9, 2026, 11:42 PM" },
-          { role: "assistant", content: `Hello! I'm tbox, ready to help with "${title}". All virtual sandbox boundaries are armed.`, time: "Sep 9, 2026, 11:42 PM" }
+          { role: "assistant", content: `Hello! I'm Ethos, ready to help with "${title}". All virtual sandbox boundaries are armed.`, time: "Sep 9, 2026, 11:42 PM" }
         ],
         tokens: { input: 8283, output: 23, reasoning: 26, total: 8332, cost: 0.00 },
         created: "Sep 9, 2026, 11:42 PM",
@@ -435,10 +438,10 @@ document.addEventListener("DOMContentLoaded", () => {
     state.apiKey = document.getElementById("settings-api-key").value;
     state.model = document.getElementById("settings-model-select").value;
 
-    localStorage.setItem("tbox_provider", state.provider);
-    localStorage.setItem("tbox_api_url", state.apiUrl);
-    localStorage.setItem("tbox_api_key", state.apiKey);
-    localStorage.setItem("tbox_model", state.model);
+    setPref("provider", state.provider);
+    setPref("api_url", state.apiUrl);
+    setPref("api_key", state.apiKey);
+    setPref("model", state.model);
 
     activeModelLabel.textContent = state.model;
     chatModelLabel.textContent = state.model;
@@ -559,16 +562,16 @@ if (btnAddAgentTask) {
 
 // Load and save multi-modal settings
 function loadAdvancedSettings() {
-  const tts = localStorage.getItem("tbox_tts") || "kokoro";
-  const img = localStorage.getItem("tbox_image_gen") || "flux-schnell";
-  const vid = localStorage.getItem("tbox_video_gen") || "none";
-  const vdb = localStorage.getItem("tbox_vectordb") || "local-lancedb";
-  const mcp = localStorage.getItem("tbox_mcp") || "all-active";
-  const fallback = localStorage.getItem("tbox_fallback") || "openrouter";
-  const execMode = localStorage.getItem("tbox_exec_mode") || "yolo";
-  const envProt = localStorage.getItem("tbox_env_prot") !== "false";
-  const halluProt = localStorage.getItem("tbox_hallu_prot") !== "false";
-  const sentryDsn = localStorage.getItem("tbox_sentry_dsn") || "";
+  const tts = getPref("tts", "kokoro");
+  const img = getPref("image_gen", "flux-schnell");
+  const vid = getPref("video_gen", "none");
+  const vdb = getPref("vectordb", "local-lancedb");
+  const mcp = getPref("mcp", "all-active");
+  const fallback = getPref("fallback", "openrouter");
+  const execMode = getPref("exec_mode", "yolo");
+  const envProt = getPref("env_prot", "true") !== "false";
+  const halluProt = getPref("hallu_prot", "true") !== "false";
+  const sentryDsn = getPref("sentry_dsn", "");
 
   const selTTS = document.getElementById("settings-tts-select");
   if (selTTS) selTTS.value = tts;
@@ -597,25 +600,25 @@ const originalSaveBtn = document.getElementById("btn-save-settings");
 if (originalSaveBtn) {
   originalSaveBtn.addEventListener("click", () => {
     const selTTS = document.getElementById("settings-tts-select");
-    if (selTTS) localStorage.setItem("tbox_tts", selTTS.value);
+    if (selTTS) setPref("tts", selTTS.value);
     const selImg = document.getElementById("settings-image-select");
-    if (selImg) localStorage.setItem("tbox_image_gen", selImg.value);
+    if (selImg) setPref("image_gen", selImg.value);
     const selVid = document.getElementById("settings-video-select");
-    if (selVid) localStorage.setItem("tbox_video_gen", selVid.value);
+    if (selVid) setPref("video_gen", selVid.value);
     const selVdb = document.getElementById("settings-vectordb-select");
-    if (selVdb) localStorage.setItem("tbox_vectordb", selVdb.value);
+    if (selVdb) setPref("vectordb", selVdb.value);
     const selMcp = document.getElementById("settings-mcp-select");
-    if (selMcp) localStorage.setItem("tbox_mcp", selMcp.value);
+    if (selMcp) setPref("mcp", selMcp.value);
     const selFb = document.getElementById("settings-fallback-provider");
-    if (selFb) localStorage.setItem("tbox_fallback", selFb.value);
+    if (selFb) setPref("fallback", selFb.value);
     const selMode = document.getElementById("settings-exec-mode");
-    if (selMode) localStorage.setItem("tbox_exec_mode", selMode.value);
+    if (selMode) setPref("exec_mode", selMode.value);
     const chkEnv = document.getElementById("toggle-env-protection");
-    if (chkEnv) localStorage.setItem("tbox_env_prot", chkEnv.checked);
+    if (chkEnv) setPref("env_prot", chkEnv.checked);
     const chkHallu = document.getElementById("toggle-halluscan-drift");
-    if (chkHallu) localStorage.setItem("tbox_hallu_prot", chkHallu.checked);
+    if (chkHallu) setPref("hallu_prot", chkHallu.checked);
     const inSentry = document.getElementById("settings-sentry-dsn");
-    if (inSentry) localStorage.setItem("tbox_sentry_dsn", inSentry.value);
+    if (inSentry) setPref("sentry_dsn", inSentry.value);
   });
 }
 
@@ -652,7 +655,7 @@ document.querySelectorAll(".window-ctrl").forEach(btn => {
       }
     }
     if (isClose) {
-      if (confirm("Close TaintBox session?")) {
+      if (confirm("Close Ethos session?")) {
         window.close();
       }
     }
