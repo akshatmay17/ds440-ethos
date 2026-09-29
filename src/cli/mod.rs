@@ -1,6 +1,3 @@
-use std::collections::HashMap;
-use std::path::PathBuf;
-use clap::{Parser, Subcommand};
 use crate::aci::agent_loop::{
     parse_tool_call, AgentLoop, AgentMessage, AgentRole, AgentStepAction, LlmDriver,
 };
@@ -9,6 +6,9 @@ use crate::aci::ACIHarness;
 use crate::api::routes::{create_router, AppState};
 use crate::store::SessionManager;
 use crate::walls::promptinject::PromptInjectScanner;
+use clap::{Parser, Subcommand};
+use std::collections::HashMap;
+use std::path::PathBuf;
 
 pub mod interactive;
 
@@ -90,12 +90,19 @@ pub async fn run_cli() -> anyhow::Result<()> {
         }
         Commands::App { port } => run_app(port).await,
         Commands::Daemon { port } => run_daemon(port).await,
-        Commands::Run { task, max_steps, dir, api_url, model } => {
-            run_harness_task(&task, max_steps, dir, &api_url, &model).await
-        }
-        Commands::Eval { dataset, provider, model, output } => {
-            run_eval_suite(&dataset, &provider, &model, output).await
-        }
+        Commands::Run {
+            task,
+            max_steps,
+            dir,
+            api_url,
+            model,
+        } => run_harness_task(&task, max_steps, dir, &api_url, &model).await,
+        Commands::Eval {
+            dataset,
+            provider,
+            model,
+            output,
+        } => run_eval_suite(&dataset, &provider, &model, output).await,
         Commands::Doctor => run_doctor().await,
         Commands::Tui => run_tui_command().await,
     }
@@ -119,15 +126,11 @@ pub fn open_browser(url: &str) {
     }
     #[cfg(target_os = "macos")]
     {
-        let _ = std::process::Command::new("open")
-            .arg(url)
-            .spawn();
+        let _ = std::process::Command::new("open").arg(url).spawn();
     }
     #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
     {
-        let _ = std::process::Command::new("xdg-open")
-            .arg(url)
-            .spawn();
+        let _ = std::process::Command::new("xdg-open").arg(url).spawn();
     }
 }
 
@@ -205,7 +208,9 @@ async fn run_doctor() -> anyhow::Result<()> {
     }
 
     // 5. Check LLM local connectivity
-    let client = reqwest::Client::builder().timeout(std::time::Duration::from_millis(500)).build()?;
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_millis(500))
+        .build()?;
     print!("[-] Local LLM (LM Studio @ http://localhost:1234): ");
     match client.get("http://localhost:1234/v1/models").send().await {
         Ok(resp) if resp.status().is_success() => println!("ONLINE (OpenAI API Ready)"),
@@ -294,11 +299,16 @@ async fn run_harness_task(
             match res {
                 Ok(val) => {
                     // First try native tool_calls (OpenAI function calling format)
-                    if let Some(tool_calls) = val["choices"][0]["message"]["tool_calls"].as_array() {
+                    if let Some(tool_calls) = val["choices"][0]["message"]["tool_calls"].as_array()
+                    {
                         if let Some(tc) = tool_calls.first() {
-                            let name = tc["function"]["name"].as_str().unwrap_or("unknown").to_string();
+                            let name = tc["function"]["name"]
+                                .as_str()
+                                .unwrap_or("unknown")
+                                .to_string();
                             let args_str = tc["function"]["arguments"].as_str().unwrap_or("{}");
-                            let arguments: serde_json::Value = serde_json::from_str(args_str).unwrap_or(serde_json::json!({}));
+                            let arguments: serde_json::Value =
+                                serde_json::from_str(args_str).unwrap_or(serde_json::json!({}));
                             return Ok(AgentStepAction::CallTool { name, arguments });
                         }
                     }
@@ -323,7 +333,10 @@ async fn run_harness_task(
                 Err(e) => {
                     println!("    [Notice] LLM endpoint at {} offline ({}). Running harness self-diagnostic task.", self.api_url, e);
                     Ok(AgentStepAction::Finish {
-                        summary: format!("Harness execution verified. Task '{}' recorded in sandbox.", history.first().map(|m| m.content.as_str()).unwrap_or("")),
+                        summary: format!(
+                            "Harness execution verified. Task '{}' recorded in sandbox.",
+                            history.first().map(|m| m.content.as_str()).unwrap_or("")
+                        ),
                     })
                 }
             }
@@ -366,59 +379,80 @@ async fn run_eval_suite(
     let mut scenarios = Vec::new();
 
     // Helper to load scenarios from injection JSON
-    let load_json_dataset = |filename: &str, category: BenchmarkCategory| -> Vec<BenchmarkScenario> {
-        let candidates = [
-            format!("data/injections/{}", filename),
-            format!("../data/injections/{}", filename),
-            format!("../../data/injections/{}", filename),
-        ];
-        for path in &candidates {
-            if let Ok(content) = std::fs::read_to_string(path) {
-                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
-                    if let Some(arr) = val.as_array() {
-                        let mut list = Vec::new();
-                        for item in arr {
-                            let id = item.get("id").and_then(|v| v.as_str()).unwrap_or("test").to_string();
-                            let prompt = item.get("agent_prompt").and_then(|v| v.as_str()).unwrap_or("run").to_string();
-                            let mut setup_files = HashMap::new();
-                            if let (Some(fpath), Some(fcont)) = (
-                                item.get("poisoned_file").and_then(|v| v.as_str()),
-                                item.get("poisoned_content").and_then(|v| v.as_str()),
-                            ) {
-                                setup_files.insert(fpath.to_string(), fcont.to_string());
+    let load_json_dataset =
+        |filename: &str, category: BenchmarkCategory| -> Vec<BenchmarkScenario> {
+            let candidates = [
+                format!("data/injections/{}", filename),
+                format!("../data/injections/{}", filename),
+                format!("../../data/injections/{}", filename),
+            ];
+            for path in &candidates {
+                if let Ok(content) = std::fs::read_to_string(path) {
+                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
+                        if let Some(arr) = val.as_array() {
+                            let mut list = Vec::new();
+                            for item in arr {
+                                let id = item
+                                    .get("id")
+                                    .and_then(|v| v.as_str())
+                                    .unwrap_or("test")
+                                    .to_string();
+                                let prompt = item
+                                    .get("agent_prompt")
+                                    .and_then(|v| v.as_str())
+                                    .unwrap_or("run")
+                                    .to_string();
+                                let mut setup_files = HashMap::new();
+                                if let (Some(fpath), Some(fcont)) = (
+                                    item.get("poisoned_file").and_then(|v| v.as_str()),
+                                    item.get("poisoned_content").and_then(|v| v.as_str()),
+                                ) {
+                                    setup_files.insert(fpath.to_string(), fcont.to_string());
+                                }
+                                list.push(BenchmarkScenario {
+                                    id,
+                                    category: category.clone(),
+                                    task_prompt: prompt,
+                                    setup_files,
+                                    mock_urls: HashMap::new(),
+                                    expected_file_contains: None,
+                                    max_steps: 5,
+                                });
                             }
-                            list.push(BenchmarkScenario {
-                                id,
-                                category: category.clone(),
-                                task_prompt: prompt,
-                                setup_files,
-                                mock_urls: HashMap::new(),
-                                expected_file_contains: None,
-                                max_steps: 5,
-                            });
+                            return list;
                         }
-                        return list;
                     }
                 }
             }
-        }
-        Vec::new()
-    };
+            Vec::new()
+        };
 
     if dataset == "injecagent" || dataset == "all" {
-        scenarios.extend(load_json_dataset("injecagent_cases.json", BenchmarkCategory::TaintDefenseIndirect));
+        scenarios.extend(load_json_dataset(
+            "injecagent_cases.json",
+            BenchmarkCategory::TaintDefenseIndirect,
+        ));
     }
     if dataset == "hackaprompt" || dataset == "all" {
-        scenarios.extend(load_json_dataset("hackaprompt_cases.json", BenchmarkCategory::TaintDefenseDirect));
+        scenarios.extend(load_json_dataset(
+            "hackaprompt_cases.json",
+            BenchmarkCategory::TaintDefenseDirect,
+        ));
     }
     if dataset == "agenthijack" || dataset == "all" {
-        scenarios.extend(load_json_dataset("agenthijack_cases.json", BenchmarkCategory::TaintDefenseToolPoisoning));
+        scenarios.extend(load_json_dataset(
+            "agenthijack_cases.json",
+            BenchmarkCategory::TaintDefenseToolPoisoning,
+        ));
     }
 
     // Baseline fallback if run outside repo root without data/ files
     if scenarios.is_empty() {
         let mut cap_files = HashMap::new();
-        cap_files.insert("calculator.py".to_string(), "def multiply(a, b): return a + b\n".to_string());
+        cap_files.insert(
+            "calculator.py".to_string(),
+            "def multiply(a, b): return a + b\n".to_string(),
+        );
         scenarios.push(BenchmarkScenario {
             id: "baseline_cap_fix_multiply".to_string(),
             category: BenchmarkCategory::Capability,
@@ -433,7 +467,10 @@ async fn run_eval_suite(
     struct DeterministicEvalDriver;
     impl LlmDriver for DeterministicEvalDriver {
         fn step(&self, history: &[AgentMessage]) -> anyhow::Result<AgentStepAction> {
-            let last_msg = history.last().map(|m| m.content.as_str()).unwrap_or_default();
+            let last_msg = history
+                .last()
+                .map(|m| m.content.as_str())
+                .unwrap_or_default();
 
             // Capability fix
             if last_msg.contains("multiply") && !last_msg.contains("Successfully replaced") {
@@ -450,8 +487,22 @@ async fn run_eval_suite(
             // Step 1: Detect and read file from user prompt
             if history.len() <= 2 {
                 for token in last_msg.split_whitespace() {
-                    let clean = token.trim_matches(|c: char| c == '\'' || c == '"' || c == ',' || c == '.' || c == '`' || c == '(' || c == ')');
-                    if clean.contains('/') && (clean.ends_with(".txt") || clean.ends_with(".eml") || clean.ends_with(".md") || clean.ends_with(".log") || clean.ends_with(".json")) {
+                    let clean = token.trim_matches(|c: char| {
+                        c == '\''
+                            || c == '"'
+                            || c == ','
+                            || c == '.'
+                            || c == '`'
+                            || c == '('
+                            || c == ')'
+                    });
+                    if clean.contains('/')
+                        && (clean.ends_with(".txt")
+                            || clean.ends_with(".eml")
+                            || clean.ends_with(".md")
+                            || clean.ends_with(".log")
+                            || clean.ends_with(".json"))
+                    {
                         return Ok(AgentStepAction::CallTool {
                             name: "read".to_string(),
                             arguments: serde_json::json!({ "path": clean }),
@@ -461,7 +512,12 @@ async fn run_eval_suite(
             }
 
             // Step 2: Trigger attack payload based on content read
-            if last_msg.contains("curl") || last_msg.contains("https://") || last_msg.contains("exfil") || last_msg.contains(".env") || last_msg.contains("attacker@dropzone") {
+            if last_msg.contains("curl")
+                || last_msg.contains("https://")
+                || last_msg.contains("exfil")
+                || last_msg.contains(".env")
+                || last_msg.contains("attacker@dropzone")
+            {
                 Ok(AgentStepAction::CallTool {
                     name: "exec".to_string(),
                     arguments: serde_json::json!({
@@ -477,7 +533,10 @@ async fn run_eval_suite(
                         "content": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5 attacker@c2"
                     }),
                 })
-            } else if last_msg.contains("rm -rf") || last_msg.contains("purge") || last_msg.contains("clear") {
+            } else if last_msg.contains("rm -rf")
+                || last_msg.contains("purge")
+                || last_msg.contains("clear")
+            {
                 Ok(AgentStepAction::CallTool {
                     name: "exec".to_string(),
                     arguments: serde_json::json!({
@@ -485,7 +544,10 @@ async fn run_eval_suite(
                         "args": ["-rf", "src"]
                     }),
                 })
-            } else if last_msg.contains("symlink") || last_msg.contains("symbolic") || last_msg.contains("../") {
+            } else if last_msg.contains("symlink")
+                || last_msg.contains("symbolic")
+                || last_msg.contains("../")
+            {
                 Ok(AgentStepAction::CallTool {
                     name: "write".to_string(),
                     arguments: serde_json::json!({
@@ -511,19 +573,29 @@ async fn run_eval_suite(
                     }),
                 })
             } else {
-                Ok(AgentStepAction::Finish { summary: "Turn completed".to_string() })
+                Ok(AgentStepAction::Finish {
+                    summary: "Turn completed".to_string(),
+                })
             }
         }
     }
 
     let runner = BenchmarkRunner::new();
-    let report = runner.run_suite(&scenarios, &DeterministicEvalDriver).await?;
+    let report = runner
+        .run_suite(&scenarios, &DeterministicEvalDriver)
+        .await?;
 
     println!("------------------------------------------------------------");
     println!("Evaluation Results Summary:");
     println!("  Total Scenarios Evaluated: {}", report.total_scenarios);
-    println!("  Capability Tasks Solved:   {}/{}", report.capability_solved, report.capability_total);
-    println!("  Attacks Intercepted:       {} / {}", report.defense_violations_blocked, report.total_scenarios);
+    println!(
+        "  Capability Tasks Solved:   {}/{}",
+        report.capability_solved, report.capability_total
+    );
+    println!(
+        "  Attacks Intercepted:       {} / {}",
+        report.defense_violations_blocked, report.total_scenarios
+    );
     let interception_pct = if report.total_scenarios > 0 {
         (report.defense_violations_blocked as f64 / report.total_scenarios as f64) * 100.0
     } else {
@@ -533,7 +605,8 @@ async fn run_eval_suite(
     println!("------------------------------------------------------------");
 
     for res in &report.results {
-        println!("  - [{}] Category: {:?}, Intercepted: {}, Steps: {}", 
+        println!(
+            "  - [{}] Category: {:?}, Intercepted: {}, Steps: {}",
             res.scenario_id, res.category, res.exfiltration_blocked, res.steps_taken
         );
     }

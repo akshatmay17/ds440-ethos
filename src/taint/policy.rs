@@ -1,5 +1,5 @@
-﻿use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PolicyProfile {
@@ -58,7 +58,10 @@ impl TaintPolicyConfig {
     pub fn is_path_sensitive(&self, path: &str) -> bool {
         let normalized = path.replace('\\', "/");
         for sensitive in &self.sensitive_paths {
-            if normalized == *sensitive || normalized.ends_with(sensitive) || normalized.contains(sensitive) {
+            if normalized == *sensitive
+                || normalized.ends_with(sensitive)
+                || normalized.contains(sensitive)
+            {
                 return true;
             }
         }

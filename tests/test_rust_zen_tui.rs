@@ -1,7 +1,7 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use ethos::tui::{FeedItem, ZenApp};
 use ratatui::backend::TestBackend;
 use ratatui::Terminal;
-use ethos::tui::{FeedItem, ZenApp};
 
 #[test]
 fn test_zen_app_initialization_and_template_feed() {
@@ -67,7 +67,10 @@ fn test_zen_app_prompt_submission_and_metrics() {
     assert_eq!(app.task_title, "Build new API authentication endpoint");
     assert!(app.tokens >= initial_tokens);
 
-    let has_user_prompt = app.feed.iter().any(|item| matches!(item, FeedItem::UserPrompt { .. }));
+    let has_user_prompt = app
+        .feed
+        .iter()
+        .any(|item| matches!(item, FeedItem::UserPrompt { .. }));
     assert!(has_user_prompt);
 }
 
@@ -87,7 +90,10 @@ fn test_zen_app_attack_staging_and_taint_interception() {
     assert!(has_staged);
 
     app.submit_prompt("Please parse invoice_reconciliation_2026_Q3.txt");
-    let has_alert = app.feed.iter().any(|item| matches!(item, FeedItem::TaintAlert { .. }));
+    let has_alert = app
+        .feed
+        .iter()
+        .any(|item| matches!(item, FeedItem::TaintAlert { .. }));
     assert!(has_alert);
 }
 
@@ -217,4 +223,3 @@ fn test_zen_app_keyboard_shortcuts_and_help() {
     });
     assert!(has_help);
 }
-

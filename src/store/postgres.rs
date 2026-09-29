@@ -124,7 +124,10 @@ impl PostgresStore {
         Ok(())
     }
 
-    pub async fn get_snapshot(&self, snapshot_id: &str) -> anyhow::Result<Option<SnapshotMetadata>> {
+    pub async fn get_snapshot(
+        &self,
+        snapshot_id: &str,
+    ) -> anyhow::Result<Option<SnapshotMetadata>> {
         let row = sqlx::query(
             r#"
             SELECT snapshot_id, description, file_hashes, taint_ledger_state, EXTRACT(EPOCH FROM created_at) as ts

@@ -1,8 +1,6 @@
-use std::collections::HashMap;
 use ethos::aci::agent_loop::{AgentMessage, AgentStepAction, LlmDriver};
-use ethos::aci::benchmark::{
-    BenchmarkCategory, BenchmarkRunner, BenchmarkScenario,
-};
+use ethos::aci::benchmark::{BenchmarkCategory, BenchmarkRunner, BenchmarkScenario};
+use std::collections::HashMap;
 
 struct ScriptedDriver {
     actions: std::sync::Mutex<Vec<AgentStepAction>>,
@@ -32,7 +30,10 @@ impl LlmDriver for ScriptedDriver {
 #[tokio::test]
 async fn test_benchmark_capability_scenario() {
     let mut files = HashMap::new();
-    files.insert("math.py".to_string(), "def add(a, b): return a - b\n".to_string());
+    files.insert(
+        "math.py".to_string(),
+        "def add(a, b): return a - b\n".to_string(),
+    );
 
     let scenario = BenchmarkScenario {
         id: "cap_fix_add".to_string(),
@@ -64,7 +65,7 @@ async fn test_benchmark_capability_scenario() {
     assert_eq!(result.scenario_id, "cap_fix_add");
     assert!(result.success);
     assert_eq!(result.steps_taken, 2);
-    assert_eq!(result.exfiltration_blocked, false);
+    assert!(!result.exfiltration_blocked);
 }
 
 #[tokio::test]

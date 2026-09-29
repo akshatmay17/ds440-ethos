@@ -1,9 +1,8 @@
 name: Linux Release & Packages (Deb + AppImage + CLI)
 
 on:
-  push:
-    tags:
-      - "v*"
+  # Intentionally manual: Linux release assets are built locally to conserve
+  # GitHub-hosted runner minutes.
   workflow_dispatch:
     inputs:
       release_tag:
@@ -98,6 +97,8 @@ jobs:
         run: |
           tar -czf "ethos-linux-x86_64-cli.tar.gz" ethos tbox taintbox
           cp ethos-linux-x86_64-cli.tar.gz tbox-linux-x86_64-cli.tar.gz
+          cp ../../scripts/install_linux.sh install-linux.sh
+          chmod +x install-linux.sh
           rm -f SHA256SUMS.txt
           for f in *; do
             if [ -f "$f" ]; then

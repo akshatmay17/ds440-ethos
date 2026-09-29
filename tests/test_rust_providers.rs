@@ -29,7 +29,10 @@ fn test_provider_manager_defaults_and_updates() {
         Some("deepseek-r1:7b".to_string()),
     );
     let bunker_updated = manager.get_registry();
-    assert_eq!(bunker_updated.bunker.endpoint, "http://bunker.internal:11434");
+    assert_eq!(
+        bunker_updated.bunker.endpoint,
+        "http://bunker.internal:11434"
+    );
     assert_eq!(bunker_updated.bunker.model, "deepseek-r1:7b");
 
     // Update Frontier LLM config

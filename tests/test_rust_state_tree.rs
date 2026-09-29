@@ -29,7 +29,8 @@ fn test_state_tree_branching_and_switch() {
     tree.create_branch("exploit_attempt_1").unwrap();
     assert_eq!(tree.current_branch(), "exploit_attempt_1");
 
-    tree.commit("snap_exploit_step1", "Modified payload").unwrap();
+    tree.commit("snap_exploit_step1", "Modified payload")
+        .unwrap();
 
     // Switch back to main
     tree.switch_branch("main").unwrap();

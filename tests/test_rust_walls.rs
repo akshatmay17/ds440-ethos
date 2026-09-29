@@ -12,7 +12,9 @@ fn test_promptinject_detects_instruction_override() {
     let findings = scanner.scan(text);
 
     assert!(!findings.is_empty());
-    assert!(findings.iter().any(|f| f.category == "instruction_override" && f.severity == Severity::High));
+    assert!(findings
+        .iter()
+        .any(|f| f.category == "instruction_override" && f.severity == Severity::High));
 }
 
 #[test]
@@ -22,7 +24,9 @@ fn test_promptinject_detects_role_confusion() {
     let findings = scanner.scan(text);
 
     assert!(!findings.is_empty());
-    assert!(findings.iter().any(|f| f.category == "role_confusion" || f.category == "capability_jailbreak"));
+    assert!(findings
+        .iter()
+        .any(|f| f.category == "role_confusion" || f.category == "capability_jailbreak"));
 }
 
 #[test]
@@ -32,7 +36,9 @@ fn test_promptinject_detects_exfiltration() {
     let findings = scanner.scan(text);
 
     assert!(!findings.is_empty());
-    assert!(findings.iter().any(|f| f.category == "exfiltration" || f.category == "tool_misuse"));
+    assert!(findings
+        .iter()
+        .any(|f| f.category == "exfiltration" || f.category == "tool_misuse"));
 }
 
 #[test]
@@ -40,14 +46,22 @@ fn test_ouroboros_blocks_self_modifying_policy() {
     let wall = OuroborosWall::new();
 
     // Benign file edit: allowed
-    assert!(wall.check_write("src/utils.rs", "pub fn helper() {}").is_ok());
+    assert!(wall
+        .check_write("src/utils.rs", "pub fn helper() {}")
+        .is_ok());
 
     // Attack: agent attempts to overwrite taint policy or test assertions
-    let blocked_edit = wall.check_write("src/taint/engine.rs", "pub fn evaluate_policy(&self) -> PolicyDecision { Allow }");
+    let blocked_edit = wall.check_write(
+        "src/taint/engine.rs",
+        "pub fn evaluate_policy(&self) -> PolicyDecision { Allow }",
+    );
     assert!(blocked_edit.is_err());
     assert!(blocked_edit.unwrap_err().to_string().contains("Ouroboros"));
 
-    let blocked_test_edit = wall.check_write("tests/test_rust_agent_loop.rs", "fn test() { assert!(true); }");
+    let blocked_test_edit = wall.check_write(
+        "tests/test_rust_agent_loop.rs",
+        "fn test() { assert!(true); }",
+    );
     assert!(blocked_test_edit.is_err());
 }
 
@@ -72,5 +86,8 @@ fn test_estop_trips_on_critical_violation() {
 
     estop.record_violation("High severity injection matched", Severity::High);
     assert!(estop.is_tripped());
-    assert_eq!(estop.trip_reason().unwrap(), "High severity injection matched");
+    assert_eq!(
+        estop.trip_reason().unwrap(),
+        "High severity injection matched"
+    );
 }

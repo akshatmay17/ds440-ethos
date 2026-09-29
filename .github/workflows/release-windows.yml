@@ -1,9 +1,8 @@
 name: Windows Release & Installer (MSI + Setup.exe)
 
 on:
-  push:
-    tags:
-      - "v*"
+  # Intentionally manual: Windows release assets are built locally to conserve
+  # GitHub-hosted runner minutes.
   workflow_dispatch:
     inputs:
       release_tag:

@@ -49,7 +49,9 @@ fn test_taint_propagation_inherits_worst_severity() {
     );
 
     assert_eq!(derived.trust_level, TrustLevel::Untrusted);
-    assert!(derived.chain_of_custody.contains(&"malicious.txt".to_string()));
+    assert!(derived
+        .chain_of_custody
+        .contains(&"malicious.txt".to_string()));
     assert!(engine.is_tainted("derived.txt"));
 }
 

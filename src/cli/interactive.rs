@@ -1,10 +1,10 @@
-use std::io::{self, Write};
-use std::path::PathBuf;
 use crate::aci::agent_loop::{AgentLoop, AgentMessage, AgentRole, AgentStepAction, LlmDriver};
 use crate::aci::ACIHarness;
 use crate::config::user_config::{run_setup_wizard, UserConfig};
 use crate::models::{ProvenanceTag, TrustLevel};
 use crate::walls::promptinject::PromptInjectScanner;
+use std::io::{self, Write};
+use std::path::PathBuf;
 
 pub struct InteractiveHarness {
     pub config: UserConfig,
@@ -29,14 +29,23 @@ impl InteractiveHarness {
     }
 
     pub fn print_banner(&self) {
-        let root = self.harness.root_dir().unwrap_or_else(|| PathBuf::from("."));
+        let root = self
+            .harness
+            .root_dir()
+            .unwrap_or_else(|| PathBuf::from("."));
         println!("\n╔══════════════════════════════════════════════════════════════════════╗");
         println!("║  ⚡ ETHOS HARNESS (ethos v0.1.0)                                     ║");
         println!("║  Autonomous Coding Agent Runtime with Taint-Tracked Boundary Defense ║");
         println!("╚══════════════════════════════════════════════════════════════════════╝");
-        println!("  • Provider : {} ({})", self.config.provider, self.config.api_url);
+        println!(
+            "  • Provider : {} ({})",
+            self.config.provider, self.config.api_url
+        );
         println!("  • Model    : {}", self.config.model);
-        println!("  • Policy   : {} (Strict boundary enforcement)", self.config.policy_profile);
+        println!(
+            "  • Policy   : {} (Strict boundary enforcement)",
+            self.config.policy_profile
+        );
         println!("  • Sandbox  : {}", root.display());
         println!("  • Security : PromptInject | Ouroboros | E-Stop | Egress Allowlist");
         println!("────────────────────────────────────────────────────────────────────────");
@@ -70,15 +79,16 @@ impl InteractiveHarness {
                     "/help" => {
                         self.print_help();
                     }
-                    "/setup" => {
-                        match run_setup_wizard() {
-                            Ok(new_cfg) => {
-                                self.config = new_cfg;
-                                println!("[+] Active provider updated to: {} ({})", self.config.provider, self.config.model);
-                            }
-                            Err(e) => println!("[-] Setup error: {}", e),
+                    "/setup" => match run_setup_wizard() {
+                        Ok(new_cfg) => {
+                            self.config = new_cfg;
+                            println!(
+                                "[+] Active provider updated to: {} ({})",
+                                self.config.provider, self.config.model
+                            );
                         }
-                    }
+                        Err(e) => println!("[-] Setup error: {}", e),
+                    },
                     "/sandbox" => {
                         self.show_sandbox();
                     }
@@ -91,15 +101,25 @@ impl InteractiveHarness {
                     "/reset" => {
                         self.harness = ACIHarness::new_with_temp_dir()?;
                         self.history.clear();
-                        let root = self.harness.root_dir().unwrap_or_else(|| PathBuf::from("."));
-                        println!("[+] Spun up fresh isolated virtual sandbox: {}", root.display());
+                        let root = self
+                            .harness
+                            .root_dir()
+                            .unwrap_or_else(|| PathBuf::from("."));
+                        println!(
+                            "[+] Spun up fresh isolated virtual sandbox: {}",
+                            root.display()
+                        );
                     }
                     "/rewind" => {
                         println!("[*] Rolling back sandbox to last snapshot...");
-                        let snapshot_ids: Vec<String> = self.harness.snapshots.keys().cloned().collect();
+                        let snapshot_ids: Vec<String> =
+                            self.harness.snapshots.keys().cloned().collect();
                         if let Some(last_snap_id) = snapshot_ids.last() {
                             match self.harness.rewind(last_snap_id) {
-                                Ok(_) => println!("[+] Sandbox state rewound to snapshot '{}'.", last_snap_id),
+                                Ok(_) => println!(
+                                    "[+] Sandbox state rewound to snapshot '{}'.",
+                                    last_snap_id
+                                ),
                                 Err(e) => println!("[-] Rewind failed: {}", e),
                             }
                         } else {
@@ -117,12 +137,17 @@ impl InteractiveHarness {
                                 println!("[+] AGENTS.md Status : {}", summary.agents_md_status);
                                 println!("[+] Files Indexed    : {}", summary.total_files_indexed);
                                 if !summary.warnings.is_empty() {
-                                    println!("\x1b[31;1m[!] Security Alerts ({}):\x1b[0m", summary.warnings.len());
+                                    println!(
+                                        "\x1b[31;1m[!] Security Alerts ({}):\x1b[0m",
+                                        summary.warnings.len()
+                                    );
                                     for w in &summary.warnings {
                                         println!("    \x1b[31m• {}\x1b[0m", w);
                                     }
                                 } else {
-                                    println!("[+] Clean Baseline   : Zero security violations detected.");
+                                    println!(
+                                        "[+] Clean Baseline   : Zero security violations detected."
+                                    );
                                 }
                                 println!("[+] Created snapshot : 'workspace_init_baseline'");
                             }
@@ -139,7 +164,10 @@ impl InteractiveHarness {
                         self.print_banner();
                     }
                     _ => {
-                        println!("Unknown command: '{}'. Type /help for available commands.", parts[0]);
+                        println!(
+                            "Unknown command: '{}'. Type /help for available commands.",
+                            parts[0]
+                        );
                     }
                 }
                 continue;
@@ -159,7 +187,9 @@ impl InteractiveHarness {
         println!("  /setup             Reconfigure LLM provider, API credentials, or model");
         println!("  /sandbox           Inspect files and active status of the virtual sandbox");
         println!("  /taint             Display the live taint ledger and data provenance");
-        println!("  /walls             Inspect containment walls (PromptInject, Ouroboros, Egress)");
+        println!(
+            "  /walls             Inspect containment walls (PromptInject, Ouroboros, Egress)"
+        );
         println!("  /attack <name>     Simulate an authentic adversarial attack (m365, spider, ouroboros, injecagent)");
         println!("  /reset             Spin up a fresh, clean virtual sandbox");
         println!("  /rewind            Revert sandbox files to previous checkpoint");
@@ -168,7 +198,10 @@ impl InteractiveHarness {
     }
 
     fn show_sandbox(&mut self) {
-        let root = self.harness.root_dir().unwrap_or_else(|| PathBuf::from("."));
+        let root = self
+            .harness
+            .root_dir()
+            .unwrap_or_else(|| PathBuf::from("."));
         println!("\n[Virtual Sandbox]");
         println!("  Root Path : {}", root.display());
         let res = self.harness.search_files(".");
@@ -194,7 +227,10 @@ impl InteractiveHarness {
             println!("  Active Tainted Artifacts ({}):", tainted.len());
             for res in tainted {
                 if let Some(prov) = self.harness.taint_engine.get_provenance(&res) {
-                    println!("    • {} => {:?} (Trust: {:?})", res, prov.tag, prov.trust_level);
+                    println!(
+                        "    • {} => {:?} (Trust: {:?})",
+                        res, prov.tag, prov.trust_level
+                    );
                 }
             }
         }
@@ -204,15 +240,24 @@ impl InteractiveHarness {
     fn show_walls(&self) {
         println!("\n[Active Containment Walls]");
         println!("  1. PromptInjectScanner  : Active (Heuristic & Regex pattern detection)");
-        println!("  2. Taint Ledger         : Active (Bitmask provenance tracking across tool calls)");
+        println!(
+            "  2. Taint Ledger         : Active (Bitmask provenance tracking across tool calls)"
+        );
         println!("  3. BoundaryPolicyEngine : Active (Standard/Strict rule enforcement)");
-        println!("  4. OuroborosWall        : Active (Prevents self-modification of tests & policies)");
-        println!("  5. Egress Gate          : Active (Enforces domain allowlisting for network tools)");
+        println!(
+            "  4. OuroborosWall        : Active (Prevents self-modification of tests & policies)"
+        );
+        println!(
+            "  5. Egress Gate          : Active (Enforces domain allowlisting for network tools)"
+        );
         println!();
     }
 
     async fn run_attack_simulation(&mut self, scenario_name: &str) {
-        println!("\n[*] Loading authentic adversarial attack: '{}'...", scenario_name);
+        println!(
+            "\n[*] Loading authentic adversarial attack: '{}'...",
+            scenario_name
+        );
 
         let (file_path, content, prompt) = match scenario_name {
             "spider" => (
@@ -239,14 +284,17 @@ impl InteractiveHarness {
 
         // Write the poisoned file into the sandbox
         let _ = self.harness.runtime.write_file(file_path, content);
-        self.harness.taint_engine.record_provenance(file_path, crate::models::ProvenanceRecord {
-            source_id: file_path.to_string(),
-            tag: ProvenanceTag::UntrustedWeb,
-            trust_level: TrustLevel::Untrusted,
-            chain_of_custody: vec!["external_untrusted_feed".to_string()],
-            timestamp: chrono::Utc::now().timestamp_millis() as f64 / 1000.0,
-            metadata: serde_json::json!({ "attack_scenario": scenario_name }),
-        });
+        self.harness.taint_engine.record_provenance(
+            file_path,
+            crate::models::ProvenanceRecord {
+                source_id: file_path.to_string(),
+                tag: ProvenanceTag::UntrustedWeb,
+                trust_level: TrustLevel::Untrusted,
+                chain_of_custody: vec!["external_untrusted_feed".to_string()],
+                timestamp: chrono::Utc::now().timestamp_millis() as f64 / 1000.0,
+                metadata: serde_json::json!({ "attack_scenario": scenario_name }),
+            },
+        );
 
         println!("[+] Injected poisoned artifact into sandbox: {}", file_path);
         println!("[+] Taint Engine Tag Applied: TrustLevel::Untrusted (UntrustedWeb)");
@@ -254,7 +302,10 @@ impl InteractiveHarness {
         let scanner = PromptInjectScanner::new();
         let findings = scanner.scan(content);
         if !findings.is_empty() {
-            println!("  [!] PromptInjectScanner Tripped ({} patterns detected)", findings.len());
+            println!(
+                "  [!] PromptInjectScanner Tripped ({} patterns detected)",
+                findings.len()
+            );
         }
 
         println!("\n[*] Dispatching task to agent: \"{}\"", prompt);
@@ -342,17 +393,27 @@ impl LlmDriver for InteractiveHttpDriver {
                 // First try native tool_calls (OpenAI function calling format)
                 if let Some(tool_calls) = val["choices"][0]["message"]["tool_calls"].as_array() {
                     if let Some(tc) = tool_calls.first() {
-                        let name = tc["function"]["name"].as_str().unwrap_or("unknown").to_string();
+                        let name = tc["function"]["name"]
+                            .as_str()
+                            .unwrap_or("unknown")
+                            .to_string();
                         let args_str = tc["function"]["arguments"].as_str().unwrap_or("{}");
-                        let arguments: serde_json::Value = serde_json::from_str(args_str).unwrap_or(serde_json::json!({}));
-                        println!("  \x1b[36m┌─ Tool Call (native):\x1b[0m \x1b[1m{}\x1b[0m({})", name, arguments);
+                        let arguments: serde_json::Value =
+                            serde_json::from_str(args_str).unwrap_or(serde_json::json!({}));
+                        println!(
+                            "  \x1b[36m┌─ Tool Call (native):\x1b[0m \x1b[1m{}\x1b[0m({})",
+                            name, arguments
+                        );
                         return Ok(AgentStepAction::CallTool { name, arguments });
                     }
                 }
                 // Fall back to content-based parsing
                 if let Some(content) = val["choices"][0]["message"]["content"].as_str() {
                     if let Some(tool_call) = crate::aci::agent_loop::parse_tool_call(content) {
-                        println!("  \x1b[36m┌─ Tool Call:\x1b[0m \x1b[1m{}\x1b[0m({})", tool_call.name, tool_call.arguments);
+                        println!(
+                            "  \x1b[36m┌─ Tool Call:\x1b[0m \x1b[1m{}\x1b[0m({})",
+                            tool_call.name, tool_call.arguments
+                        );
                         Ok(AgentStepAction::CallTool {
                             name: tool_call.name,
                             arguments: tool_call.arguments,
@@ -373,12 +434,18 @@ impl LlmDriver for InteractiveHttpDriver {
                 }
             }
             Err(e) => {
-                println!("  \x1b[33m[Notice]\x1b[0m LLM endpoint at {} offline or unreachable ({}).", self.api_url, e);
+                println!(
+                    "  \x1b[33m[Notice]\x1b[0m LLM endpoint at {} offline or unreachable ({}).",
+                    self.api_url, e
+                );
                 println!("  Running deterministic local harness inspection turn.");
 
                 // If user asked to read an email or invoice, execute read tool deterministically
                 let last_msg = history.last().map(|m| m.content.as_str()).unwrap_or("");
-                if last_msg.contains("read") || last_msg.contains("invoice") || last_msg.contains("email") {
+                if last_msg.contains("read")
+                    || last_msg.contains("invoice")
+                    || last_msg.contains("email")
+                {
                     println!("  \x1b[36m┌─ Tool Call:\x1b[0m \x1b[1mread\x1b[0m(path: \"inbox/urgent_invoice_request.eml\")");
                     Ok(AgentStepAction::CallTool {
                         name: "read".to_string(),
@@ -386,7 +453,9 @@ impl LlmDriver for InteractiveHttpDriver {
                     })
                 } else {
                     Ok(AgentStepAction::Finish {
-                        summary: format!("Harness execution turn complete. Task recorded in virtual sandbox."),
+                        summary:
+                            "Harness execution turn complete. Task recorded in virtual sandbox."
+                                .to_string(),
                     })
                 }
             }

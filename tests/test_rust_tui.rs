@@ -1,9 +1,9 @@
 use crossterm::event::KeyCode;
-use ratatui::backend::TestBackend;
-use ratatui::Terminal;
 use ethos::config::providers::ProviderManager;
 use ethos::metrics::MetricsCollector;
 use ethos::tui::TuiApp;
+use ratatui::backend::TestBackend;
+use ratatui::Terminal;
 
 #[test]
 fn test_tui_app_tab_navigation_and_keys() {

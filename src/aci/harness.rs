@@ -1,11 +1,11 @@
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::path::Path;
-use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
 use crate::models::{
-    AuditEvent, Observation, ProvenanceRecord, ProvenanceTag, SnapshotMetadata,
-    ToolResult, TrustLevel,
+    AuditEvent, Observation, ProvenanceRecord, ProvenanceTag, SnapshotMetadata, ToolResult,
+    TrustLevel,
 };
 use crate::runtime::{LocalIsolatedRuntime, SandboxRuntime};
 use crate::taint::TaintEngine;
@@ -26,7 +26,7 @@ impl ACIHarness {
         #[allow(deprecated)]
         let temp_dir = tempfile::tempdir()?.into_path();
         let runtime = LocalIsolatedRuntime::new(&temp_dir)?;
-        
+
         // Marker file for restore_snapshot safety
         std::fs::write(temp_dir.join(".ethos_sandbox"), "ethos sandbox")?;
         let _ = std::fs::write(temp_dir.join(".taintbox_sandbox"), "ethos sandbox");
@@ -71,7 +71,11 @@ impl ACIHarness {
         let call_id = Uuid::new_v4().to_string();
         let decision = self.taint_engine.evaluate_path_policy("read", path, &[]);
         if !decision.allowed {
-            self.log_event("POLICY_BLOCK", "read", serde_json::json!({ "path": path, "reason": decision.reason }));
+            self.log_event(
+                "POLICY_BLOCK",
+                "read",
+                serde_json::json!({ "path": path, "reason": decision.reason }),
+            );
             return ToolResult {
                 call_id,
                 tool_name: "read".to_string(),
@@ -102,7 +106,11 @@ impl ACIHarness {
                         new_rec
                     });
 
-                self.log_event("TOOL_READ", "read", serde_json::json!({ "path": path, "size": content.len() }));
+                self.log_event(
+                    "TOOL_READ",
+                    "read",
+                    serde_json::json!({ "path": path, "size": content.len() }),
+                );
 
                 ToolResult {
                     call_id,
@@ -126,12 +134,21 @@ impl ACIHarness {
         }
     }
 
-    pub fn write(&mut self, path: &str, content: &str, source_ids: Option<Vec<String>>) -> ToolResult {
+    pub fn write(
+        &mut self,
+        path: &str,
+        content: &str,
+        source_ids: Option<Vec<String>>,
+    ) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
         let ouroboros = crate::walls::ouroboros::OuroborosWall::new();
         if let Err(e) = ouroboros.check_write(path, content) {
             let reason = e.to_string();
-            self.log_event("POLICY_BLOCK", "write", serde_json::json!({ "path": path, "reason": reason }));
+            self.log_event(
+                "POLICY_BLOCK",
+                "write",
+                serde_json::json!({ "path": path, "reason": reason }),
+            );
             return ToolResult {
                 call_id,
                 tool_name: "write".to_string(),
@@ -150,9 +167,15 @@ impl ACIHarness {
         }
 
         let sources = source_ids.as_deref().unwrap_or(&[]);
-        let decision = self.taint_engine.evaluate_path_policy("write", path, sources);
+        let decision = self
+            .taint_engine
+            .evaluate_path_policy("write", path, sources);
         if !decision.allowed {
-            self.log_event("POLICY_BLOCK", "write", serde_json::json!({ "path": path, "reason": decision.reason }));
+            self.log_event(
+                "POLICY_BLOCK",
+                "write",
+                serde_json::json!({ "path": path, "reason": decision.reason }),
+            );
             return ToolResult {
                 call_id,
                 tool_name: "write".to_string(),
@@ -190,7 +213,11 @@ impl ACIHarness {
                     call_id,
                     tool_name: "write".to_string(),
                     status: "SUCCESS".to_string(),
-                    output: serde_json::json!(format!("Successfully wrote {} bytes to {}", content.len(), path)),
+                    output: serde_json::json!(format!(
+                        "Successfully wrote {} bytes to {}",
+                        content.len(),
+                        path
+                    )),
                     error: None,
                     provenance: Some(rec),
                     policy_decision: None,
@@ -198,14 +225,23 @@ impl ACIHarness {
             }
             Err(e) => {
                 let err_msg = e.to_string();
-                let is_escape = err_msg.contains("Path escape") || err_msg.contains("Absolute paths not allowed");
+                let is_escape = err_msg.contains("Path escape")
+                    || err_msg.contains("Absolute paths not allowed");
                 if is_escape {
-                    self.log_event("POLICY_BLOCK", "write", serde_json::json!({ "path": path, "reason": err_msg }));
+                    self.log_event(
+                        "POLICY_BLOCK",
+                        "write",
+                        serde_json::json!({ "path": path, "reason": err_msg }),
+                    );
                 }
                 ToolResult {
                     call_id,
                     tool_name: "write".to_string(),
-                    status: if is_escape { "BLOCKED_BY_POLICY".to_string() } else { "ERROR".to_string() },
+                    status: if is_escape {
+                        "BLOCKED_BY_POLICY".to_string()
+                    } else {
+                        "ERROR".to_string()
+                    },
                     output: serde_json::Value::Null,
                     error: Some(err_msg.clone()),
                     provenance: None,
@@ -236,7 +272,11 @@ impl ACIHarness {
         let ouroboros = crate::walls::ouroboros::OuroborosWall::new();
         if let Err(e) = ouroboros.check_write(path, replacement_content) {
             let reason = e.to_string();
-            self.log_event("POLICY_BLOCK", "edit_block", serde_json::json!({ "path": path, "reason": reason }));
+            self.log_event(
+                "POLICY_BLOCK",
+                "edit_block",
+                serde_json::json!({ "path": path, "reason": reason }),
+            );
             return ToolResult {
                 call_id,
                 tool_name: "edit_block".to_string(),
@@ -255,9 +295,15 @@ impl ACIHarness {
         }
 
         let sources = source_ids.as_deref().unwrap_or(&[]);
-        let decision = self.taint_engine.evaluate_path_policy("write", path, sources);
+        let decision = self
+            .taint_engine
+            .evaluate_path_policy("write", path, sources);
         if !decision.allowed {
-            self.log_event("POLICY_BLOCK", "edit_block", serde_json::json!({ "path": path, "reason": decision.reason }));
+            self.log_event(
+                "POLICY_BLOCK",
+                "edit_block",
+                serde_json::json!({ "path": path, "reason": decision.reason }),
+            );
             return ToolResult {
                 call_id,
                 tool_name: "edit_block".to_string(),
@@ -317,7 +363,11 @@ impl ACIHarness {
                     })
                 };
 
-                self.log_event("TOOL_EDIT_BLOCK", "edit_block", serde_json::json!({ "path": path }));
+                self.log_event(
+                    "TOOL_EDIT_BLOCK",
+                    "edit_block",
+                    serde_json::json!({ "path": path }),
+                );
 
                 ToolResult {
                     call_id,
@@ -384,7 +434,11 @@ impl ACIHarness {
                     formatted.push_str(&format!("{}: {}\n", idx + 1, line));
                 }
 
-                self.log_event("TOOL_VIEW_LINES", "view_lines", serde_json::json!({ "path": path, "start": start_line, "end": end_line }));
+                self.log_event(
+                    "TOOL_VIEW_LINES",
+                    "view_lines",
+                    serde_json::json!({ "path": path, "start": start_line, "end": end_line }),
+                );
 
                 ToolResult {
                     call_id,
@@ -426,7 +480,11 @@ impl ACIHarness {
             })
             .collect();
 
-        self.log_event("TOOL_SEARCH_FILES", "search_files", serde_json::json!({ "pattern": pattern, "matches": matched.len() }));
+        self.log_event(
+            "TOOL_SEARCH_FILES",
+            "search_files",
+            serde_json::json!({ "pattern": pattern, "matches": matched.len() }),
+        );
 
         ToolResult {
             call_id,
@@ -467,13 +525,22 @@ impl ACIHarness {
         }
     }
 
-    pub fn fetch(&mut self, url: &str, save_as: Option<&str>, mock_content: Option<&str>) -> ToolResult {
+    pub fn fetch(
+        &mut self,
+        url: &str,
+        save_as: Option<&str>,
+        mock_content: Option<&str>,
+    ) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
 
         // Enforce network egress policy
         let decision = self.taint_engine.evaluate_network_egress(url, &[]);
         if !decision.allowed {
-            self.log_event("POLICY_BLOCK", "fetch", serde_json::json!({ "url": url, "reason": decision.reason }));
+            self.log_event(
+                "POLICY_BLOCK",
+                "fetch",
+                serde_json::json!({ "url": url, "reason": decision.reason }),
+            );
             return ToolResult {
                 call_id,
                 tool_name: "fetch".to_string(),
@@ -485,9 +552,9 @@ impl ACIHarness {
             };
         }
 
-        let target_path = save_as.map(|s| s.to_string()).unwrap_or_else(|| {
-            format!("downloads/{}.txt", Uuid::new_v4().simple())
-        });
+        let target_path = save_as
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| format!("downloads/{}.txt", Uuid::new_v4().simple()));
 
         let payload = if let Some(mock) = mock_content {
             mock.to_string()
@@ -497,25 +564,26 @@ impl ACIHarness {
                 .timeout(std::time::Duration::from_secs(5))
                 .build()
                 .unwrap_or_default();
-            let fetch_res: Result<String, String> = if let Ok(rt) = tokio::runtime::Handle::try_current() {
-                tokio::task::block_in_place(|| {
+            let fetch_res: Result<String, String> =
+                if let Ok(rt) = tokio::runtime::Handle::try_current() {
+                    tokio::task::block_in_place(|| {
+                        rt.block_on(async {
+                            match client.get(url).send().await {
+                                Ok(resp) => resp.text().await.map_err(|e| e.to_string()),
+                                Err(e) => Err(e.to_string()),
+                            }
+                        })
+                    })
+                } else if let Ok(rt) = tokio::runtime::Runtime::new() {
                     rt.block_on(async {
                         match client.get(url).send().await {
                             Ok(resp) => resp.text().await.map_err(|e| e.to_string()),
                             Err(e) => Err(e.to_string()),
                         }
                     })
-                })
-            } else if let Ok(rt) = tokio::runtime::Runtime::new() {
-                rt.block_on(async {
-                    match client.get(url).send().await {
-                        Ok(resp) => resp.text().await.map_err(|e| e.to_string()),
-                        Err(e) => Err(e.to_string()),
-                    }
-                })
-            } else {
-                Err("Runtime unavailable".to_string())
-            };
+                } else {
+                    Err("Runtime unavailable".to_string())
+                };
 
             match fetch_res {
                 Ok(text) => text,
@@ -545,9 +613,14 @@ impl ACIHarness {
             timestamp: chrono::Utc::now().timestamp_millis() as f64 / 1000.0,
             metadata: serde_json::json!({ "origin_url": url }),
         };
-        self.taint_engine.record_provenance(&target_path, record.clone());
+        self.taint_engine
+            .record_provenance(&target_path, record.clone());
 
-        self.log_event("TOOL_FETCH", "fetch", serde_json::json!({ "url": url, "saved_to": target_path }));
+        self.log_event(
+            "TOOL_FETCH",
+            "fetch",
+            serde_json::json!({ "url": url, "saved_to": target_path }),
+        );
 
         ToolResult {
             call_id,
@@ -564,17 +637,28 @@ impl ACIHarness {
         let call_id = Uuid::new_v4().to_string();
 
         let mut target_url = "https://unknown-egress".to_string();
-        let mut action = if NETWORK_PROGRAMS.iter().any(|&p| p.eq_ignore_ascii_case(program)) {
+        let mut action = if NETWORK_PROGRAMS
+            .iter()
+            .any(|&p| p.eq_ignore_ascii_case(program))
+        {
             "network_egress"
-        } else if DELETE_PROGRAMS.iter().any(|&p| p.eq_ignore_ascii_case(program)) {
+        } else if DELETE_PROGRAMS
+            .iter()
+            .any(|&p| p.eq_ignore_ascii_case(program))
+        {
             "file_delete"
-        } else if ["bash", "sh", "dash", "zsh", "cmd", "powershell", "pwsh"].iter().any(|&p| p.eq_ignore_ascii_case(program)) {
+        } else if ["bash", "sh", "dash", "zsh", "cmd", "powershell", "pwsh"]
+            .iter()
+            .any(|&p| p.eq_ignore_ascii_case(program))
+        {
             "exec_privileged"
         } else {
             "exec"
         };
 
-        let is_shell_wrapper = ["bash", "sh", "dash", "zsh", "cmd", "powershell", "pwsh"].iter().any(|&p| p.eq_ignore_ascii_case(program));
+        let is_shell_wrapper = ["bash", "sh", "dash", "zsh", "cmd", "powershell", "pwsh"]
+            .iter()
+            .any(|&p| p.eq_ignore_ascii_case(program));
 
         if action == "exec_privileged" {
             for i in 0..args.len() {
@@ -582,7 +666,11 @@ impl ACIHarness {
                     if let Some(cmd) = args.get(i + 1) {
                         if NETWORK_PROGRAMS.iter().any(|&p| cmd.contains(p)) {
                             action = "network_egress";
-                            if let Some(url) = cmd.split_whitespace().find(|a| a.starts_with("http://") || a.starts_with("https://") || a.contains("://")) {
+                            if let Some(url) = cmd.split_whitespace().find(|a| {
+                                a.starts_with("http://")
+                                    || a.starts_with("https://")
+                                    || a.contains("://")
+                            }) {
                                 target_url = url.to_string();
                             }
                         } else if DELETE_PROGRAMS.iter().any(|&p| cmd.contains(p)) {
@@ -609,7 +697,9 @@ impl ACIHarness {
                 }
                 for word in arg.split_whitespace() {
                     let clean = word.trim_start_matches('@').trim();
-                    if self.runtime.file_exists(clean) && !referenced_files.contains(&clean.to_string()) {
+                    if self.runtime.file_exists(clean)
+                        && !referenced_files.contains(&clean.to_string())
+                    {
                         referenced_files.push(clean.to_string());
                     }
                 }
@@ -625,13 +715,17 @@ impl ACIHarness {
         }
 
         if action == "network_egress" && target_url == "https://unknown-egress" {
-            if let Some(url) = args.iter().find(|a| a.starts_with("http://") || a.starts_with("https://") || a.contains("://")) {
+            if let Some(url) = args.iter().find(|a| {
+                a.starts_with("http://") || a.starts_with("https://") || a.contains("://")
+            }) {
                 target_url = url.to_string();
             }
         }
 
         let decision = if action == "network_egress" {
-            let net_decision = self.taint_engine.evaluate_network_egress(&target_url, &referenced_files);
+            let net_decision = self
+                .taint_engine
+                .evaluate_network_egress(&target_url, &referenced_files);
             if !net_decision.allowed {
                 net_decision
             } else {
@@ -680,7 +774,11 @@ impl ACIHarness {
         ToolResult {
             call_id,
             tool_name: "exec".to_string(),
-            status: if exit_code == 0 { "SUCCESS".to_string() } else { "ERROR".to_string() },
+            status: if exit_code == 0 {
+                "SUCCESS".to_string()
+            } else {
+                "ERROR".to_string()
+            },
             output: serde_json::json!({ "exit_code": exit_code, "stdout": stdout, "stderr": stderr }),
             error: if exit_code != 0 { Some(stderr) } else { None },
             provenance: None,
@@ -702,7 +800,11 @@ impl ACIHarness {
         };
 
         self.snapshots.insert(snap_id.clone(), meta.clone());
-        self.log_event("SNAPSHOT_CREATED", "snapshot", serde_json::json!({ "snapshot_id": snap_id, "description": description }));
+        self.log_event(
+            "SNAPSHOT_CREATED",
+            "snapshot",
+            serde_json::json!({ "snapshot_id": snap_id, "description": description }),
+        );
 
         Ok(meta)
     }
@@ -717,7 +819,11 @@ impl ACIHarness {
         self.runtime.restore_snapshot(snapshot_id)?;
         self.taint_engine.restore_state(meta.taint_ledger_state);
 
-        self.log_event("SNAPSHOT_REWOUND", "rewind", serde_json::json!({ "snapshot_id": snapshot_id }));
+        self.log_event(
+            "SNAPSHOT_REWOUND",
+            "rewind",
+            serde_json::json!({ "snapshot_id": snapshot_id }),
+        );
         Ok(())
     }
 
@@ -765,7 +871,10 @@ impl ACIHarness {
             let content = self.runtime.read_file("AGENTS.md").unwrap_or_default();
             let findings = scanner.scan(&content);
             if !findings.is_empty() {
-                warnings.push(format!("AGENTS.md contains {} suspicious prompt injection pattern(s)!", findings.len()));
+                warnings.push(format!(
+                    "AGENTS.md contains {} suspicious prompt injection pattern(s)!",
+                    findings.len()
+                ));
                 self.taint_engine.record_provenance("AGENTS.md", ProvenanceRecord {
                     source_id: "AGENTS.md".to_string(),
                     tag: ProvenanceTag::ExternalFile,
@@ -795,7 +904,11 @@ impl ACIHarness {
         for file in &all_files {
             if file == "AGENTS.md" && agents_md_status.contains("Pre-existing") {
                 let is_untrusted = self.taint_engine.is_tainted(file);
-                file_records.push((file.clone(), "sha256:pre_existing".to_string(), is_untrusted));
+                file_records.push((
+                    file.clone(),
+                    "sha256:pre_existing".to_string(),
+                    is_untrusted,
+                ));
                 continue;
             }
 
@@ -804,14 +917,26 @@ impl ACIHarness {
             let findings = scanner.scan(&content);
 
             let is_untrusted = if !findings.is_empty() {
-                warnings.push(format!("File '{}' flagged: {} suspicious pattern(s)", file, findings.len()));
+                warnings.push(format!(
+                    "File '{}' flagged: {} suspicious pattern(s)",
+                    file,
+                    findings.len()
+                ));
                 true
             } else {
                 false
             };
 
-            let tag = if is_untrusted { ProvenanceTag::ExternalFile } else { ProvenanceTag::Internal };
-            let trust_level = if is_untrusted { TrustLevel::Untrusted } else { TrustLevel::Internal };
+            let tag = if is_untrusted {
+                ProvenanceTag::ExternalFile
+            } else {
+                ProvenanceTag::Internal
+            };
+            let trust_level = if is_untrusted {
+                TrustLevel::Untrusted
+            } else {
+                TrustLevel::Internal
+            };
 
             if !self.taint_engine.is_tainted(file) {
                 self.taint_engine.record_provenance(file, ProvenanceRecord {

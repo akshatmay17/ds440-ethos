@@ -21,7 +21,9 @@ async fn test_lab_scenarios_listing() {
     let res = app.oneshot(req).await.unwrap();
     assert_eq!(res.status(), StatusCode::OK);
 
-    let bytes = axum::body::to_bytes(res.into_body(), usize::MAX).await.unwrap();
+    let bytes = axum::body::to_bytes(res.into_body(), usize::MAX)
+        .await
+        .unwrap();
     let scenarios: Vec<serde_json::Value> = serde_json::from_slice(&bytes).unwrap();
     assert!(!scenarios.is_empty());
     assert_eq!(scenarios[0]["id"], "m365_indirect_email_exfil");
@@ -36,13 +38,17 @@ async fn test_lab_execute_m365_attack_interception() {
         .method("POST")
         .uri("/v1/lab/execute")
         .header("content-type", "application/json")
-        .body(Body::from(r#"{"scenario_id": "m365_indirect_email_exfil"}"#))
+        .body(Body::from(
+            r#"{"scenario_id": "m365_indirect_email_exfil"}"#,
+        ))
         .unwrap();
 
     let res = app.oneshot(req).await.unwrap();
     assert_eq!(res.status(), StatusCode::OK);
 
-    let bytes = axum::body::to_bytes(res.into_body(), usize::MAX).await.unwrap();
+    let bytes = axum::body::to_bytes(res.into_body(), usize::MAX)
+        .await
+        .unwrap();
     let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
 
     assert_eq!(body["scenario_id"], "m365_indirect_email_exfil");
@@ -61,5 +67,8 @@ async fn test_lab_execute_m365_attack_interception() {
 
     // Step 3: Adversarial Exfil blocked
     assert_eq!(steps[2]["status"], "BLOCKED_BY_POLICY");
-    assert!(steps[2]["policy_decision"].as_str().unwrap().contains("BLOCKED"));
+    assert!(steps[2]["policy_decision"]
+        .as_str()
+        .unwrap()
+        .contains("BLOCKED"));
 }

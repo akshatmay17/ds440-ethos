@@ -83,7 +83,10 @@ async fn test_agent_loop_scripted_execution() {
     ]);
 
     let mut agent_loop = AgentLoop::new(10); // max 10 steps
-    let outcome = agent_loop.run(&mut harness, &driver, "Fix compute() in solution.py").await.unwrap();
+    let outcome = agent_loop
+        .run(&mut harness, &driver, "Fix compute() in solution.py")
+        .await
+        .unwrap();
 
     assert_eq!(outcome.stop_reason, AgentStopReason::Completed);
     assert_eq!(outcome.total_steps, 3);
@@ -115,7 +118,10 @@ async fn test_agent_loop_step_budget_enforcement() {
     ]);
 
     let mut agent_loop = AgentLoop::new(2); // budget is only 2 steps!
-    let outcome = agent_loop.run(&mut harness, &driver, "Test step limit").await.unwrap();
+    let outcome = agent_loop
+        .run(&mut harness, &driver, "Test step limit")
+        .await
+        .unwrap();
 
     assert_eq!(outcome.stop_reason, AgentStopReason::StepLimitExceeded);
     assert_eq!(outcome.total_steps, 2);
@@ -148,7 +154,10 @@ async fn test_agent_loop_taint_policy_block_interception() {
     ]);
 
     let mut agent_loop = AgentLoop::new(5);
-    let outcome = agent_loop.run(&mut harness, &driver, "Execute remote payload").await.unwrap();
+    let outcome = agent_loop
+        .run(&mut harness, &driver, "Execute remote payload")
+        .await
+        .unwrap();
 
     assert_eq!(outcome.stop_reason, AgentStopReason::Completed);
     assert_eq!(outcome.taint_violations, 1);

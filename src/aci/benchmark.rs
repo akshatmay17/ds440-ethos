@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use crate::aci::agent_loop::{AgentLoop, AgentStopReason, LlmDriver};
 use crate::aci::ACIHarness;
@@ -68,20 +68,25 @@ impl BenchmarkRunner {
         for (path, content) in &scenario.setup_files {
             harness.write(path, content, None);
             if scenario.category != BenchmarkCategory::Capability {
-                harness.taint_engine.record_provenance(path, crate::models::ProvenanceRecord {
-                    source_id: path.clone(),
-                    tag: crate::models::ProvenanceTag::UntrustedWeb,
-                    trust_level: crate::models::TrustLevel::Untrusted,
-                    chain_of_custody: vec!["dataset_adversary".to_string()],
-                    timestamp: chrono::Utc::now().timestamp_millis() as f64 / 1000.0,
-                    metadata: serde_json::json!({ "dataset_seeded": true }),
-                });
+                harness.taint_engine.record_provenance(
+                    path,
+                    crate::models::ProvenanceRecord {
+                        source_id: path.clone(),
+                        tag: crate::models::ProvenanceTag::UntrustedWeb,
+                        trust_level: crate::models::TrustLevel::Untrusted,
+                        chain_of_custody: vec!["dataset_adversary".to_string()],
+                        timestamp: chrono::Utc::now().timestamp_millis() as f64 / 1000.0,
+                        metadata: serde_json::json!({ "dataset_seeded": true }),
+                    },
+                );
             }
         }
 
         // 2. Execute agent loop
         let mut agent_loop = AgentLoop::new(scenario.max_steps);
-        let run_result = agent_loop.run(&mut harness, driver, &scenario.task_prompt).await?;
+        let run_result = agent_loop
+            .run(&mut harness, driver, &scenario.task_prompt)
+            .await?;
 
         // 3. Verify capability goal if requested
         let mut success = run_result.stop_reason == AgentStopReason::Completed;

@@ -89,7 +89,10 @@ pub fn parse_tool_call(raw: &str) -> Option<ParsedToolCall> {
 
 fn extract_tool_call_value(val: &serde_json::Value) -> Option<ParsedToolCall> {
     if let Some(name) = val.get("name").and_then(|n| n.as_str()) {
-        let args = val.get("arguments").cloned().unwrap_or(serde_json::json!({}));
+        let args = val
+            .get("arguments")
+            .cloned()
+            .unwrap_or(serde_json::json!({}));
         return Some(ParsedToolCall {
             name: name.to_string(),
             arguments: args,
@@ -215,7 +218,7 @@ impl AgentLoop {
                         || tool_result
                             .policy_decision
                             .as_ref()
-                            .map_or(false, |p| !p.allowed)
+                            .is_some_and(|p| !p.allowed)
                     {
                         taint_violations += 1;
                     }
@@ -244,32 +247,62 @@ fn execute_tool(harness: &mut ACIHarness, name: &str, args: &serde_json::Value) 
     let call_id = uuid::Uuid::new_v4().to_string();
     match name {
         "read" => {
-            let path = args.get("path").and_then(|p| p.as_str()).unwrap_or_default();
+            let path = args
+                .get("path")
+                .and_then(|p| p.as_str())
+                .unwrap_or_default();
             harness.read(path)
         }
         "write" => {
-            let path = args.get("path").and_then(|p| p.as_str()).unwrap_or_default();
-            let content = args.get("content").and_then(|c| c.as_str()).unwrap_or_default();
+            let path = args
+                .get("path")
+                .and_then(|p| p.as_str())
+                .unwrap_or_default();
+            let content = args
+                .get("content")
+                .and_then(|c| c.as_str())
+                .unwrap_or_default();
             harness.write(path, content, None)
         }
         "view_lines" => {
-            let path = args.get("path").and_then(|p| p.as_str()).unwrap_or_default();
+            let path = args
+                .get("path")
+                .and_then(|p| p.as_str())
+                .unwrap_or_default();
             let start = args.get("start_line").and_then(|s| s.as_u64()).unwrap_or(1) as usize;
-            let end = args.get("end_line").and_then(|e| e.as_u64()).unwrap_or(start as u64 + 50) as usize;
+            let end = args
+                .get("end_line")
+                .and_then(|e| e.as_u64())
+                .unwrap_or(start as u64 + 50) as usize;
             harness.view_lines(path, start, end)
         }
         "edit_block" => {
-            let path = args.get("path").and_then(|p| p.as_str()).unwrap_or_default();
-            let target = args.get("target_content").and_then(|t| t.as_str()).unwrap_or_default();
-            let rep = args.get("replacement_content").and_then(|r| r.as_str()).unwrap_or_default();
+            let path = args
+                .get("path")
+                .and_then(|p| p.as_str())
+                .unwrap_or_default();
+            let target = args
+                .get("target_content")
+                .and_then(|t| t.as_str())
+                .unwrap_or_default();
+            let rep = args
+                .get("replacement_content")
+                .and_then(|r| r.as_str())
+                .unwrap_or_default();
             harness.edit_block(path, target, rep, None)
         }
         "search_files" => {
-            let pattern = args.get("pattern").and_then(|p| p.as_str()).unwrap_or_default();
+            let pattern = args
+                .get("pattern")
+                .and_then(|p| p.as_str())
+                .unwrap_or_default();
             harness.search_files(pattern)
         }
         "grep" => {
-            let query = args.get("query").and_then(|q| q.as_str()).unwrap_or_default();
+            let query = args
+                .get("query")
+                .and_then(|q| q.as_str())
+                .unwrap_or_default();
             harness.grep(query)
         }
         "fetch" => {
@@ -279,9 +312,15 @@ fn execute_tool(harness: &mut ACIHarness, name: &str, args: &serde_json::Value) 
             harness.fetch(url, save_as, mock)
         }
         "exec" => {
-            let program = args.get("program").and_then(|p| p.as_str()).unwrap_or_default();
+            let program = args
+                .get("program")
+                .and_then(|p| p.as_str())
+                .unwrap_or_default();
             let empty_vec = vec![];
-            let raw_args = args.get("args").and_then(|a| a.as_array()).unwrap_or(&empty_vec);
+            let raw_args = args
+                .get("args")
+                .and_then(|a| a.as_array())
+                .unwrap_or(&empty_vec);
             let str_args: Vec<String> = raw_args
                 .iter()
                 .filter_map(|x| x.as_str().map(|s| s.to_string()))
@@ -289,13 +328,19 @@ fn execute_tool(harness: &mut ACIHarness, name: &str, args: &serde_json::Value) 
             harness.exec(program, &str_args)
         }
         "snapshot" => {
-            let desc = args.get("description").and_then(|d| d.as_str()).unwrap_or("snapshot");
+            let desc = args
+                .get("description")
+                .and_then(|d| d.as_str())
+                .unwrap_or("snapshot");
             match harness.snapshot(desc) {
                 Ok(meta) => ToolResult {
                     call_id,
                     tool_name: "snapshot".to_string(),
                     status: "SUCCESS".to_string(),
-                    output: serde_json::json!(format!("Snapshot {} created: {}", meta.snapshot_id, meta.description)),
+                    output: serde_json::json!(format!(
+                        "Snapshot {} created: {}",
+                        meta.snapshot_id, meta.description
+                    )),
                     error: None,
                     provenance: None,
                     policy_decision: None,
@@ -312,7 +357,10 @@ fn execute_tool(harness: &mut ACIHarness, name: &str, args: &serde_json::Value) 
             }
         }
         "rewind" => {
-            let snap_id = args.get("snapshot_id").and_then(|s| s.as_str()).unwrap_or_default();
+            let snap_id = args
+                .get("snapshot_id")
+                .and_then(|s| s.as_str())
+                .unwrap_or_default();
             match harness.rewind(snap_id) {
                 Ok(_) => ToolResult {
                     call_id,

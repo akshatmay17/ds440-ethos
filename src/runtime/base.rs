@@ -12,7 +12,9 @@ pub trait SandboxRuntime: Send + Sync {
     fn execute_command(&self, program: &str, args: &[String]) -> (i32, String, String);
     fn create_snapshot(&self, snapshot_id: &str) -> anyhow::Result<HashMap<String, String>>;
     fn restore_snapshot(&self, snapshot_id: &str) -> anyhow::Result<()>;
-    fn root_dir(&self) -> Option<PathBuf> { None }
+    fn root_dir(&self) -> Option<PathBuf> {
+        None
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -36,7 +38,10 @@ impl LocalIsolatedRuntime {
     fn resolve_path(&self, rel_path: &str) -> anyhow::Result<PathBuf> {
         let cleaned = Path::new(rel_path);
         if cleaned.is_absolute() {
-            return Err(anyhow::anyhow!("Absolute paths not allowed in sandbox: {}", rel_path));
+            return Err(anyhow::anyhow!(
+                "Absolute paths not allowed in sandbox: {}",
+                rel_path
+            ));
         }
         let resolved = self.root_path.join(cleaned);
 
@@ -64,7 +69,7 @@ impl LocalIsolatedRuntime {
         if !canonical_resolved.starts_with(&canon_root) {
             return Err(anyhow::anyhow!("Path escape detected: {}", rel_path));
         }
-        
+
         Ok(canonical_resolved)
     }
 
@@ -112,7 +117,9 @@ impl SandboxRuntime for LocalIsolatedRuntime {
     }
 
     fn file_exists(&self, rel_path: &str) -> bool {
-        self.resolve_path(rel_path).map(|p| p.exists()).unwrap_or(false)
+        self.resolve_path(rel_path)
+            .map(|p| p.exists())
+            .unwrap_or(false)
     }
 
     fn list_files(&self) -> Vec<String> {
@@ -188,7 +195,11 @@ impl SandboxRuntime for LocalIsolatedRuntime {
         // Clean current files (except snapshots directory and markers)
         for entry in fs::read_dir(&self.root_path)?.flatten() {
             let path = entry.path();
-            if path == self.snapshots_dir || path == marker || path == legacy_marker || path == self.root_path.join(".taintbox_snapshots") {
+            if path == self.snapshots_dir
+                || path == marker
+                || path == legacy_marker
+                || path == self.root_path.join(".taintbox_snapshots")
+            {
                 continue;
             }
             if path.is_dir() {

@@ -1,7 +1,7 @@
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{self, Write};
 use std::path::PathBuf;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserConfig {
@@ -57,9 +57,11 @@ impl UserConfig {
         if let Ok(key) = std::env::var("OPENROUTER_API_KEY") {
             return Some(Self {
                 provider: "openrouter".to_string(),
-                api_url: std::env::var("OPENROUTER_BASE_URL").unwrap_or_else(|_| "https://openrouter.ai/api/v1".to_string()),
+                api_url: std::env::var("OPENROUTER_BASE_URL")
+                    .unwrap_or_else(|_| "https://openrouter.ai/api/v1".to_string()),
                 api_key: Some(key),
-                model: std::env::var("OPENROUTER_MODEL").unwrap_or_else(|_| "anthropic/claude-3.5-sonnet".to_string()),
+                model: std::env::var("OPENROUTER_MODEL")
+                    .unwrap_or_else(|_| "anthropic/claude-3.5-sonnet".to_string()),
                 policy_profile: "Standard".to_string(),
                 temperature: 0.0,
             });
@@ -67,7 +69,8 @@ impl UserConfig {
         if let Ok(key) = std::env::var("OPENAI_API_KEY") {
             return Some(Self {
                 provider: "openai".to_string(),
-                api_url: std::env::var("OPENAI_BASE_URL").unwrap_or_else(|_| "https://api.openai.com/v1".to_string()),
+                api_url: std::env::var("OPENAI_BASE_URL")
+                    .unwrap_or_else(|_| "https://api.openai.com/v1".to_string()),
                 api_key: Some(key),
                 model: std::env::var("OPENAI_MODEL").unwrap_or_else(|_| "gpt-4o".to_string()),
                 policy_profile: "Standard".to_string(),
@@ -84,12 +87,17 @@ impl UserConfig {
                 temperature: 0.0,
             });
         }
-        if let Ok(key) = std::env::var("GEMINI_API_KEY").or_else(|_| std::env::var("GOOGLE_API_KEY")) {
+        if let Ok(key) =
+            std::env::var("GEMINI_API_KEY").or_else(|_| std::env::var("GOOGLE_API_KEY"))
+        {
             return Some(Self {
                 provider: "google".to_string(),
-                api_url: std::env::var("GEMINI_BASE_URL").unwrap_or_else(|_| "https://generativelanguage.googleapis.com/v1beta/openai".to_string()),
+                api_url: std::env::var("GEMINI_BASE_URL").unwrap_or_else(|_| {
+                    "https://generativelanguage.googleapis.com/v1beta/openai".to_string()
+                }),
                 api_key: Some(key),
-                model: std::env::var("GEMINI_MODEL").unwrap_or_else(|_| "gemini-2.5-flash".to_string()),
+                model: std::env::var("GEMINI_MODEL")
+                    .unwrap_or_else(|_| "gemini-2.5-flash".to_string()),
                 policy_profile: "Standard".to_string(),
                 temperature: 0.0,
             });
@@ -165,7 +173,11 @@ pub fn run_setup_wizard() -> anyhow::Result<UserConfig> {
     let mut url_input = String::new();
     io::stdin().read_line(&mut url_input)?;
     let url_input = url_input.trim();
-    let api_url = if url_input.is_empty() { default_url.to_string() } else { url_input.to_string() };
+    let api_url = if url_input.is_empty() {
+        default_url.to_string()
+    } else {
+        url_input.to_string()
+    };
 
     // API Key
     let api_key = if needs_key {
@@ -174,21 +186,36 @@ pub fn run_setup_wizard() -> anyhow::Result<UserConfig> {
         let mut key_input = String::new();
         io::stdin().read_line(&mut key_input)?;
         let key_input = key_input.trim();
-        if key_input.is_empty() { None } else { Some(key_input.to_string()) }
+        if key_input.is_empty() {
+            None
+        } else {
+            Some(key_input.to_string())
+        }
     } else {
         print!("API Key (optional for Ollama/local, press Enter to skip): ");
         io::stdout().flush()?;
         let mut key_input = String::new();
         io::stdin().read_line(&mut key_input)?;
         let key_input = key_input.trim();
-        if key_input.is_empty() { None } else { Some(key_input.to_string()) }
+        if key_input.is_empty() {
+            None
+        } else {
+            Some(key_input.to_string())
+        }
     };
 
     // Dynamic model picker from models.dev catalog
-    let available_models = crate::config::models_dev::ModelCatalog::get_models_for_provider(provider);
+    let available_models =
+        crate::config::models_dev::ModelCatalog::get_models_for_provider(provider);
     println!("\nSelect Model from models.dev Catalog for '{}':", provider);
     for (i, m) in available_models.iter().enumerate() {
-        println!("  [{}] {} ({}) [ctx: {}k]", i + 1, m.name, m.id, m.context_window / 1000);
+        println!(
+            "  [{}] {} ({}) [ctx: {}k]",
+            i + 1,
+            m.name,
+            m.id,
+            m.context_window / 1000
+        );
     }
     println!("  [0] Custom / unlisted model name");
     print!("\nChoice [0-{}] (default: 1): ", available_models.len());
@@ -204,7 +231,11 @@ pub fn run_setup_wizard() -> anyhow::Result<UserConfig> {
         let mut custom_model = String::new();
         io::stdin().read_line(&mut custom_model)?;
         let trimmed = custom_model.trim();
-        if trimmed.is_empty() { available_models[0].id.clone() } else { trimmed.to_string() }
+        if trimmed.is_empty() {
+            available_models[0].id.clone()
+        } else {
+            trimmed.to_string()
+        }
     } else if let Ok(idx) = model_choice.parse::<usize>() {
         if idx >= 1 && idx <= available_models.len() {
             available_models[idx - 1].id.clone()
@@ -217,13 +248,19 @@ pub fn run_setup_wizard() -> anyhow::Result<UserConfig> {
 
     // Policy profile
     println!("\nSelect Boundary Policy Enforcement Profile:");
-    println!("  [1] Standard (Blocks unauthorized writes & unallowlisted egress on untrusted data)");
+    println!(
+        "  [1] Standard (Blocks unauthorized writes & unallowlisted egress on untrusted data)"
+    );
     println!("  [2] Strict (Zero unconfined execution; blocks all untrusted write/exec turns)");
     print!("Choice [1-2] (default: 1): ");
     io::stdout().flush()?;
     let mut pol_input = String::new();
     io::stdin().read_line(&mut pol_input)?;
-    let policy_profile = if pol_input.trim() == "2" { "Strict".to_string() } else { "Standard".to_string() };
+    let policy_profile = if pol_input.trim() == "2" {
+        "Strict".to_string()
+    } else {
+        "Standard".to_string()
+    };
 
     let config = UserConfig {
         provider: provider.to_string(),
@@ -235,8 +272,14 @@ pub fn run_setup_wizard() -> anyhow::Result<UserConfig> {
     };
 
     config.save()?;
-    println!("\n[+] Configuration saved to: {}", UserConfig::config_path().display());
-    println!("[+] Provider: {} | Model: {}", config.provider, config.model);
+    println!(
+        "\n[+] Configuration saved to: {}",
+        UserConfig::config_path().display()
+    );
+    println!(
+        "[+] Provider: {} | Model: {}",
+        config.provider, config.model
+    );
     println!("[+] Policy Profile: {}\n", config.policy_profile);
 
     Ok(config)

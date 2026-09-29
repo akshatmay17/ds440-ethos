@@ -5,7 +5,10 @@ fn test_export_openai_tool_definitions() {
     let tools = get_all_tool_definitions();
     assert!(tools.len() >= 8);
 
-    let tool_names: Vec<&str> = tools.iter().map(|t| t["function"]["name"].as_str().unwrap()).collect();
+    let tool_names: Vec<&str> = tools
+        .iter()
+        .map(|t| t["function"]["name"].as_str().unwrap())
+        .collect();
 
     assert!(tool_names.contains(&"read"));
     assert!(tool_names.contains(&"write"));
@@ -18,7 +21,10 @@ fn test_export_openai_tool_definitions() {
     assert!(tool_names.contains(&"rewind"));
 
     // Verify schema structure on one tool
-    let view_tool = tools.iter().find(|t| t["function"]["name"] == "view_lines").unwrap();
+    let view_tool = tools
+        .iter()
+        .find(|t| t["function"]["name"] == "view_lines")
+        .unwrap();
     assert_eq!(view_tool["type"], "function");
     assert!(view_tool["function"]["parameters"]["properties"]["path"].is_object());
     assert!(view_tool["function"]["parameters"]["properties"]["start_line"].is_object());

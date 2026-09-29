@@ -51,7 +51,11 @@ impl StateTree {
             return Err(anyhow::anyhow!("Branch already exists: {}", branch_name));
         }
 
-        let current_head = self.branches.get(&self.current_branch).cloned().unwrap_or_default();
+        let current_head = self
+            .branches
+            .get(&self.current_branch)
+            .cloned()
+            .unwrap_or_default();
         self.branches.insert(branch_name.to_string(), current_head);
         self.current_branch = branch_name.to_string();
         Ok(())

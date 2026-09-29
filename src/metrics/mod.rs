@@ -1,6 +1,6 @@
-use std::sync::{Arc, RwLock};
-use serde::{Deserialize, Serialize};
 use crate::models::AuditEvent;
+use serde::{Deserialize, Serialize};
+use std::sync::{Arc, RwLock};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricsSummary {

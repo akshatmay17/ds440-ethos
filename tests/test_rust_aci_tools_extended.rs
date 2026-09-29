@@ -51,7 +51,11 @@ fn test_search_files_matches_pattern() {
 #[test]
 fn test_grep_finds_matching_lines() {
     let mut harness = ACIHarness::new_with_temp_dir().unwrap();
-    harness.write("auth.py", "def login():\n    token = 'SECRET_TOKEN_123'\n    return token\n", None);
+    harness.write(
+        "auth.py",
+        "def login():\n    token = 'SECRET_TOKEN_123'\n    return token\n",
+        None,
+    );
     harness.write("public.py", "def info():\n    return 'ok'\n", None);
 
     let res = harness.grep("SECRET_TOKEN");

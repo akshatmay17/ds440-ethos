@@ -18,13 +18,13 @@ use ratatui::{
 use crate::config::providers::ProviderManager;
 use crate::metrics::MetricsCollector;
 
-pub const COLOR_BG: Color = Color::Rgb(28, 28, 28);       // #1C1C1C
-pub const COLOR_BORDER: Color = Color::Rgb(40, 40, 40);   // #282828
-pub const COLOR_CYAN: Color = Color::Rgb(250, 178, 131);  // #FAB283 (OC-2 Peach brand)
-pub const COLOR_GREEN: Color = Color::Rgb(72, 187, 120);  // #48BB78
-pub const COLOR_AMBER: Color = Color::Rgb(246, 173, 85);  // #F6AD55
-pub const COLOR_RED: Color = Color::Rgb(245, 101, 101);   // #F56565
-pub const COLOR_DIM: Color = Color::Rgb(168, 168, 168);   // #A8A8A8
+pub const COLOR_BG: Color = Color::Rgb(28, 28, 28); // #1C1C1C
+pub const COLOR_BORDER: Color = Color::Rgb(40, 40, 40); // #282828
+pub const COLOR_CYAN: Color = Color::Rgb(250, 178, 131); // #FAB283 (OC-2 Peach brand)
+pub const COLOR_GREEN: Color = Color::Rgb(72, 187, 120); // #48BB78
+pub const COLOR_AMBER: Color = Color::Rgb(246, 173, 85); // #F6AD55
+pub const COLOR_RED: Color = Color::Rgb(245, 101, 101); // #F56565
+pub const COLOR_DIM: Color = Color::Rgb(168, 168, 168); // #A8A8A8
 
 pub struct TuiApp {
     pub selected_tab: usize,
@@ -109,12 +109,19 @@ impl TuiApp {
     fn draw_header(&self, frame: &mut Frame, area: Rect) {
         let header_chunks = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Length(26), Constraint::Min(20), Constraint::Length(24)])
+            .constraints([
+                Constraint::Length(26),
+                Constraint::Min(20),
+                Constraint::Length(24),
+            ])
             .split(area);
 
         // 1. Logo / Title
         let logo = Paragraph::new(Line::from(vec![
-            Span::styled("⚡ ETHOS ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "⚡ ETHOS ",
+                Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD),
+            ),
             Span::styled("v0.1.0", Style::default().fg(COLOR_DIM)),
         ]))
         .block(
@@ -152,13 +159,29 @@ impl TuiApp {
         let summary = self.metrics.get_summary();
         let status_text = if self.paused {
             Line::from(vec![
-                Span::styled("PAUSED", Style::default().fg(COLOR_AMBER).add_modifier(Modifier::BOLD)),
-                Span::styled(format!(" | {:.0}s", summary.uptime_seconds), Style::default().fg(COLOR_DIM)),
+                Span::styled(
+                    "PAUSED",
+                    Style::default()
+                        .fg(COLOR_AMBER)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    format!(" | {:.0}s", summary.uptime_seconds),
+                    Style::default().fg(COLOR_DIM),
+                ),
             ])
         } else {
             Line::from(vec![
-                Span::styled("● LIVE ", Style::default().fg(COLOR_GREEN).add_modifier(Modifier::BOLD)),
-                Span::styled(format!("| Uptime: {:.0}s", summary.uptime_seconds), Style::default().fg(COLOR_DIM)),
+                Span::styled(
+                    "● LIVE ",
+                    Style::default()
+                        .fg(COLOR_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    format!("| Uptime: {:.0}s", summary.uptime_seconds),
+                    Style::default().fg(COLOR_DIM),
+                ),
             ])
         };
         let status = Paragraph::new(status_text)
@@ -203,12 +226,18 @@ impl TuiApp {
 
         // Card 1: Sandboxes
         let card1 = Paragraph::new(vec![
-            Line::from(Span::styled("ACTIVE SANDBOXES", Style::default().fg(COLOR_DIM))),
+            Line::from(Span::styled(
+                "ACTIVE SANDBOXES",
+                Style::default().fg(COLOR_DIM),
+            )),
             Line::from(Span::styled(
                 format!("{}", summary.active_sandboxes),
                 Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD),
             )),
-            Line::from(Span::styled("Isolated OS Environments", Style::default().fg(COLOR_DIM))),
+            Line::from(Span::styled(
+                "Isolated OS Environments",
+                Style::default().fg(COLOR_DIM),
+            )),
         ])
         .block(
             Block::default()
@@ -220,12 +249,20 @@ impl TuiApp {
 
         // Card 2: Steps Executed
         let card2 = Paragraph::new(vec![
-            Line::from(Span::styled("TOTAL TOOL STEPS", Style::default().fg(COLOR_DIM))),
+            Line::from(Span::styled(
+                "TOTAL TOOL STEPS",
+                Style::default().fg(COLOR_DIM),
+            )),
             Line::from(Span::styled(
                 format!("{}", summary.total_steps),
-                Style::default().fg(COLOR_GREEN).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(COLOR_GREEN)
+                    .add_modifier(Modifier::BOLD),
             )),
-            Line::from(Span::styled("Read/Write/Exec Turns", Style::default().fg(COLOR_DIM))),
+            Line::from(Span::styled(
+                "Read/Write/Exec Turns",
+                Style::default().fg(COLOR_DIM),
+            )),
         ])
         .block(
             Block::default()
@@ -236,14 +273,26 @@ impl TuiApp {
         frame.render_widget(card2, top_cards[1]);
 
         // Card 3: Active Taint Ledger
-        let taint_color = if summary.active_taint_count > 0 { COLOR_RED } else { COLOR_GREEN };
+        let taint_color = if summary.active_taint_count > 0 {
+            COLOR_RED
+        } else {
+            COLOR_GREEN
+        };
         let card3 = Paragraph::new(vec![
-            Line::from(Span::styled("TAINTED ARTIFACTS", Style::default().fg(COLOR_DIM))),
+            Line::from(Span::styled(
+                "TAINTED ARTIFACTS",
+                Style::default().fg(COLOR_DIM),
+            )),
             Line::from(Span::styled(
                 format!("{}", summary.active_taint_count),
-                Style::default().fg(taint_color).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(taint_color)
+                    .add_modifier(Modifier::BOLD),
             )),
-            Line::from(Span::styled("Tracked in Provenance DAG", Style::default().fg(COLOR_DIM))),
+            Line::from(Span::styled(
+                "Tracked in Provenance DAG",
+                Style::default().fg(COLOR_DIM),
+            )),
         ])
         .block(
             Block::default()
@@ -258,15 +307,23 @@ impl TuiApp {
             + summary.wall_trips_ouroboros
             + summary.wall_trips_hallu_scan
             + summary.wall_trips_estop;
-        let trip_color = if total_trips > 0 { COLOR_AMBER } else { COLOR_GREEN };
+        let trip_color = if total_trips > 0 {
+            COLOR_AMBER
+        } else {
+            COLOR_GREEN
+        };
         let card4 = Paragraph::new(vec![
-            Line::from(Span::styled("CONTAINMENT TRIPS", Style::default().fg(COLOR_DIM))),
+            Line::from(Span::styled(
+                "CONTAINMENT TRIPS",
+                Style::default().fg(COLOR_DIM),
+            )),
             Line::from(Span::styled(
                 format!("{}", total_trips),
                 Style::default().fg(trip_color).add_modifier(Modifier::BOLD),
             )),
             Line::from(Span::styled(
-                format!("PI:{} OU:{} HS:{} ES:{}", 
+                format!(
+                    "PI:{} OU:{} HS:{} ES:{}",
                     summary.wall_trips_prompt_inject,
                     summary.wall_trips_ouroboros,
                     summary.wall_trips_hallu_scan,
@@ -290,7 +347,9 @@ impl TuiApp {
                 Cell::from("---"),
                 Cell::from("SYSTEM_READY"),
                 Cell::from("engine"),
-                Cell::from("Ethos daemon online. Waiting for agent activity or harness executions..."),
+                Cell::from(
+                    "Ethos daemon online. Waiting for agent activity or harness executions...",
+                ),
             ])]
         } else {
             events
@@ -340,14 +399,20 @@ impl TuiApp {
         let sample_rows = vec![
             Row::new(vec![
                 Cell::from("downloads/scrape_payload.txt"),
-                Cell::from(Span::styled("[UNTRUSTED]", Style::default().fg(COLOR_RED).add_modifier(Modifier::BOLD))),
+                Cell::from(Span::styled(
+                    "[UNTRUSTED]",
+                    Style::default().fg(COLOR_RED).add_modifier(Modifier::BOLD),
+                )),
                 Cell::from("UntrustedWeb"),
                 Cell::from("https://malicious-forum.example.com/exploit.html"),
                 Cell::from("Direct Ingestion"),
             ]),
             Row::new(vec![
                 Cell::from("src/cache/parsed_nodes.json"),
-                Cell::from(Span::styled("[UNTRUSTED]", Style::default().fg(COLOR_RED).add_modifier(Modifier::BOLD))),
+                Cell::from(Span::styled(
+                    "[UNTRUSTED]",
+                    Style::default().fg(COLOR_RED).add_modifier(Modifier::BOLD),
+                )),
                 Cell::from("Propagated"),
                 Cell::from("downloads/scrape_payload.txt -> edit_block"),
                 Cell::from("Inherited Taint"),
@@ -361,7 +426,12 @@ impl TuiApp {
             ]),
             Row::new(vec![
                 Cell::from("verified/sanitized_report.csv"),
-                Cell::from(Span::styled("[TRUSTED]", Style::default().fg(COLOR_GREEN).add_modifier(Modifier::BOLD))),
+                Cell::from(Span::styled(
+                    "[TRUSTED]",
+                    Style::default()
+                        .fg(COLOR_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                )),
                 Cell::from("Declassified"),
                 Cell::from("Token: SEC-OVERRIDE-TOKEN-VALIDATED"),
                 Cell::from("Human Verified"),
@@ -379,8 +449,14 @@ impl TuiApp {
             ],
         )
         .header(
-            Row::new(vec!["Resource Path", "Trust Level", "Provenance Tag", "Chain of Custody / Origin", "Status"])
-                .style(Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
+            Row::new(vec![
+                "Resource Path",
+                "Trust Level",
+                "Provenance Tag",
+                "Chain of Custody / Origin",
+                "Status",
+            ])
+            .style(Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
         )
         .block(
             Block::default()
@@ -412,10 +488,18 @@ impl TuiApp {
         let p1 = Paragraph::new(vec![
             Line::from(vec![
                 Span::styled("STATUS: ", Style::default().fg(COLOR_DIM)),
-                Span::styled("ARMED & MONITORING", Style::default().fg(COLOR_GREEN).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "ARMED & MONITORING",
+                    Style::default()
+                        .fg(COLOR_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                ),
             ]),
             Line::from("Scans: Direct, Indirect, Role Confusion, Jailbreak, Tool Misuse"),
-            Line::from(Span::styled("Threshold: Multi-family keyword & regex entropy", Style::default().fg(COLOR_DIM))),
+            Line::from(Span::styled(
+                "Threshold: Multi-family keyword & regex entropy",
+                Style::default().fg(COLOR_DIM),
+            )),
             Line::from("Action: Intercepts toxic agent prompts before execution"),
         ])
         .block(
@@ -430,10 +514,18 @@ impl TuiApp {
         let p2 = Paragraph::new(vec![
             Line::from(vec![
                 Span::styled("STATUS: ", Style::default().fg(COLOR_DIM)),
-                Span::styled("ARMED & SHIELDING", Style::default().fg(COLOR_GREEN).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "ARMED & SHIELDING",
+                    Style::default()
+                        .fg(COLOR_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                ),
             ]),
             Line::from("Protected: tests/**, src/taint/**, src/walls/**, .git/**"),
-            Line::from(Span::styled("Defense: Prevents autonomous agents from modifying test assertions", Style::default().fg(COLOR_DIM))),
+            Line::from(Span::styled(
+                "Defense: Prevents autonomous agents from modifying test assertions",
+                Style::default().fg(COLOR_DIM),
+            )),
             Line::from("Action: Immediately blocks write/edit_block targeting security files"),
         ])
         .block(
@@ -448,10 +540,18 @@ impl TuiApp {
         let p3 = Paragraph::new(vec![
             Line::from(vec![
                 Span::styled("STATUS: ", Style::default().fg(COLOR_DIM)),
-                Span::styled("ACTIVE PRE-VALIDATION", Style::default().fg(COLOR_GREEN).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "ACTIVE PRE-VALIDATION",
+                    Style::default()
+                        .fg(COLOR_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                ),
             ]),
             Line::from("Function: Validates file target existence before tool invocation"),
-            Line::from(Span::styled("Neutralizes: Hallucinated file path loops and retry waste", Style::default().fg(COLOR_DIM))),
+            Line::from(Span::styled(
+                "Neutralizes: Hallucinated file path loops and retry waste",
+                Style::default().fg(COLOR_DIM),
+            )),
             Line::from("Efficiency: Saves up to 40% model context tokens"),
         ])
         .block(
@@ -466,10 +566,18 @@ impl TuiApp {
         let p4 = Paragraph::new(vec![
             Line::from(vec![
                 Span::styled("CIRCUIT STATUS: ", Style::default().fg(COLOR_DIM)),
-                Span::styled("NORMAL (CLOSED)", Style::default().fg(COLOR_GREEN).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "NORMAL (CLOSED)",
+                    Style::default()
+                        .fg(COLOR_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                ),
             ]),
             Line::from("Trips on: Critical severity injections or unauthorized egress"),
-            Line::from(Span::styled("Effect: Instant termination of AgentLoop with audit snapshot", Style::default().fg(COLOR_DIM))),
+            Line::from(Span::styled(
+                "Effect: Instant termination of AgentLoop with audit snapshot",
+                Style::default().fg(COLOR_DIM),
+            )),
             Line::from("Manual Reset: Available via REST API or CLI command"),
         ])
         .block(
@@ -490,7 +598,12 @@ impl TuiApp {
                 Cell::from("High-throughput Web Scrapers & Proxy Network"),
                 Cell::from(registry.spider.endpoint.clone()),
                 Cell::from(if registry.spider.enabled {
-                    Span::styled("ENABLED", Style::default().fg(COLOR_GREEN).add_modifier(Modifier::BOLD))
+                    Span::styled(
+                        "ENABLED",
+                        Style::default()
+                            .fg(COLOR_GREEN)
+                            .add_modifier(Modifier::BOLD),
+                    )
                 } else {
                     Span::styled("PENDING_KEY", Style::default().fg(COLOR_AMBER))
                 }),
@@ -500,14 +613,22 @@ impl TuiApp {
                 Cell::from("Ollama Bunker"),
                 Cell::from("Self-Hosted Open-Weight Attacker / Local LLM"),
                 Cell::from(registry.bunker.endpoint.clone()),
-                Cell::from(Span::styled("CONNECTED", Style::default().fg(COLOR_GREEN).add_modifier(Modifier::BOLD))),
+                Cell::from(Span::styled(
+                    "CONNECTED",
+                    Style::default()
+                        .fg(COLOR_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                )),
                 Cell::from(registry.bunker.model.clone()),
             ]),
             Row::new(vec![
                 Cell::from("Frontier LLM"),
                 Cell::from("OpenAI / Anthropic Enterprise Agent Model"),
                 Cell::from("api.openai.com / api.anthropic.com"),
-                Cell::from(Span::styled(&registry.frontier.status, Style::default().fg(COLOR_CYAN))),
+                Cell::from(Span::styled(
+                    &registry.frontier.status,
+                    Style::default().fg(COLOR_CYAN),
+                )),
                 Cell::from(registry.frontier.model.clone()),
             ]),
             Row::new(vec![
@@ -530,8 +651,14 @@ impl TuiApp {
             ],
         )
         .header(
-            Row::new(vec!["Provider / Engine", "Role", "Endpoint / Target", "Status", "Configuration"])
-                .style(Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
+            Row::new(vec![
+                "Provider / Engine",
+                "Role",
+                "Endpoint / Target",
+                "Status",
+                "Configuration",
+            ])
+            .style(Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
         )
         .block(
             Block::default()
@@ -557,8 +684,14 @@ impl TuiApp {
             .split(chunks[0]);
 
         let p1 = Paragraph::new(vec![
-            Line::from(Span::styled("PAPER 1: ACI CAPABILITY CURVE", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD))),
-            Line::from(format!("Task Solve Rate: {:.1}%", summary.benchmark_solve_rate * 100.0)),
+            Line::from(Span::styled(
+                "PAPER 1: ACI CAPABILITY CURVE",
+                Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD),
+            )),
+            Line::from(format!(
+                "Task Solve Rate: {:.1}%",
+                summary.benchmark_solve_rate * 100.0
+            )),
             Line::from("Baseline (Vanilla Prompt): 38.2%"),
             Line::from("Ethos Harness Enhanced: 82.5% (+44.3% lift)"),
         ])
@@ -571,8 +704,16 @@ impl TuiApp {
         frame.render_widget(p1, top_cols[0]);
 
         let p2 = Paragraph::new(vec![
-            Line::from(Span::styled("PAPER 2: TAINT DEFENSE STUDY", Style::default().fg(COLOR_GREEN).add_modifier(Modifier::BOLD))),
-            Line::from(format!("Exfiltration Block Rate: {:.1}%", summary.benchmark_defense_rate * 100.0)),
+            Line::from(Span::styled(
+                "PAPER 2: TAINT DEFENSE STUDY",
+                Style::default()
+                    .fg(COLOR_GREEN)
+                    .add_modifier(Modifier::BOLD),
+            )),
+            Line::from(format!(
+                "Exfiltration Block Rate: {:.1}%",
+                summary.benchmark_defense_rate * 100.0
+            )),
             Line::from("Direct & Indirect Injections Intercepted: 100%"),
             Line::from("False Positive Rate on Benign Workflows: < 1.2%"),
         ])
@@ -602,18 +743,32 @@ impl TuiApp {
 
     fn draw_footer(&self, frame: &mut Frame, area: Rect) {
         let text = Line::from(vec![
-            Span::styled(" [Tab/1-5] ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                " [Tab/1-5] ",
+                Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD),
+            ),
             Span::styled("Switch Views  ", Style::default().fg(COLOR_DIM)),
-            Span::styled(" [Space] ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                " [Space] ",
+                Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD),
+            ),
             Span::styled("Pause/Resume  ", Style::default().fg(COLOR_DIM)),
-            Span::styled(" [r] ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                " [r] ",
+                Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD),
+            ),
             Span::styled("Refresh  ", Style::default().fg(COLOR_DIM)),
-            Span::styled(" [q/Esc] ", Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                " [q/Esc] ",
+                Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD),
+            ),
             Span::styled("Exit TUI", Style::default().fg(COLOR_DIM)),
         ]);
-        let footer = Paragraph::new(text)
-            .alignment(Alignment::Center)
-            .block(Block::default().borders(Borders::TOP).border_style(Style::default().fg(COLOR_BORDER)));
+        let footer = Paragraph::new(text).alignment(Alignment::Center).block(
+            Block::default()
+                .borders(Borders::TOP)
+                .border_style(Style::default().fg(COLOR_BORDER)),
+        );
         frame.render_widget(footer, area);
     }
 }

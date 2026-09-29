@@ -1,5 +1,5 @@
-use std::sync::{Arc, RwLock};
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, RwLock};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpiderCloudConfig {
@@ -76,8 +76,9 @@ pub struct PostgresConfig {
 impl Default for PostgresConfig {
     fn default() -> Self {
         Self {
-            url: std::env::var("DATABASE_URL")
-                .unwrap_or_else(|_| "postgres://postgres:postgres@localhost:5432/ethos".to_string()),
+            url: std::env::var("DATABASE_URL").unwrap_or_else(|_| {
+                "postgres://postgres:postgres@localhost:5432/ethos".to_string()
+            }),
             max_connections: 5,
             status: "configured".to_string(),
         }
@@ -114,7 +115,12 @@ impl ProviderManager {
         self.inner.read().unwrap().clone()
     }
 
-    pub fn update_spider(&mut self, api_key: Option<String>, endpoint: Option<String>, concurrency: Option<usize>) {
+    pub fn update_spider(
+        &mut self,
+        api_key: Option<String>,
+        endpoint: Option<String>,
+        concurrency: Option<usize>,
+    ) {
         if let Ok(mut lock) = self.inner.write() {
             if let Some(key) = api_key {
                 lock.spider.api_key = Some(key);
@@ -141,7 +147,12 @@ impl ProviderManager {
         }
     }
 
-    pub fn update_frontier(&mut self, provider: Option<String>, api_key: Option<String>, model: Option<String>) {
+    pub fn update_frontier(
+        &mut self,
+        provider: Option<String>,
+        api_key: Option<String>,
+        model: Option<String>,
+    ) {
         if let Ok(mut lock) = self.inner.write() {
             if let Some(p) = provider {
                 lock.frontier.provider = p;

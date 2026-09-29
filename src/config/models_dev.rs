@@ -1,9 +1,9 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::{OnceLock, RwLock};
 use std::time::{Duration, SystemTime};
-use serde::{Deserialize, Serialize};
 
 pub const CACHE_TTL_SECONDS: u64 = 7 * 24 * 3600; // 7 days (weekly TTL)
 pub const MODELS_DEV_URL: &str = "https://models.dev/api.json";
@@ -53,6 +53,7 @@ pub struct ModelSpec {
 }
 
 impl ModelSpec {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         id: &str,
         name: &str,
@@ -74,9 +75,19 @@ impl ModelSpec {
             cost_output_per_million: cost_out,
             cost_cache_read_per_million: 0.0,
             has_tools: tool_format == "native_json",
-            has_reasoning: id.contains("r1") || id.contains("o1") || id.contains("o3") || id.contains("reasoner"),
-            has_vision: id.contains("4o") || id.contains("gemini") || id.contains("sonnet") || id.contains("vision"),
-            is_open_weights: provider == "ollama" || id.contains("llama") || id.contains("qwen") || id.contains("deepseek") || id.contains("gemma"),
+            has_reasoning: id.contains("r1")
+                || id.contains("o1")
+                || id.contains("o3")
+                || id.contains("reasoner"),
+            has_vision: id.contains("4o")
+                || id.contains("gemini")
+                || id.contains("sonnet")
+                || id.contains("vision"),
+            is_open_weights: provider == "ollama"
+                || id.contains("llama")
+                || id.contains("qwen")
+                || id.contains("deepseek")
+                || id.contains("gemma"),
             description: None,
         }
     }
@@ -108,13 +119,76 @@ impl ModelCatalogData {
 
         // 1. Always include local Ollama as a first-class local bunker provider
         let ollama_models = vec![
-            ModelSpec::new("qwen2.5-coder:7b", "Qwen 2.5 Coder 7B", "ollama", 32_768, 8_192, "xml", 0.0, 0.0),
-            ModelSpec::new("qwen2.5-coder:14b", "Qwen 2.5 Coder 14B", "ollama", 32_768, 8_192, "xml", 0.0, 0.0),
-            ModelSpec::new("qwen2.5-coder:32b", "Qwen 2.5 Coder 32B", "ollama", 32_768, 8_192, "xml", 0.0, 0.0),
-            ModelSpec::new("deepseek-r1:8b", "DeepSeek R1 Distill 8B", "ollama", 65_536, 8_192, "xml", 0.0, 0.0),
-            ModelSpec::new("deepseek-r1:14b", "DeepSeek R1 Distill 14B", "ollama", 65_536, 8_192, "xml", 0.0, 0.0),
-            ModelSpec::new("llama3.3:70b", "Llama 3.3 70B Instruct", "ollama", 131_072, 8_192, "xml", 0.0, 0.0),
-            ModelSpec::new("codellama:13b", "CodeLlama 13B", "ollama", 16_384, 4_096, "xml", 0.0, 0.0),
+            ModelSpec::new(
+                "qwen2.5-coder:7b",
+                "Qwen 2.5 Coder 7B",
+                "ollama",
+                32_768,
+                8_192,
+                "xml",
+                0.0,
+                0.0,
+            ),
+            ModelSpec::new(
+                "qwen2.5-coder:14b",
+                "Qwen 2.5 Coder 14B",
+                "ollama",
+                32_768,
+                8_192,
+                "xml",
+                0.0,
+                0.0,
+            ),
+            ModelSpec::new(
+                "qwen2.5-coder:32b",
+                "Qwen 2.5 Coder 32B",
+                "ollama",
+                32_768,
+                8_192,
+                "xml",
+                0.0,
+                0.0,
+            ),
+            ModelSpec::new(
+                "deepseek-r1:8b",
+                "DeepSeek R1 Distill 8B",
+                "ollama",
+                65_536,
+                8_192,
+                "xml",
+                0.0,
+                0.0,
+            ),
+            ModelSpec::new(
+                "deepseek-r1:14b",
+                "DeepSeek R1 Distill 14B",
+                "ollama",
+                65_536,
+                8_192,
+                "xml",
+                0.0,
+                0.0,
+            ),
+            ModelSpec::new(
+                "llama3.3:70b",
+                "Llama 3.3 70B Instruct",
+                "ollama",
+                131_072,
+                8_192,
+                "xml",
+                0.0,
+                0.0,
+            ),
+            ModelSpec::new(
+                "codellama:13b",
+                "CodeLlama 13B",
+                "ollama",
+                16_384,
+                4_096,
+                "xml",
+                0.0,
+                0.0,
+            ),
         ];
         all_models.extend(ollama_models.clone());
         models_by_provider.insert("ollama".to_string(), ollama_models);
@@ -130,9 +204,16 @@ impl ModelCatalogData {
         });
 
         // 2. Always include Custom VPS / self-hosted as a provider
-        let custom_models = vec![
-            ModelSpec::new("custom-model", "Custom OpenAI-Compatible Model", "custom", 65_536, 8_192, "native_json", 0.0, 0.0),
-        ];
+        let custom_models = vec![ModelSpec::new(
+            "custom-model",
+            "Custom OpenAI-Compatible Model",
+            "custom",
+            65_536,
+            8_192,
+            "native_json",
+            0.0,
+            0.0,
+        )];
         all_models.extend(custom_models.clone());
         models_by_provider.insert("custom".to_string(), custom_models);
         providers.push(ProviderSummary {
@@ -148,69 +229,116 @@ impl ModelCatalogData {
         // 3. Parse models.dev raw JSON map
         if let Ok(raw_map) = serde_json::from_str::<HashMap<String, serde_json::Value>>(json_str) {
             for (p_id, p_val) in raw_map {
-                let p_name = p_val.get("name").and_then(|v| v.as_str()).unwrap_or(&p_id).to_string();
-                let p_api = p_val.get("api").and_then(|v| v.as_str()).map(|s| s.to_string());
-                let p_doc = p_val.get("doc").and_then(|v| v.as_str()).map(|s| s.to_string());
-                let p_env = p_val.get("env")
+                let p_name = p_val
+                    .get("name")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or(&p_id)
+                    .to_string();
+                let p_api = p_val
+                    .get("api")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string());
+                let p_doc = p_val
+                    .get("doc")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string());
+                let p_env = p_val
+                    .get("env")
                     .and_then(|v| v.as_array())
-                    .map(|arr| arr.iter().filter_map(|x| x.as_str().map(|s| s.to_string())).collect())
+                    .map(|arr| {
+                        arr.iter()
+                            .filter_map(|x| x.as_str().map(|s| s.to_string()))
+                            .collect()
+                    })
                     .unwrap_or_default();
 
-                let default_api = p_api.unwrap_or_else(|| {
-                    match p_id.as_str() {
-                        "openai" => "https://api.openai.com/v1".to_string(),
-                        "anthropic" => "https://api.anthropic.com/v1".to_string(),
-                        "google" => "https://generativelanguage.googleapis.com/v1beta/openai".to_string(),
-                        "deepseek" => "https://api.deepseek.com/v1".to_string(),
-                        "openrouter" => "https://openrouter.ai/api/v1".to_string(),
-                        "groq" => "https://api.groq.com/openai/v1".to_string(),
-                        "mistral" => "https://api.mistral.ai/v1".to_string(),
-                        "togetherai" => "https://api.together.xyz/v1".to_string(),
-                        "cohere" => "https://api.cohere.com/v1".to_string(),
-                        _ => format!("https://api.{}.com/v1", p_id),
+                let default_api = p_api.unwrap_or_else(|| match p_id.as_str() {
+                    "openai" => "https://api.openai.com/v1".to_string(),
+                    "anthropic" => "https://api.anthropic.com/v1".to_string(),
+                    "google" => {
+                        "https://generativelanguage.googleapis.com/v1beta/openai".to_string()
                     }
+                    "deepseek" => "https://api.deepseek.com/v1".to_string(),
+                    "openrouter" => "https://openrouter.ai/api/v1".to_string(),
+                    "groq" => "https://api.groq.com/openai/v1".to_string(),
+                    "mistral" => "https://api.mistral.ai/v1".to_string(),
+                    "togetherai" => "https://api.together.xyz/v1".to_string(),
+                    "cohere" => "https://api.cohere.com/v1".to_string(),
+                    _ => format!("https://api.{}.com/v1", p_id),
                 });
 
                 let mut p_models = Vec::new();
                 if let Some(raw_models) = p_val.get("models").and_then(|m| m.as_object()) {
                     for (m_key, m_val) in raw_models {
-                        let id = m_val.get("id").and_then(|v| v.as_str()).unwrap_or(m_key).to_string();
-                        let name = m_val.get("name").and_then(|v| v.as_str()).unwrap_or(&id).to_string();
-                        let desc = m_val.get("description").and_then(|v| v.as_str()).map(|s| s.to_string());
-                        
-                        let context_window = m_val.get("limit")
+                        let id = m_val
+                            .get("id")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or(m_key)
+                            .to_string();
+                        let name = m_val
+                            .get("name")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or(&id)
+                            .to_string();
+                        let desc = m_val
+                            .get("description")
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_string());
+
+                        let context_window = m_val
+                            .get("limit")
                             .and_then(|l| l.get("context"))
                             .and_then(|c| c.as_u64())
-                            .unwrap_or(32_768) as usize;
-                        let max_output_tokens = m_val.get("limit")
+                            .unwrap_or(32_768)
+                            as usize;
+                        let max_output_tokens = m_val
+                            .get("limit")
                             .and_then(|l| l.get("output"))
                             .and_then(|c| c.as_u64())
-                            .unwrap_or(4_096) as usize;
-                        
-                        let cost_in = m_val.get("cost")
+                            .unwrap_or(4_096)
+                            as usize;
+
+                        let cost_in = m_val
+                            .get("cost")
                             .and_then(|c| c.get("input"))
                             .and_then(|v| v.as_f64())
                             .unwrap_or(0.0);
-                        let cost_out = m_val.get("cost")
+                        let cost_out = m_val
+                            .get("cost")
                             .and_then(|c| c.get("output"))
                             .and_then(|v| v.as_f64())
                             .unwrap_or(0.0);
-                        let cost_cache = m_val.get("cost")
+                        let cost_cache = m_val
+                            .get("cost")
                             .and_then(|c| c.get("cache_read"))
                             .and_then(|v| v.as_f64())
                             .unwrap_or(0.0);
 
-                        let tool_call = m_val.get("tool_call").and_then(|v| v.as_bool()).unwrap_or(false);
-                        let reasoning = m_val.get("reasoning").and_then(|v| v.as_bool()).unwrap_or(false);
-                        let open_weights = m_val.get("open_weights").and_then(|v| v.as_bool()).unwrap_or(false);
+                        let tool_call = m_val
+                            .get("tool_call")
+                            .and_then(|v| v.as_bool())
+                            .unwrap_or(false);
+                        let reasoning = m_val
+                            .get("reasoning")
+                            .and_then(|v| v.as_bool())
+                            .unwrap_or(false);
+                        let open_weights = m_val
+                            .get("open_weights")
+                            .and_then(|v| v.as_bool())
+                            .unwrap_or(false);
 
-                        let has_vision = m_val.get("modalities")
+                        let has_vision = m_val
+                            .get("modalities")
                             .and_then(|m| m.get("input"))
                             .and_then(|inp| inp.as_array())
                             .map(|arr| arr.iter().any(|v| v.as_str() == Some("image")))
                             .unwrap_or(false);
 
-                        let tool_format = if tool_call { "native_json".to_string() } else { "xml".to_string() };
+                        let tool_format = if tool_call {
+                            "native_json".to_string()
+                        } else {
+                            "xml".to_string()
+                        };
 
                         let spec = ModelSpec {
                             id,
@@ -235,7 +363,7 @@ impl ModelCatalogData {
                 }
 
                 // Sort models so largest context windows are up front
-                p_models.sort_by(|a, b| b.context_window.cmp(&a.context_window));
+                p_models.sort_by_key(|model| std::cmp::Reverse(model.context_window));
 
                 let is_pop = POPULAR_PROVIDER_IDS.contains(&p_id.as_str());
 
@@ -254,12 +382,10 @@ impl ModelCatalogData {
         }
 
         // Sort providers: popular first, then alphabetical by name
-        providers.sort_by(|a, b| {
-            match (a.is_popular, b.is_popular) {
-                (true, false) => std::cmp::Ordering::Less,
-                (false, true) => std::cmp::Ordering::Greater,
-                _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
-            }
+        providers.sort_by(|a, b| match (a.is_popular, b.is_popular) {
+            (true, false) => std::cmp::Ordering::Less,
+            (false, true) => std::cmp::Ordering::Greater,
+            _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
         });
 
         Self {
@@ -281,11 +407,15 @@ impl ModelCatalog {
         let home = std::env::var("USERPROFILE")
             .or_else(|_| std::env::var("HOME"))
             .unwrap_or_else(|_| ".".to_string());
-        let ethos_path = PathBuf::from(&home).join(".ethos").join("models_dev_cache.json");
+        let ethos_path = PathBuf::from(&home)
+            .join(".ethos")
+            .join("models_dev_cache.json");
         if ethos_path.exists() {
             return ethos_path;
         }
-        let legacy_path = PathBuf::from(&home).join(".taintbox").join("models_dev_cache.json");
+        let legacy_path = PathBuf::from(&home)
+            .join(".taintbox")
+            .join("models_dev_cache.json");
         if legacy_path.exists() {
             return legacy_path;
         }
@@ -337,7 +467,10 @@ impl ModelCatalog {
                 let q_lower = q.trim().to_lowercase();
                 lock.providers
                     .iter()
-                    .filter(|p| p.id.to_lowercase().contains(&q_lower) || p.name.to_lowercase().contains(&q_lower))
+                    .filter(|p| {
+                        p.id.to_lowercase().contains(&q_lower)
+                            || p.name.to_lowercase().contains(&q_lower)
+                    })
                     .cloned()
                     .collect()
             }
@@ -384,13 +517,19 @@ impl ModelCatalog {
         let lock = Self::get_data().read().unwrap();
         let id_lower = model_id.to_lowercase();
         // 1. Exact match first
-        if let Some(m) = lock.all_models.iter().find(|m| m.id.to_lowercase() == id_lower) {
+        if let Some(m) = lock
+            .all_models
+            .iter()
+            .find(|m| m.id.to_lowercase() == id_lower)
+        {
             return Some(m.clone());
         }
         // 2. Partial match fallback
         lock.all_models
             .iter()
-            .find(|m| m.id.to_lowercase().contains(&id_lower) || id_lower.contains(&m.id.to_lowercase()))
+            .find(|m| {
+                m.id.to_lowercase().contains(&id_lower) || id_lower.contains(&m.id.to_lowercase())
+            })
             .cloned()
     }
 
@@ -404,7 +543,9 @@ impl ModelCatalog {
         match prov_lower.as_str() {
             "openai" => "https://api.openai.com/v1".to_string(),
             "anthropic" => "https://api.anthropic.com/v1".to_string(),
-            "google" | "gemini" => "https://generativelanguage.googleapis.com/v1beta/openai".to_string(),
+            "google" | "gemini" => {
+                "https://generativelanguage.googleapis.com/v1beta/openai".to_string()
+            }
             "ollama" => "http://localhost:11434/v1".to_string(),
             "deepseek" => "https://api.deepseek.com/v1".to_string(),
             "openrouter" => "https://openrouter.ai/api/v1".to_string(),
@@ -440,12 +581,18 @@ impl ModelCatalog {
 
         let resp = client
             .get(MODELS_DEV_URL)
-            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Ethos/0.1.0")
+            .header(
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Ethos/0.1.0",
+            )
             .send()
             .await?;
 
         if !resp.status().is_success() {
-            anyhow::bail!("Failed to fetch models.dev API: HTTP status {}", resp.status());
+            anyhow::bail!(
+                "Failed to fetch models.dev API: HTTP status {}",
+                resp.status()
+            );
         }
 
         let body = resp.text().await?;
