@@ -37,6 +37,14 @@ pub struct BenchmarkResult {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkSuiteReport {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timestamp: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provider: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub split: Option<String>,
     pub total_scenarios: usize,
     pub capability_solved: usize,
     pub capability_total: usize,
@@ -141,6 +149,10 @@ impl BenchmarkRunner {
         }
 
         Ok(BenchmarkSuiteReport {
+            timestamp: Some(chrono::Utc::now().to_rfc3339()),
+            provider: None,
+            model: None,
+            split: None,
             total_scenarios: scenarios.len(),
             capability_solved: cap_solved,
             capability_total: cap_total,
