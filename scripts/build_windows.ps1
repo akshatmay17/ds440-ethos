@@ -1,5 +1,5 @@
 # Ethos Windows Build & Packaging Script
-# Compiles ethos.exe / tbox.exe CLI and generates WiX MSI & NSIS Setup.exe installers via Tauri v2
+# Compiles ethos.exe CLI and generates WiX MSI & NSIS Setup.exe installers via Tauri v2
 
 param(
     [switch]$SkipCli = $false,

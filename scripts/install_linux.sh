@@ -49,8 +49,7 @@ fi
 tar -xzf "${TEMP_DIR}/${ARCHIVE}" -C "$TEMP_DIR"
 mkdir -p "$INSTALL_DIR"
 install -m 0755 "${TEMP_DIR}/ethos" "${INSTALL_DIR}/ethos"
-install -m 0755 "${TEMP_DIR}/tbox" "${INSTALL_DIR}/tbox"
-install -m 0755 "${TEMP_DIR}/taintbox" "${INSTALL_DIR}/taintbox"
+ln -sf "${INSTALL_DIR}/ethos" "${INSTALL_DIR}/tbox"
 
 echo "Installed Ethos commands to ${INSTALL_DIR}."
 case ":${PATH}:" in

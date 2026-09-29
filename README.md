@@ -280,7 +280,7 @@ chmod +x ./scripts/build_linux.sh
 ## 9. Automated CI/CD Release Matrix
 
 Pushes with tags matching `v*` (or manual triggers via GitHub Actions `workflow_dispatch`) automatically execute:
-- [**`release-windows.yml`**](.github/workflows/release-windows.yml): Compiles `ethos.exe` & `tbox.exe`, builds WiX MSI and NSIS installers, and uploads release assets.
+- [**`release-windows.yml`**](.github/workflows/release-windows.yml): Compiles `ethos.exe`, builds WiX MSI and NSIS installers, and uploads release assets.
 - [**`release-macos.yml`**](.github/workflows/release-macos.yml): Compiles universal CLI, builds `.dmg` and `.app.tar.gz`, and generates SHA256 checksums.
 - [**`release-linux.yml`**](.github/workflows/release-linux.yml): Compiles Linux binary, builds `.deb` and `.AppImage`, and creates GitHub Release entries.
 - [**`ci.yml`**](.github/workflows/ci.yml): Enforces `cargo test --all-targets` and formatting checks on all pull requests.
