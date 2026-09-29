@@ -23,14 +23,12 @@ New-Item -ItemType Directory -Force -Path $DistDir | Out-Null
 
 # 2. Build CLI & Daemon Binaries
 if (-not $SkipCli) {
-    Write-Host "`n[1/3] Building Standalone CLI & Daemon (ethos.exe & tbox.exe)..." -ForegroundColor Yellow
+    Write-Host "`n[1/3] Building Standalone CLI & Daemon (ethos.exe)..." -ForegroundColor Yellow
     Push-Location (Join-Path $PSScriptRoot "..")
     try {
-        cargo build --release --bin ethos --bin tbox --bin taintbox
+        cargo build --release --bin ethos
         Copy-Item "target\release\ethos.exe" -Destination "$DistDir\ethos.exe" -Force
-        Copy-Item "target\release\tbox.exe" -Destination "$DistDir\tbox.exe" -Force
-        Copy-Item "target\release\taintbox.exe" -Destination "$DistDir\taintbox.exe" -Force
-        Write-Host "  -> CLI compiled to $DistDir\ethos.exe & $DistDir\tbox.exe" -ForegroundColor Green
+        Write-Host "  -> CLI compiled to $DistDir\ethos.exe" -ForegroundColor Green
     } finally {
         Pop-Location
     }
@@ -70,7 +68,7 @@ if (-not $SkipDesktop) {
 # 4. Package CLI Zip & Generate Checksums
 Write-Host "`n[3/3] Generating Checksums & Portable Zip..." -ForegroundColor Yellow
 if (Test-Path "$DistDir\ethos.exe") {
-    Compress-Archive -Path "$DistDir\ethos.exe", "$DistDir\tbox.exe", "$DistDir\taintbox.exe" -DestinationPath "$DistDir\ethos-windows-x64-cli.zip" -Force
+    Compress-Archive -Path "$DistDir\ethos.exe" -DestinationPath "$DistDir\ethos-windows-x64-cli.zip" -Force
 }
 
 $SumFile = "$DistDir\SHA256SUMS.txt"

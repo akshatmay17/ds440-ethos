@@ -23,14 +23,12 @@ mkdir -p "$DIST_DIR"
 
 # 2. Build CLI & Daemon
 echo ""
-echo "[1/3] Building Standalone CLI & Daemon (ethos & tbox)..."
+echo "[1/3] Building Standalone CLI & Daemon (ethos)..."
 cd "$ROOT_DIR"
-cargo build --release --bin ethos --bin tbox --bin taintbox
+cargo build --release --bin ethos
 cp "target/release/ethos" "$DIST_DIR/ethos"
-cp "target/release/tbox" "$DIST_DIR/tbox"
-cp "target/release/taintbox" "$DIST_DIR/taintbox"
-chmod +x "$DIST_DIR/ethos" "$DIST_DIR/tbox" "$DIST_DIR/taintbox"
-echo "  -> CLI compiled to $DIST_DIR/ethos & $DIST_DIR/tbox"
+chmod +x "$DIST_DIR/ethos"
+echo "  -> CLI compiled to $DIST_DIR/ethos"
 
 # 3. Check Tauri CLI
 echo ""
@@ -62,7 +60,7 @@ fi
 
 # 5. Package Portable Tarball
 cd "$DIST_DIR"
-tar -czf "ethos-linux-x64-cli.tar.gz" ethos tbox taintbox
+tar -czf "ethos-linux-x64-cli.tar.gz" ethos
 
 # 6. Generate Checksums
 rm -f SHA256SUMS.txt

@@ -66,7 +66,7 @@ jobs:
 
       - name: Build Core Ethos CLI & Daemon
         run: |
-          cargo build --release --target ${{ matrix.target }} --bin ethos --bin tbox --bin taintbox
+          cargo build --release --target ${{ matrix.target }} --bin ethos
 
       - name: Install Tauri CLI
         run: |
@@ -81,11 +81,9 @@ jobs:
         run: |
           mkdir -p dist/macos
 
-          # 1. Standalone CLI & Daemon Binaries
+          # 1. Standalone CLI & Daemon Binary
           cp "target/${{ matrix.target }}/release/ethos" "dist/macos/ethos-${{ matrix.arch }}"
-          cp "target/${{ matrix.target }}/release/tbox" "dist/macos/tbox-${{ matrix.arch }}"
-          cp "target/${{ matrix.target }}/release/taintbox" "dist/macos/taintbox-${{ matrix.arch }}"
-          chmod +x dist/macos/ethos-${{ matrix.arch }} dist/macos/tbox-${{ matrix.arch }} dist/macos/taintbox-${{ matrix.arch }}
+          chmod +x dist/macos/ethos-${{ matrix.arch }}
 
           # 2. Collect Tauri Bundle Outputs (.dmg and .app)
           BUNDLE_DIR="apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle"

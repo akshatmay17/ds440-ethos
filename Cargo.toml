@@ -11,14 +11,6 @@ default-run = "ethos"
 name = "ethos"
 path = "src/bin/ethos.rs"
 
-[[bin]]
-name = "tbox"
-path = "src/bin/tbox.rs"
-
-[[bin]]
-name = "taintbox"
-path = "src/main.rs"
-
 [dependencies]
 tokio = { version = "1", features = ["full"] }
 axum = { version = "0.7", features = ["macros"] }

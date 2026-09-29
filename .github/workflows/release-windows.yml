@@ -55,7 +55,7 @@ jobs:
 
       - name: Build Core Ethos CLI & Daemon (x86_64-pc-windows-msvc)
         run: |
-          cargo build --release --target x86_64-pc-windows-msvc --bin ethos --bin tbox --bin taintbox
+          cargo build --release --target x86_64-pc-windows-msvc --bin ethos
 
       - name: Install Tauri CLI
         run: |
@@ -71,10 +71,8 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path dist/windows
 
-          # 1. Copy Standalone CLI & Daemon Binaries
+          # 1. Copy Standalone CLI & Daemon Binary
           Copy-Item "target/x86_64-pc-windows-msvc/release/ethos.exe" -Destination "dist/windows/ethos.exe"
-          Copy-Item "target/x86_64-pc-windows-msvc/release/tbox.exe" -Destination "dist/windows/tbox.exe"
-          Copy-Item "target/x86_64-pc-windows-msvc/release/taintbox.exe" -Destination "dist/windows/taintbox.exe"
 
           # 2. Collect Tauri Bundle Outputs (MSI and NSIS Setup)
           $bundleBase = "apps/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle"
@@ -91,9 +89,8 @@ jobs:
               }
           }
 
-          # 3. Create Portable Zip of CLI Binaries
-          Compress-Archive -Path "dist/windows/ethos.exe", "dist/windows/tbox.exe", "dist/windows/taintbox.exe" -DestinationPath "dist/windows/ethos-windows-x64-cli.zip" -Force
-          Copy-Item "dist/windows/ethos-windows-x64-cli.zip" -Destination "dist/windows/tbox-windows-x64-cli.zip" -Force
+          # 3. Create Portable Zip of CLI Binary
+          Compress-Archive -Path "dist/windows/ethos.exe" -DestinationPath "dist/windows/ethos-windows-x64-cli.zip" -Force
 
           # 4. Generate SHA256 Checksums for all release assets
           Get-ChildItem "dist/windows" -File | Where-Object { $_.Name -ne "SHA256SUMS.txt" } | ForEach-Object {

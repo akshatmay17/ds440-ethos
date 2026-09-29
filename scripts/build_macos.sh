@@ -24,28 +24,24 @@ mkdir -p "$DIST_DIR"
 
 # 2. Build CLI & Daemon
 echo ""
-echo "[1/3] Building Standalone CLI & Daemon (ethos & tbox)..."
+echo "[1/3] Building Standalone CLI & Daemon (ethos)..."
 cd "$ROOT_DIR"
-cargo build --release --bin ethos --bin tbox --bin taintbox
+cargo build --release --bin ethos
 cp "target/release/ethos" "$DIST_DIR/ethos"
-cp "target/release/tbox" "$DIST_DIR/tbox"
-cp "target/release/taintbox" "$DIST_DIR/taintbox"
-chmod +x "$DIST_DIR/ethos" "$DIST_DIR/tbox" "$DIST_DIR/taintbox"
-echo "  -> CLI compiled to $DIST_DIR/ethos & $DIST_DIR/tbox"
+chmod +x "$DIST_DIR/ethos"
+echo "  -> CLI compiled to $DIST_DIR/ethos"
 
-# 3. Check Tauri CLI
+# 3. Check Tauri CLI & Build Desktop Application & DMG
 echo ""
-echo "[2/3] Checking Tauri CLI..."
-if ! command -v cargo-tauri &> /dev/null && ! command -v tauri &> /dev/null; then
-    echo "Installing tauri-cli v2..."
-    cargo install tauri-cli --version "^2.0.0" --locked
-fi
-
-# 4. Build Desktop Application & DMG
-echo ""
-echo "[3/3] Building macOS Desktop App (.app and .dmg)..."
+echo "[2/3] Building macOS Desktop App (.app and .dmg)..."
 cd "$ROOT_DIR/apps/desktop"
-cargo tauri build
+if command -v cargo-tauri &> /dev/null; then
+    cargo tauri build
+elif command -v tauri &> /dev/null; then
+    tauri build
+else
+    npx --yes @tauri-apps/cli@latest build
+fi
 
 BUNDLE_BASE="src-tauri/target/release/bundle"
 if [ -d "$BUNDLE_BASE" ]; then

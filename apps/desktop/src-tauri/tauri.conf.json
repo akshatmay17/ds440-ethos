@@ -46,7 +46,7 @@
     },
     "windows": {
       "nsis": {
-        "installMode": "currentUser"
+        "installMode": "both"
       },
       "wix": {
         "language": ["en-US"]
