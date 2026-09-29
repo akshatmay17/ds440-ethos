@@ -100,8 +100,7 @@ jobs:
           fi
 
           # 3. Create CLI Portable Tarball
-          tar -czf "dist/macos/ethos-mac-${{ matrix.arch }}-cli.tar.gz" -C dist/macos "ethos-${{ matrix.arch }}" "tbox-${{ matrix.arch }}" "taintbox-${{ matrix.arch }}"
-          cp "dist/macos/ethos-mac-${{ matrix.arch }}-cli.tar.gz" "dist/macos/tbox-mac-${{ matrix.arch }}-cli.tar.gz"
+          tar -czf "dist/macos/ethos-mac-${{ matrix.arch }}-cli.tar.gz" -C dist/macos "ethos-${{ matrix.arch }}"
 
           # 4. Generate SHA256 Checksums
           cd dist/macos
@@ -140,7 +139,7 @@ jobs:
             ### 🍏 macOS Package Downloads
             - **Apple Silicon (M1/M2/M3/M4 - arm64)**: DMG installer & `.app.tar.gz` bundle
             - **Intel (x86_64)**: DMG installer & `.app.tar.gz` bundle
-            - **CLI & Daemon**: Standalone `ethos`, `tbox` & `taintbox` binaries for terminal
+            - **CLI & Daemon**: Standalone `ethos` binary for terminal
 
             ### 🔐 Verification
             Verify SHA-256 checksums before opening:

@@ -127,7 +127,7 @@ jobs:
             ### 📦 Windows Package Downloads
             - **WiX MSI Installer**: Enterprise-grade Windows Installer package (`.msi`)
             - **NSIS Setup Executable**: Full setup wizard with desktop & start menu shortcuts (`-setup.exe`)
-            - **Portable CLI & Daemon**: Standalone `ethos.exe`, `tbox.exe` & `taintbox.exe` command-line runtime (`.zip`)
+            - **Portable CLI & Daemon**: Standalone `ethos.exe` command-line runtime (`.zip`)
 
             ### 🔐 Integrity & Verification
             Verify the SHA-256 checksums before installing:
