@@ -3171,7 +3171,8 @@ pub async fn run_zen_tui(dir: Option<PathBuf>) -> anyhow::Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let is_first_run = UserConfig::load().is_none();
+    let has_env_key = UserConfig::has_env_api_key();
+    let is_configured = UserConfig::is_explicitly_configured();
     let config = UserConfig::load().unwrap_or_default();
     let harness = match dir {
         Some(d) => ACIHarness::new_with_dir(d).ok(),
@@ -3180,16 +3181,18 @@ pub async fn run_zen_tui(dir: Option<PathBuf>) -> anyhow::Result<()> {
 
     let mut app = ZenApp::new(harness, config);
 
-    // Auto-launch Setup Wizard on first run or when credentials are unconfigured
-    if is_first_run
-        || (app
-            .config
-            .api_key
-            .as_deref()
-            .unwrap_or("")
-            .trim()
-            .is_empty()
-            && app.config.provider != "ollama")
+    // Auto-launch Setup Wizard if no API key is in environment and no explicit user config exists,
+    // or if a remote provider is configured without an API key
+    let has_saved_key = app
+        .config
+        .api_key
+        .as_deref()
+        .map(|k| !k.trim().is_empty())
+        .unwrap_or(false);
+
+    if !has_env_key
+        && (!is_configured
+            || (!has_saved_key && app.config.provider != "ollama" && app.config.provider != "lmstudio"))
     {
         app.open_setup_modal();
     }

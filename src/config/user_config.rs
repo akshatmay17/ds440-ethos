@@ -42,6 +42,35 @@ impl UserConfig {
         ethos_path
     }
 
+    /// Checks if any supported LLM provider API key exists in the current environment or .env
+    pub fn has_env_api_key() -> bool {
+        let _ = dotenvy::dotenv();
+        [
+            "ANTHROPIC_API_KEY",
+            "OPENAI_API_KEY",
+            "GEMINI_API_KEY",
+            "GOOGLE_API_KEY",
+            "OPENROUTER_API_KEY",
+            "GROQ_API_KEY",
+            "DEEPSEEK_API_KEY",
+            "MISTRAL_API_KEY",
+            "COHERE_API_KEY",
+            "TOGETHER_API_KEY",
+            "ETHOS_API_KEY",
+            "TBOX_API_KEY",
+        ]
+        .iter()
+        .any(|v| std::env::var(v).map(|k| !k.trim().is_empty()).unwrap_or(false))
+    }
+
+    /// Checks if an explicit user configuration file exists at ~/.ethos/config.json
+    pub fn is_explicitly_configured() -> bool {
+        let home = std::env::var("USERPROFILE")
+            .or_else(|_| std::env::var("HOME"))
+            .unwrap_or_else(|_| ".".to_string());
+        PathBuf::from(&home).join(".ethos").join("config.json").exists()
+    }
+
     pub fn load() -> Option<Self> {
         let _ = dotenvy::dotenv();
         let path = Self::config_path();

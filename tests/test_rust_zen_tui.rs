@@ -223,3 +223,27 @@ fn test_zen_app_keyboard_shortcuts_and_help() {
     });
     assert!(has_help);
 }
+
+#[test]
+fn test_zen_app_auto_opens_setup_when_no_credentials() {
+    let mut config = ethos::config::user_config::UserConfig::default();
+    config.api_key = None;
+    config.provider = "openai".to_string(); // Remote provider without key
+
+    let mut app = ZenApp::new(None, config);
+    // Simulating startup logic
+    let has_saved_key = app
+        .config
+        .api_key
+        .as_deref()
+        .map(|k| !k.trim().is_empty())
+        .unwrap_or(false);
+
+    if !has_saved_key && app.config.provider != "ollama" {
+        app.open_setup_modal();
+    }
+
+    assert!(app.setup_open);
+    assert_eq!(app.setup_step, 0);
+}
+

@@ -442,6 +442,8 @@ document.addEventListener("DOMContentLoaded", () => {
     setPref("api_url", state.apiUrl);
     setPref("api_key", state.apiKey);
     setPref("model", state.model);
+    setPref("configured", "true");
+    localStorage.setItem("ethos_configured", "true");
 
     activeModelLabel.textContent = state.model;
     chatModelLabel.textContent = state.model;
@@ -508,6 +510,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initial population from backend models.dev engine
   fetchModelsDevCatalog(false);
+
+  // Auto-launch Setup / Settings modal if credentials or provider are unconfigured
+  const isConfigured = localStorage.getItem("ethos_configured") || localStorage.getItem("tbox_configured");
+  const hasKey = state.apiKey && state.apiKey.trim().length > 0;
+  const isLocal = state.provider === "ollama" || state.provider === "lmstudio";
+  if (!isConfigured || (!hasKey && !isLocal)) {
+    settingsModal.style.display = "flex";
+    populateModelsSelect();
+  }
 });
 
 // Wire up Kanban navigation
