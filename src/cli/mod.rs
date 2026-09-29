@@ -228,6 +228,102 @@ async fn run_doctor() -> anyhow::Result<()> {
     Ok(())
 }
 
+pub struct CliHttpDriver {
+    pub client: reqwest::Client,
+    pub api_url: String,
+    pub model: String,
+}
+
+impl LlmDriver for CliHttpDriver {
+    fn step(&self, history: &[AgentMessage]) -> anyhow::Result<AgentStepAction> {
+        let rt = tokio::runtime::Handle::current();
+        let prompt_messages: Vec<serde_json::Value> = history
+            .iter()
+            .map(|m| {
+                let role_str = match m.role {
+                    AgentRole::System => "system",
+                    AgentRole::User => "user",
+                    AgentRole::Assistant => "assistant",
+                    AgentRole::Tool => "user",
+                };
+                serde_json::json!({
+                    "role": role_str,
+                    "content": m.content
+                })
+            })
+            .collect();
+
+        let payload = serde_json::json!({
+            "model": self.model,
+            "messages": prompt_messages,
+            "temperature": 0.0
+        });
+
+        let client = self.client.clone();
+        let url = format!("{}/chat/completions", self.api_url);
+
+        let res = tokio::task::block_in_place(|| {
+            rt.block_on(async move {
+                client
+                    .post(&url)
+                    .json(&payload)
+                    .timeout(std::time::Duration::from_secs(60))
+                    .send()
+                    .await?
+                    .json::<serde_json::Value>()
+                    .await
+            })
+        });
+
+        match res {
+            Ok(val) => {
+                // First try native tool_calls (OpenAI function calling format)
+                if let Some(tool_calls) = val["choices"][0]["message"]["tool_calls"].as_array() {
+                    if let Some(tc) = tool_calls.first() {
+                        let name = tc["function"]["name"]
+                            .as_str()
+                            .unwrap_or("unknown")
+                            .to_string();
+                        let args_str = tc["function"]["arguments"].as_str().unwrap_or("{}");
+                        let arguments: serde_json::Value =
+                            serde_json::from_str(args_str).unwrap_or(serde_json::json!({}));
+                        return Ok(AgentStepAction::CallTool { name, arguments });
+                    }
+                }
+                // Fall back to content-based parsing
+                if let Some(content) = val["choices"][0]["message"]["content"].as_str() {
+                    if let Some(tool_call) = parse_tool_call(content) {
+                        Ok(AgentStepAction::CallTool {
+                            name: tool_call.name,
+                            arguments: tool_call.arguments,
+                        })
+                    } else {
+                        Ok(AgentStepAction::Finish {
+                            summary: content.to_string(),
+                        })
+                    }
+                } else {
+                    Ok(AgentStepAction::Finish {
+                        summary: format!("LLM response: {}", val),
+                    })
+                }
+            }
+            Err(e) => {
+                println!(
+                    "    [Notice] LLM endpoint at {} offline ({}). Running harness self-diagnostic task.",
+                    self.api_url, e
+                );
+                Ok(AgentStepAction::Finish {
+                    summary: format!(
+                        "Harness execution verified. Task '{}' recorded in sandbox.",
+                        history.first().map(|m| m.content.as_str()).unwrap_or("")
+                    ),
+                })
+            }
+        }
+    }
+}
+
 async fn run_harness_task(
     task: &str,
     max_steps: usize,
@@ -247,101 +343,6 @@ async fn run_harness_task(
         Some(d) => ACIHarness::new_with_dir(d)?,
         None => ACIHarness::new_with_temp_dir()?,
     };
-
-    // Construct local driver or mock
-    struct CliHttpDriver {
-        client: reqwest::Client,
-        api_url: String,
-        model: String,
-    }
-
-    impl LlmDriver for CliHttpDriver {
-        fn step(&self, history: &[AgentMessage]) -> anyhow::Result<AgentStepAction> {
-            let rt = tokio::runtime::Handle::current();
-            let prompt_messages: Vec<serde_json::Value> = history
-                .iter()
-                .map(|m| {
-                    let role_str = match m.role {
-                        AgentRole::System => "system",
-                        AgentRole::User => "user",
-                        AgentRole::Assistant => "assistant",
-                        AgentRole::Tool => "user",
-                    };
-                    serde_json::json!({
-                        "role": role_str,
-                        "content": m.content
-                    })
-                })
-                .collect();
-
-            let payload = serde_json::json!({
-                "model": self.model,
-                "messages": prompt_messages,
-                "temperature": 0.0
-            });
-
-            let client = self.client.clone();
-            let url = format!("{}/chat/completions", self.api_url);
-
-            let res = tokio::task::block_in_place(|| {
-                rt.block_on(async move {
-                    client
-                        .post(&url)
-                        .json(&payload)
-                        .timeout(std::time::Duration::from_secs(5))
-                        .send()
-                        .await?
-                        .json::<serde_json::Value>()
-                        .await
-                })
-            });
-
-            match res {
-                Ok(val) => {
-                    // First try native tool_calls (OpenAI function calling format)
-                    if let Some(tool_calls) = val["choices"][0]["message"]["tool_calls"].as_array()
-                    {
-                        if let Some(tc) = tool_calls.first() {
-                            let name = tc["function"]["name"]
-                                .as_str()
-                                .unwrap_or("unknown")
-                                .to_string();
-                            let args_str = tc["function"]["arguments"].as_str().unwrap_or("{}");
-                            let arguments: serde_json::Value =
-                                serde_json::from_str(args_str).unwrap_or(serde_json::json!({}));
-                            return Ok(AgentStepAction::CallTool { name, arguments });
-                        }
-                    }
-                    // Fall back to content-based parsing
-                    if let Some(content) = val["choices"][0]["message"]["content"].as_str() {
-                        if let Some(tool_call) = parse_tool_call(content) {
-                            Ok(AgentStepAction::CallTool {
-                                name: tool_call.name,
-                                arguments: tool_call.arguments,
-                            })
-                        } else {
-                            Ok(AgentStepAction::Finish {
-                                summary: content.to_string(),
-                            })
-                        }
-                    } else {
-                        Ok(AgentStepAction::Finish {
-                            summary: format!("LLM response: {}", val),
-                        })
-                    }
-                }
-                Err(e) => {
-                    println!("    [Notice] LLM endpoint at {} offline ({}). Running harness self-diagnostic task.", self.api_url, e);
-                    Ok(AgentStepAction::Finish {
-                        summary: format!(
-                            "Harness execution verified. Task '{}' recorded in sandbox.",
-                            history.first().map(|m| m.content.as_str()).unwrap_or("")
-                        ),
-                    })
-                }
-            }
-        }
-    }
 
     let driver = CliHttpDriver {
         client: reqwest::Client::new(),
@@ -580,14 +581,76 @@ async fn run_eval_suite(
         }
     }
 
+    let (driver, is_live): (Box<dyn LlmDriver>, bool) = if provider == "lmstudio" {
+        let test_client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_millis(800))
+            .build()?;
+        if test_client
+            .get("http://localhost:1234/v1/models")
+            .send()
+            .await
+            .map(|r| r.status().is_success())
+            .unwrap_or(false)
+        {
+            println!("  [+] Connected to live LM Studio server at http://localhost:1234/v1");
+            println!("      Streaming live inference against model: {}\n", model);
+            (
+                Box::new(CliHttpDriver {
+                    client: reqwest::Client::new(),
+                    api_url: "http://localhost:1234/v1".to_string(),
+                    model: model.to_string(),
+                }),
+                true,
+            )
+        } else {
+            println!("  [!] Notice: LM Studio is offline at http://localhost:1234.");
+            println!("      Running evaluation suite with deterministic baseline driver.\n");
+            (Box::new(DeterministicEvalDriver), false)
+        }
+    } else if provider == "ollama" {
+        let test_client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_millis(800))
+            .build()?;
+        if test_client
+            .get("http://localhost:11434/v1/models")
+            .send()
+            .await
+            .map(|r| r.status().is_success())
+            .unwrap_or(false)
+        {
+            println!("  [+] Connected to live Ollama server at http://localhost:11434/v1");
+            println!("      Streaming live inference against model: {}\n", model);
+            (
+                Box::new(CliHttpDriver {
+                    client: reqwest::Client::new(),
+                    api_url: "http://localhost:11434/v1".to_string(),
+                    model: model.to_string(),
+                }),
+                true,
+            )
+        } else {
+            println!("  [!] Notice: Ollama is offline at http://localhost:11434.");
+            println!("      Running evaluation suite with deterministic baseline driver.\n");
+            (Box::new(DeterministicEvalDriver), false)
+        }
+    } else {
+        (Box::new(DeterministicEvalDriver), false)
+    };
+
     let runner = BenchmarkRunner::new();
-    let report = runner
-        .run_suite(&scenarios, &DeterministicEvalDriver)
-        .await?;
+    let report = runner.run_suite(&scenarios, &*driver).await?;
 
     println!("------------------------------------------------------------");
     println!("Evaluation Results Summary:");
     println!("  Total Scenarios Evaluated: {}", report.total_scenarios);
+    println!(
+        "  Driver Mode:               {}",
+        if is_live {
+            format!("Live HTTP ({})", provider)
+        } else {
+            "Deterministic Evaluation Harness".to_string()
+        }
+    );
     println!(
         "  Capability Tasks Solved:   {}/{}",
         report.capability_solved, report.capability_total
