@@ -226,9 +226,11 @@ fn test_zen_app_keyboard_shortcuts_and_help() {
 
 #[test]
 fn test_zen_app_auto_opens_setup_when_no_credentials() {
-    let mut config = ethos::config::user_config::UserConfig::default();
-    config.api_key = None;
-    config.provider = "openai".to_string(); // Remote provider without key
+    let config = ethos::config::user_config::UserConfig {
+        api_key: None,
+        provider: "openai".to_string(),
+        ..Default::default()
+    };
 
     let mut app = ZenApp::new(None, config);
     // Simulating startup logic

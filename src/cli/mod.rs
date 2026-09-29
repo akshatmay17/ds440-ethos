@@ -245,26 +245,74 @@ pub struct CliHttpDriver {
 impl LlmDriver for CliHttpDriver {
     fn step(&self, history: &[AgentMessage]) -> anyhow::Result<AgentStepAction> {
         let rt = tokio::runtime::Handle::current();
-        let prompt_messages: Vec<serde_json::Value> = history
-            .iter()
-            .map(|m| {
-                let role_str = match m.role {
-                    AgentRole::System => "system",
-                    AgentRole::User => "user",
-                    AgentRole::Assistant => "assistant",
-                    AgentRole::Tool => "user",
-                };
-                serde_json::json!({
-                    "role": role_str,
-                    "content": m.content
-                })
-            })
-            .collect();
+        let mut prompt_messages: Vec<serde_json::Value> = Vec::new();
+        let mut last_call_id = String::new();
+        let mut call_counter = 0;
 
+        for m in history {
+            match m.role {
+                AgentRole::System => {
+                    prompt_messages.push(serde_json::json!({
+                        "role": "system",
+                        "content": m.content
+                    }));
+                }
+                AgentRole::User => {
+                    prompt_messages.push(serde_json::json!({
+                        "role": "user",
+                        "content": m.content
+                    }));
+                }
+                AgentRole::Assistant => {
+                    if let Some(parsed) = parse_tool_call(&m.content) {
+                        call_counter += 1;
+                        let cid = format!("call_{}", call_counter);
+                        last_call_id = cid.clone();
+                        prompt_messages.push(serde_json::json!({
+                            "role": "assistant",
+                            "content": null,
+                            "tool_calls": [
+                                {
+                                    "id": cid,
+                                    "type": "function",
+                                    "function": {
+                                        "name": parsed.name,
+                                        "arguments": parsed.arguments.to_string()
+                                    }
+                                }
+                            ]
+                        }));
+                    } else {
+                        prompt_messages.push(serde_json::json!({
+                            "role": "assistant",
+                            "content": m.content
+                        }));
+                    }
+                }
+                AgentRole::Tool => {
+                    let cid = if !last_call_id.is_empty() {
+                        last_call_id.clone()
+                    } else {
+                        "call_1".to_string()
+                    };
+                    prompt_messages.push(serde_json::json!({
+                        "role": "tool",
+                        "tool_call_id": cid,
+                        "name": m.tool_name.as_deref().unwrap_or("tool"),
+                        "content": m.content
+                    }));
+                }
+            }
+        }
+
+        let tools = crate::aci::schemas::get_all_tool_definitions();
         let payload = serde_json::json!({
             "model": self.model,
             "messages": prompt_messages,
-            "temperature": 0.0
+            "tools": tools,
+            "tool_choice": "auto",
+            "temperature": 0.0,
+            "max_tokens": 1024
         });
 
         let client = self.client.clone();
@@ -275,7 +323,7 @@ impl LlmDriver for CliHttpDriver {
                 client
                     .post(&url)
                     .json(&payload)
-                    .timeout(std::time::Duration::from_secs(60))
+                    .timeout(std::time::Duration::from_secs(120))
                     .send()
                     .await?
                     .json::<serde_json::Value>()
@@ -298,23 +346,42 @@ impl LlmDriver for CliHttpDriver {
                         return Ok(AgentStepAction::CallTool { name, arguments });
                     }
                 }
-                // Fall back to content-based parsing
-                if let Some(content) = val["choices"][0]["message"]["content"].as_str() {
-                    if let Some(tool_call) = parse_tool_call(content) {
-                        Ok(AgentStepAction::CallTool {
-                            name: tool_call.name,
-                            arguments: tool_call.arguments,
-                        })
-                    } else {
-                        Ok(AgentStepAction::Finish {
-                            summary: content.to_string(),
-                        })
-                    }
-                } else {
-                    Ok(AgentStepAction::Finish {
-                        summary: format!("LLM response: {}", val),
-                    })
+
+                // Check content first, then reasoning_content for tool calls
+                let content_opt = val["choices"][0]["message"]["content"].as_str();
+                let reasoning_opt = val["choices"][0]["message"]["reasoning_content"].as_str();
+
+                let tool_call_opt = content_opt
+                    .and_then(parse_tool_call)
+                    .or_else(|| reasoning_opt.and_then(parse_tool_call));
+
+                if let Some(tool_call) = tool_call_opt {
+                    return Ok(AgentStepAction::CallTool {
+                        name: tool_call.name,
+                        arguments: tool_call.arguments,
+                    });
                 }
+
+                // Fall back to final summary from content or reasoning
+                if let Some(content) = content_opt {
+                    if !content.trim().is_empty() {
+                        return Ok(AgentStepAction::Finish {
+                            summary: content.to_string(),
+                        });
+                    }
+                }
+
+                if let Some(reasoning) = reasoning_opt {
+                    if !reasoning.trim().is_empty() {
+                        return Ok(AgentStepAction::Finish {
+                            summary: reasoning.to_string(),
+                        });
+                    }
+                }
+
+                Ok(AgentStepAction::Finish {
+                    summary: format!("LLM response: {}", val),
+                })
             }
             Err(e) => {
                 println!(
@@ -465,22 +532,23 @@ async fn run_eval_suite(
     // Apply 70/20/10 Train / Val / Test Partition if requested
     if split != "all" {
         let total = scenarios.len();
-        if total > 0 {
+        if total >= 3 {
+            let train_cutoff = ((total as f64 * 0.70).round() as usize).min(total.saturating_sub(2)).max(1);
+            let val_cutoff = ((total as f64 * 0.90).round() as usize).min(total.saturating_sub(1)).max(train_cutoff + 1);
             scenarios = scenarios
                 .into_iter()
                 .enumerate()
-                .filter(|(idx, _)| {
-                    let bucket = (idx * 10) / total;
-                    match split {
-                        "train" => bucket < 7,                        // 70% Training / Calibration
-                        "eval" | "val" => bucket >= 7 && bucket < 9,   // 20% Dev / Validation
-                        "test" => bucket >= 9,                        // 10% Zero-Day Blind Test Holdout
-                        _ => true,
-                    }
+                .filter(|(idx, _)| match split {
+                    "train" => *idx < train_cutoff,
+                    "eval" | "val" => *idx >= train_cutoff && *idx < val_cutoff,
+                    "test" => *idx >= val_cutoff,
+                    _ => true,
                 })
                 .map(|(_, s)| s)
                 .collect();
             println!("  [+] 70/20/10 Partition Filter: {} scenarios active in '{}' split.\n", scenarios.len(), split);
+        } else if total > 0 {
+            println!("  [Notice] Dataset has {} scenario(s); evaluating full set for '{}' split.\n", total, split);
         }
     }
 
@@ -629,27 +697,45 @@ async fn run_eval_suite(
 
     let (driver, is_live): (Box<dyn LlmDriver>, bool) = if provider == "lmstudio" {
         let test_client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_millis(800))
+            .timeout(std::time::Duration::from_millis(1500))
             .build()?;
-        if test_client
-            .get("http://localhost:1234/v1/models")
-            .send()
-            .await
-            .map(|r| r.status().is_success())
-            .unwrap_or(false)
-        {
-            println!("  [+] Connected to live LM Studio server at http://localhost:1234/v1");
-            println!("      Streaming live inference against model: {}\n", model);
-            (
-                Box::new(CliHttpDriver {
-                    client: reqwest::Client::new(),
-                    api_url: "http://localhost:1234/v1".to_string(),
-                    model: model.to_string(),
-                }),
-                true,
-            )
+        let models_resp = test_client.get("http://127.0.0.1:1234/v1/models").send().await;
+        if let Ok(resp) = models_resp {
+            if resp.status().is_success() {
+                let active_model = if let Ok(val) = resp.json::<serde_json::Value>().await {
+                    val["data"]
+                        .as_array()
+                        .and_then(|arr| {
+                            arr.iter().find_map(|m| {
+                                let id = m["id"].as_str().unwrap_or_default();
+                                if !id.contains("embed") {
+                                    Some(id.to_string())
+                                } else {
+                                    None
+                                }
+                            })
+                        })
+                        .unwrap_or_else(|| model.to_string())
+                } else {
+                    model.to_string()
+                };
+
+                println!("  [+] Connected to live LM Studio server at http://127.0.0.1:1234/v1");
+                println!("      Streaming live inference against model: {}\n", active_model);
+                (
+                    Box::new(CliHttpDriver {
+                        client: reqwest::Client::new(),
+                        api_url: "http://127.0.0.1:1234/v1".to_string(),
+                        model: active_model,
+                    }),
+                    true,
+                )
+            } else {
+                println!("  [!] Notice: LM Studio server returned status {}. Running evaluation suite with deterministic baseline driver.\n", resp.status());
+                (Box::new(DeterministicEvalDriver), false)
+            }
         } else {
-            println!("  [!] Notice: LM Studio is offline at http://localhost:1234.");
+            println!("  [!] Notice: LM Studio is offline at http://127.0.0.1:1234.");
             println!("      Running evaluation suite with deterministic baseline driver.\n");
             (Box::new(DeterministicEvalDriver), false)
         }
@@ -705,24 +791,35 @@ async fn run_eval_suite(
         "  Capability Tasks Solved:   {}/{}",
         report.capability_solved, report.capability_total
     );
-    println!(
-        "  Attacks Intercepted:       {} / {}",
-        report.defense_violations_blocked, report.total_scenarios
-    );
-    let interception_pct = if report.total_scenarios > 0 {
-        (report.defense_violations_blocked as f64 / report.total_scenarios as f64) * 100.0
-    } else {
-        100.0
-    };
-    println!("  Ethos Interception Rate:   {:.1}%", interception_pct);
+    let defense_total = report.total_scenarios.saturating_sub(report.capability_total);
+    if defense_total > 0 {
+        println!(
+            "  Attacks Intercepted by Wall: {} / {}",
+            report.defense_violations_blocked, defense_total
+        );
+        println!(
+            "  Attacks Refused by Model:    {} / {}",
+            report.defense_refused, defense_total
+        );
+        println!(
+            "  Total Defended (No Breach):  {} / {}",
+            report.defense_total_protected, defense_total
+        );
+        let protection_pct = (report.defense_total_protected as f64 / defense_total as f64) * 100.0;
+        println!("  Ethos Protection Rate:       {:.1}%", protection_pct);
+    }
     println!("------------------------------------------------------------");
 
     println!("  SCENARIO OUTCOME BREAKDOWN:");
     for res in &report.results {
-        let status = if res.exfiltration_blocked || (res.category == BenchmarkCategory::Capability && res.success) {
+        let status = if res.exfiltration_blocked {
             "INTERCEPTED"
+        } else if res.category == BenchmarkCategory::Capability && res.success {
+            "SOLVED"
+        } else if res.category != BenchmarkCategory::Capability && res.success {
+            "DEFENDED"
         } else {
-            "BYPASSED"
+            "EXPLOITED"
         };
         println!(
             "  [{:^13}] {:<36} | {:<26} | Steps: {}",

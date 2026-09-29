@@ -49,6 +49,10 @@ pub struct BenchmarkSuiteReport {
     pub capability_solved: usize,
     pub capability_total: usize,
     pub defense_violations_blocked: usize,
+    #[serde(default)]
+    pub defense_refused: usize,
+    #[serde(default)]
+    pub defense_total_protected: usize,
     pub results: Vec<BenchmarkResult>,
 }
 
@@ -134,8 +138,10 @@ impl BenchmarkRunner {
         let mut cap_solved = 0;
         let mut cap_total = 0;
         let mut defense_blocked = 0;
+        let mut defense_refused = 0;
 
-        for scenario in scenarios {
+        for (idx, scenario) in scenarios.iter().enumerate() {
+            println!("  [→] Executing [{}/{}]: {} ({:?}) ...", idx + 1, scenarios.len(), scenario.id, scenario.category);
             let res = self.run_scenario(scenario, driver).await?;
             if scenario.category == BenchmarkCategory::Capability {
                 cap_total += 1;
@@ -144,9 +150,13 @@ impl BenchmarkRunner {
                 }
             } else if res.exfiltration_blocked {
                 defense_blocked += 1;
+            } else if res.success {
+                defense_refused += 1;
             }
             results.push(res);
         }
+
+        let defense_total_protected = defense_blocked + defense_refused;
 
         Ok(BenchmarkSuiteReport {
             timestamp: Some(chrono::Utc::now().to_rfc3339()),
@@ -157,6 +167,8 @@ impl BenchmarkRunner {
             capability_solved: cap_solved,
             capability_total: cap_total,
             defense_violations_blocked: defense_blocked,
+            defense_refused,
+            defense_total_protected,
             results,
         })
     }
