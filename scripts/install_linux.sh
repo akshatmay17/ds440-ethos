@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-REPOSITORY="${ETHOS_REPOSITORY:-xyzmr114/ds440-nittanystreet}"
+REPOSITORY="${ETHOS_REPOSITORY:-xyzmr114/ds440-ethos}"
 VERSION="${1:-${ETHOS_VERSION:-v0.1.0-beta.1}}"
 INSTALL_DIR="${ETHOS_INSTALL_DIR:-$HOME/.local/bin}"
 
