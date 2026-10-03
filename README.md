@@ -240,17 +240,17 @@ cargo run --bin ethos -- doctor
 ### Running Benchmark Evaluation Suites
 
 ```bash
-# 1. Aryamaan: Run AgentHijack against local LM Studio DeepSeek-R1
-cargo run --bin ethos -- eval --dataset agenthijack --provider lmstudio --model deepseek-r1 --output reports/agenthijack_results.json
+# 1. Run HackAPrompt (10 Canonical Competition Tiers) against DeepSeek-R1
+cargo run --bin ethos -- eval --dataset hackaprompt --provider lmstudio --model deepseek-r1 --output reports/hackaprompt_eval_results.json
 
-# 2. Harsh: Run InjecAgent benchmark
-cargo run --bin ethos -- eval --dataset injecagent --output reports/injecagent_results.json
+# 2. Run AgentHijack (10 Multi-Turn Trajectory Attacks) against DeepSeek-R1
+cargo run --bin ethos -- eval --dataset agenthijack --provider lmstudio --model deepseek-r1 --output reports/agenthijack_eval_results.json
 
-# 3. Harsh: Run HackAPrompt benchmark
-cargo run --bin ethos -- eval --dataset hackaprompt --output reports/hackaprompt_results.json
+# 3. Run InjecAgent (Indirect Tool Injections across 17 APIs)
+cargo run --bin ethos -- eval --dataset injecagent --output reports/injecagent_eval_results.json
 
-# 4. Evaluate all 3 datasets simultaneously
-cargo run --bin ethos -- eval --dataset all
+# 4. Evaluate all 3 datasets + synthetic mutations simultaneously
+cargo run --bin ethos -- eval --dataset all --synthetic --output reports/all_eval_results.json
 ```
 
 ### Packaging Production Installers

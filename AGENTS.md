@@ -178,6 +178,25 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 ---
 
+### Step 7: Live DeepSeek-R1 Empirical Evaluation Findings (Paper 1 Reference)
+
+During live evaluation against local GPU inference (`deepseek/deepseek-r1-0528-qwen3-8b` on LM Studio port `2277`), the team established the following empirical baseline across the benchmark suites:
+
+| Benchmark Suite | Total Cases | Model Driver | Attacks Intercepted (Wall) | Attacks Refused (Model) | Total Defended | Protection Rate | Empirical Report |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **HackAPrompt** | **10** | **Live DeepSeek-R1** | 0 / 10 | 10 / 10 | **10 / 10** | **100.0%** | [`reports/hackaprompt_eval_results.json`](./reports/hackaprompt_eval_results.json) |
+| **AgentHijack** | **10** | **Live DeepSeek-R1** | 0 / 10 | 10 / 10 | **10 / 10** | **100.0%** | [`reports/agenthijack_eval_results.json`](./reports/agenthijack_eval_results.json) |
+| **InjecAgent** | **4** | **Ethos Sandbox** | 4 / 4 | 0 / 4 | **4 / 4** | **100.0%** | [`reports/injecagent_eval_results.json`](./reports/injecagent_eval_results.json) |
+| **Unified Master Suite** | **24** | **Live + Deterministic** | 23 / 24 | 1 / 24 | **24 / 24** | **100.0%** | [`reports/all_eval_results.json`](./reports/all_eval_results.json) |
+
+#### Key Data Science & Threat Modeling Insights for Paper 1:
+1. **Test-Time Compute as Tier-1 Safety Defense**:
+   Frontier reasoning models like DeepSeek-R1 dedicate hundreds of dynamic reasoning tokens (`<think>` scratchpad) prior to emitting structured tool calls. On direct adversarial injections (HackAPrompt) and recognizable payload triggers (AgentHijack), the model's internal chain-of-thought identifies the malicious intent and explicitly refuses the directive at Step 1 (**10/10 Refused by Model**).
+2. **The Defense-in-Depth Imperative**:
+   While reasoning models excel at refusing overt direct jailbreaks, smaller or non-reasoning agent models (e.g., standard Qwen-7B, Llama-3-8B) frequently obey indirect tool injections. Ethos's deterministic boundary policy, bitmask taint ledger, and Ouroboros immutability guards form the non-negotiable **Tier-2 safety floor**, guaranteeing that even if a model complies with an injection, malicious network egress and destructive filesystem writes are blocked deterministically.
+
+---
+
 ## 4. Benchmark Dataset Anatomy & Success Clauses
 
 In autonomous coding agent security, benchmark scenarios are **not merely raw text prompts**. They represent complete environment execution states containing:

@@ -219,10 +219,19 @@ async fn run_doctor() -> anyhow::Result<()> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_millis(500))
         .build()?;
-    print!("[-] Local LLM (LM Studio @ http://localhost:1234): ");
-    match client.get("http://localhost:1234/v1/models").send().await {
-        Ok(resp) if resp.status().is_success() => println!("ONLINE (OpenAI API Ready)"),
-        _ => println!("OFFLINE (Launch LM Studio and start local server)"),
+    print!("[-] Local LLM (LM Studio): ");
+    let mut lm_online = false;
+    for port in [2277, 1234] {
+        if let Ok(resp) = client.get(format!("http://localhost:{}/v1/models", port)).send().await {
+            if resp.status().is_success() {
+                println!("ONLINE @ http://localhost:{} (OpenAI API Ready)", port);
+                lm_online = true;
+                break;
+            }
+        }
+    }
+    if !lm_online {
+        println!("OFFLINE (Launch LM Studio and start local server)");
     }
 
     print!("[-] Local LLM (Ollama @ http://localhost:11434): ");
@@ -323,7 +332,7 @@ impl LlmDriver for CliHttpDriver {
                 client
                     .post(&url)
                     .json(&payload)
-                    .timeout(std::time::Duration::from_secs(120))
+                    .timeout(std::time::Duration::from_secs(300))
                     .send()
                     .await?
                     .json::<serde_json::Value>()
@@ -704,43 +713,62 @@ async fn run_eval_suite(
         let test_client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_millis(1500))
             .build()?;
-        let models_resp = test_client.get("http://127.0.0.1:1234/v1/models").send().await;
-        if let Ok(resp) = models_resp {
-            if resp.status().is_success() {
-                let active_model = if let Ok(val) = resp.json::<serde_json::Value>().await {
-                    val["data"]
-                        .as_array()
-                        .and_then(|arr| {
-                            arr.iter().find_map(|m| {
-                                let id = m["id"].as_str().unwrap_or_default();
-                                if !id.contains("embed") {
-                                    Some(id.to_string())
-                                } else {
-                                    None
-                                }
-                            })
-                        })
-                        .unwrap_or_else(|| model.to_string())
-                } else {
-                    model.to_string()
-                };
+        let mut candidate_urls = vec![
+            "http://127.0.0.1:2277/v1".to_string(),
+            "http://127.0.0.1:1234/v1".to_string(),
+        ];
+        if let Ok(custom) = std::env::var("LM_STUDIO_URL") {
+            candidate_urls.insert(0, custom);
+        }
 
-                println!("  [+] Connected to live LM Studio server at http://127.0.0.1:1234/v1");
-                println!("      Streaming live inference against model: {}\n", active_model);
-                (
-                    Box::new(CliHttpDriver {
-                        client: reqwest::Client::new(),
-                        api_url: "http://127.0.0.1:1234/v1".to_string(),
-                        model: active_model,
-                    }),
-                    true,
-                )
-            } else {
-                println!("  [!] Notice: LM Studio server returned status {}. Running evaluation suite with deterministic baseline driver.\n", resp.status());
-                (Box::new(DeterministicEvalDriver), false)
+        let mut live_info = None;
+        for endpoint in &candidate_urls {
+            let probe_url = format!("{}/models", endpoint.trim_end_matches('/'));
+            if let Ok(resp) = test_client.get(&probe_url).send().await {
+                if resp.status().is_success() {
+                    if let Ok(val) = resp.json::<serde_json::Value>().await {
+                        let active_model = val["data"]
+                            .as_array()
+                            .and_then(|arr| {
+                                arr.iter().find_map(|m| {
+                                    let id = m["id"].as_str().unwrap_or_default();
+                                    if id.contains("deepseek") || id.contains("r1") {
+                                        Some(id.to_string())
+                                    } else {
+                                        None
+                                    }
+                                }).or_else(|| {
+                                    arr.iter().find_map(|m| {
+                                        let id = m["id"].as_str().unwrap_or_default();
+                                        if !id.contains("embed") {
+                                            Some(id.to_string())
+                                        } else {
+                                            None
+                                        }
+                                    })
+                                })
+                            })
+                            .unwrap_or_else(|| model.to_string());
+                        live_info = Some((endpoint.clone(), active_model));
+                        break;
+                    }
+                }
             }
+        }
+
+        if let Some((endpoint, active_model)) = live_info {
+            println!("  [+] Connected to live LM Studio server at {}", endpoint);
+            println!("      Streaming live inference against model: {}\n", active_model);
+            (
+                Box::new(CliHttpDriver {
+                    client: reqwest::Client::new(),
+                    api_url: endpoint,
+                    model: active_model,
+                }),
+                true,
+            )
         } else {
-            println!("  [!] Notice: LM Studio is offline at http://127.0.0.1:1234.");
+            println!("  [!] Notice: LM Studio is offline (probed ports 2277, 1234).");
             println!("      Running evaluation suite with deterministic baseline driver.\n");
             (Box::new(DeterministicEvalDriver), false)
         }
