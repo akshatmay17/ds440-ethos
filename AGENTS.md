@@ -27,9 +27,9 @@ To guarantee maximum engineering quality and publication-grade empirical researc
 
 | Team Member | Environment | Role | Core Deliverables & Dataset Ownership | Paper 1 Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **Harsh Rathi** | **macOS** | **Principal Engineer & Architect** | **100% of Software Engineering**: CLI runtime (`ethos` & `tbox`), Ratatui TUI, desktop native apps (Tauri v2), Axum REST daemon, gVisor integration, Windows/macOS/Linux installers, GitHub Actions CI/CD. Leads benchmark engineering; executes **InjecAgent** ([`data/injections/injecagent_cases.json`](./data/injections/injecagent_cases.json)). | **0% Writing** *(Freed 100% for engineering)* |
-| **Aryamaan** | **Windows** | **Research Lead & Paper 1 Lead Author** | **Lead Author on Paper 1** (*Evaluating Tool Ergonomics, State Rollback, and Provenance Guardrails in Autonomous AI Software Engineering*). Executes benchmark testing on **HackAPrompt** ([`data/injections/hackaprompt_cases.json`](./data/injections/hackaprompt_cases.json)) using the Ethos test harness. | **Paper 1 Lead** |
-| **Saathvik** | **Windows** | **Metrics & Empirical Analytics** | **Co-Author on Paper 1**. Telemetry aggregation, token burn curves, latency overhead tables. Executes benchmark testing on **AgentHijack** ([`data/injections/agenthijack_cases.json`](./data/injections/agenthijack_cases.json)) using the Ethos test harness. | **Paper 1 Co-Author** |
+| **Harsh Rathi** | **macOS / Windows** | **Principal Engineer & Benchmark Lead** | **100% of Software Engineering & Benchmark Execution**: CLI runtime (`ethos` & `tbox`), Ratatui TUI, desktop native apps (Tauri v2), Axum REST daemon, gVisor integration, Windows/macOS/Linux installers. Executes and owns **all 3 benchmark datasets**: **InjecAgent** ([`data/injections/injecagent_cases.json`](./data/injections/injecagent_cases.json)), **HackAPrompt** ([`data/injections/hackaprompt_cases.json`](./data/injections/hackaprompt_cases.json)), and **AgentHijack** ([`data/injections/agenthijack_cases.json`](./data/injections/agenthijack_cases.json)). | **0% Writing** *(Freed 100% for engineering & empirical benchmarks)* |
+| **Aryamaan** | **Windows** | **Research Lead & Paper 1 Lead Author** | **Lead Author on Paper 1** (*Evaluating Tool Ergonomics, State Rollback, and Provenance Guardrails in Autonomous AI Software Engineering*). Assists with HackAPrompt research context and paper drafting. | **Paper 1 Lead** |
+| **Saathvik** | **Windows** | **Metrics & Empirical Analytics** | **Co-Author on Paper 1**. Assists with telemetry charts, token burn curves, and latency overhead tables. | **Paper 1 Co-Author** |
 | **Ammar** | **Windows** | **Data & Literature Lead** | **Co-Author on Paper 1**. Literature review, dataset documentation, and evaluation methodology. | **Paper 1 Co-Author** |
 | **Akshat** | **Windows** | **Threat & Security Modeling** | **Co-Author on Paper 1**. Adversarial taxonomy (MITRE ATLAS, injection vectors), Condition D defense analysis. | **Paper 1 Co-Author** |
 
@@ -94,15 +94,29 @@ To guarantee maximum engineering quality and publication-grade empirical researc
   cargo run --bin ethos -- eval --dataset hackaprompt --provider lmstudio --model deepseek-r1 --output reports/hackaprompt_results.json
   ```
 
-#### C. Saathvik — AgentHijack (Multi-Turn Goal Drift & Test Tampering)
+#### C. AgentHijack (Multi-Turn Goal Drift & Test Tampering)
 - **Dataset File**: [`data/injections/agenthijack_cases.json`](./data/injections/agenthijack_cases.json)
 - **Windows (PowerShell)**:
   ```powershell
-  cargo run --bin ethos -- eval --dataset agenthijack --provider lmstudio --model deepseek-r1 --output reports/agenthijack_results.json
+  cargo run --bin ethos -- eval --dataset agenthijack --provider lmstudio --model deepseek-r1 --output reports/agenthijack_eval_results.json
   ```
 - **macOS / Linux (Bash)**:
   ```bash
-  cargo run --bin ethos -- eval --dataset agenthijack --provider lmstudio --model deepseek-r1 --output reports/agenthijack_results.json
+  cargo run --bin ethos -- eval --dataset agenthijack --provider lmstudio --model deepseek-r1 --output reports/agenthijack_eval_results.json
+  ```
+
+#### D. Unified Suite — All 3 Datasets + Synthetic Mutations
+- **Windows (PowerShell)**:
+  ```powershell
+  # Run all 3 datasets sequentially:
+  cargo run --bin ethos -- eval --dataset all --output reports/all_eval_results.json
+
+  # Run all 3 datasets + procedural synthetic mutations:
+  cargo run --bin ethos -- eval --dataset all --synthetic --output reports/all_eval_results.json
+  ```
+- **macOS / Linux (Bash)**:
+  ```bash
+  cargo run --bin ethos -- eval --dataset all --synthetic --output reports/all_eval_results.json
   ```
 
 ---

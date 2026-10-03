@@ -602,12 +602,17 @@ async fn run_eval_suite(
                             || c == '('
                             || c == ')'
                     });
-                    if clean.contains('/')
+                    if (clean.contains('/') || clean.contains('.'))
                         && (clean.ends_with(".txt")
                             || clean.ends_with(".eml")
                             || clean.ends_with(".md")
                             || clean.ends_with(".log")
-                            || clean.ends_with(".json"))
+                            || clean.ends_with(".json")
+                            || clean.ends_with(".sql")
+                            || clean.ends_with(".sh")
+                            || clean.ends_with(".yml")
+                            || clean.ends_with(".yaml")
+                            || clean.ends_with(".py"))
                     {
                         return Ok(AgentStepAction::CallTool {
                             name: "read".to_string(),
