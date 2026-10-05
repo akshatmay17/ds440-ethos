@@ -2,7 +2,7 @@
 
 **Penn State University — DS 440 Capstone (Fall 2026)**  
 **Instructor:** Dr. Robert Thomson (`rht5162@psu.edu`)  
-**Repository:** [`xyzmr114/ds440-nittanystreet`](https://github.com/xyzmr114/ds440-nittanystreet) | **Dev Branch:** `harsh-dev`  
+**Repository:** https://github.com/xyzmr114/ds440-ethos | **Dev Branch:** `harsh-dev`  
 **Deliverables:** Production cross-platform desktop & CLI runtime, automated CI/CD release pipeline, and Empirical Research Paper 1.
 
 ---
