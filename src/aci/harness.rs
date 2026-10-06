@@ -25,6 +25,23 @@ fn program_stem(program: &str) -> String {
     stripped.to_lowercase()
 }
 
+/// True when an exec argument is an absolute host path — exec args never
+/// pass resolve_path, so drive letters, UNC paths, and unix roots are
+/// host-filesystem access vectors and get walled.
+fn is_absolute_host_path(arg: &str) -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        let bytes = arg.as_bytes();
+        (bytes.len() >= 2 && bytes[1] == b':' && bytes[0].is_ascii_alphabetic())
+            || arg.starts_with("\\\\")
+            || arg.starts_with("//")
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        arg.starts_with('/')
+    }
+}
+
 /// Extracts file redirect targets (`>`, `>>`) from a shell command string so
 /// Ouroboros + sensitive-path walls can police exec-side writes.
 fn extract_redirect_targets(cmd: &str) -> Vec<String> {
@@ -65,7 +82,16 @@ pub struct ACIHarness {
     pub snapshots: HashMap<String, SnapshotMetadata>,
     step_counter: usize,
     audit_events: Vec<AuditEvent>,
+    /// High-severity circuit breaker: trips after CRITICAL_TRIP_THRESHOLD
+    /// attack-class policy blocks (secret access, wall tampering, sandbox
+    /// escape attempts) and then walls every tool until reset.
+    estop: crate::walls::estop::EmergencyStop,
+    critical_block_count: usize,
+    semantic_guard: crate::walls::semantic::SemanticGuard,
 }
+
+/// Number of attack-class policy blocks before EmergencyStop trips.
+pub const CRITICAL_TRIP_THRESHOLD: usize = 3;
 
 impl ACIHarness {
     pub fn new_with_temp_dir() -> anyhow::Result<Self> {
@@ -83,6 +109,9 @@ impl ACIHarness {
             snapshots: HashMap::new(),
             step_counter: 0,
             audit_events: Vec::new(),
+            estop: crate::walls::estop::EmergencyStop::new(),
+            critical_block_count: 0,
+            semantic_guard: crate::walls::semantic::SemanticGuard::default(),
         })
     }
 
@@ -94,6 +123,9 @@ impl ACIHarness {
             snapshots: HashMap::new(),
             step_counter: 0,
             audit_events: Vec::new(),
+            estop: crate::walls::estop::EmergencyStop::new(),
+            critical_block_count: 0,
+            semantic_guard: crate::walls::semantic::SemanticGuard::default(),
         })
     }
 
@@ -113,10 +145,104 @@ impl ACIHarness {
         self.audit_events.push(event);
     }
 
+    /// EmergencyStop gate: when tripped, every tool is walled until an
+    /// explicit reset. Returns the block result, or None to proceed.
+    fn estop_gate(&self, call_id: String, tool_name: &str) -> Option<ToolResult> {
+        if !self.estop.is_tripped() {
+            return None;
+        }
+        let reason = format!(
+            "EmergencyStop tripped ({} critical violations): all tools walled until reset",
+            self.critical_block_count
+        );
+        Some(ToolResult {
+            call_id,
+            tool_name: tool_name.to_string(),
+            status: "BLOCKED_BY_POLICY".to_string(),
+            output: serde_json::Value::Null,
+            error: Some(format!("Policy violation: {}", self.estop.trip_reason().unwrap_or(reason.as_str()))),
+            provenance: None,
+            policy_decision: Some(crate::models::PolicyDecision {
+                allowed: false,
+                rule_id: Some("EMERGENCY-STOP".to_string()),
+                action: tool_name.to_string(),
+                reason: self.estop.trip_reason().unwrap_or_default().to_string(),
+                taint_records: vec![],
+            }),
+        })
+    }
+
+    /// Count an attack-class policy block; trip the circuit breaker after
+    /// CRITICAL_TRIP_THRESHOLD. Egress taint blocks (RULE-001) are
+    /// deliberately NOT counted — those are measured benchmark
+    /// interceptions, not break-in attempts.
+    fn record_critical(&mut self, rule: &str, reason: &str) {
+        self.critical_block_count += 1;
+        self.log_event(
+            "CRITICAL_BLOCK_RECORDED",
+            "estop",
+            serde_json::json!({
+                "rule": rule,
+                "reason": reason,
+                "count": self.critical_block_count,
+                "threshold": CRITICAL_TRIP_THRESHOLD
+            }),
+        );
+        if self.critical_block_count >= CRITICAL_TRIP_THRESHOLD {
+            let trip_reason = format!(
+                "{} critical policy violations (last: {} [{}])",
+                self.critical_block_count, reason, rule
+            );
+            self.estop
+                .record_violation(&trip_reason, crate::walls::promptinject::Severity::High);
+        }
+    }
+
+    /// EmergencyStop state for dashboards/API: (tripped, reason, violations).
+    pub fn emergency_stop_status(&self) -> (bool, Option<String>, usize) {
+        (
+            self.estop.is_tripped(),
+            self.estop.trip_reason().map(|s| s.to_string()),
+            self.critical_block_count,
+        )
+    }
+
+    /// Clears the circuit breaker (operator action).
+    pub fn reset_emergency_stop(&mut self) {
+        self.estop.reset();
+        self.critical_block_count = 0;
+        self.log_event("EMERGENCY_STOP_RESET", "estop", serde_json::json!({}));
+    }
+
+    /// Advisory "System 1" scan: records a SEMANTIC_SCAN audit event with
+    /// model/backend/label/score. Never blocks — the enforcing walls are
+    /// the taint policy + Ouroboros + exec guards; this layer annotates.
+    fn semantic_scan(&mut self, channel: &str, text: &str) {
+        let assessment = self.semantic_guard.evaluate(text);
+        if assessment.risk_score >= 0.70 || assessment.label != crate::walls::semantic::SemanticLabel::Benign {
+            self.log_event(
+                "SEMANTIC_SCAN",
+                "semantic_guard",
+                serde_json::json!({
+                    "channel": channel,
+                    "model": assessment.model,
+                    "backend": assessment.backend,
+                    "label": format!("{:?}", assessment.label),
+                    "risk_score": assessment.risk_score,
+                    "violation": assessment.is_violation
+                }),
+            );
+        }
+    }
+
     pub fn read(&mut self, path: &str) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
+        if let Some(blocked) = self.estop_gate(call_id.clone(), "read") {
+            return blocked;
+        }
         let decision = self.taint_engine.evaluate_path_policy("read", path, &[]);
         if !decision.allowed {
+            self.record_critical("TAINT-PATH-SECRET", &decision.reason.clone());
             self.log_event(
                 "POLICY_BLOCK",
                 "read",
@@ -187,9 +313,14 @@ impl ACIHarness {
         source_ids: Option<Vec<String>>,
     ) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
+        if let Some(blocked) = self.estop_gate(call_id.clone(), "write") {
+            return blocked;
+        }
+        self.semantic_scan("write_content", content);
         let ouroboros = crate::walls::ouroboros::OuroborosWall::new();
         if let Err(e) = ouroboros.check_write(path, content) {
             let reason = e.to_string();
+            self.record_critical("OUROBOROS-WALL", &reason);
             self.log_event(
                 "POLICY_BLOCK",
                 "write",
@@ -217,6 +348,7 @@ impl ACIHarness {
             .taint_engine
             .evaluate_path_policy("write", path, sources);
         if !decision.allowed {
+            self.record_critical("TAINT-PATH-SECRET", &decision.reason.clone());
             self.log_event(
                 "POLICY_BLOCK",
                 "write",
@@ -330,9 +462,13 @@ impl ACIHarness {
         source_ids: Option<Vec<String>>,
     ) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
+        if let Some(blocked) = self.estop_gate(call_id.clone(), "edit_block") {
+            return blocked;
+        }
         let ouroboros = crate::walls::ouroboros::OuroborosWall::new();
         if let Err(e) = ouroboros.check_write(path, replacement_content) {
             let reason = e.to_string();
+            self.record_critical("OUROBOROS-WALL", &reason);
             self.log_event(
                 "POLICY_BLOCK",
                 "edit_block",
@@ -360,6 +496,7 @@ impl ACIHarness {
             .taint_engine
             .evaluate_path_policy("write", path, sources);
         if !decision.allowed {
+            self.record_critical("TAINT-PATH-SECRET", &decision.reason.clone());
             self.log_event(
                 "POLICY_BLOCK",
                 "edit_block",
@@ -487,10 +624,14 @@ impl ACIHarness {
 
     pub fn view_lines(&mut self, path: &str, start_line: usize, end_line: usize) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
+        if let Some(blocked) = self.estop_gate(call_id.clone(), "view_lines") {
+            return blocked;
+        }
         // RT-14: view_lines is a read — it must pass the same sensitive-path
         // and taint policy gate as the read tool.
         let decision = self.taint_engine.evaluate_path_policy("read", path, &[]);
         if !decision.allowed {
+            self.record_critical("TAINT-PATH-SECRET", &decision.reason.clone());
             self.log_event(
                 "POLICY_BLOCK",
                 "view_lines",
@@ -559,12 +700,18 @@ impl ACIHarness {
 
     pub fn search_files(&mut self, pattern: &str) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
+        if let Some(blocked) = self.estop_gate(call_id.clone(), "search_files") {
+            return blocked;
+        }
         let all_files = self.runtime.list_files();
 
         let clean_pattern = pattern.trim_start_matches('*').trim_end_matches('*');
         let matched: Vec<String> = all_files
             .into_iter()
             .filter(|f| {
+                if self.taint_engine.config.is_path_sensitive(f) {
+                    return false; // secret file NAMES are not disclosed either
+                }
                 if pattern == "*" || pattern == "**/*" {
                     true
                 } else if pattern.starts_with('*') {
@@ -594,6 +741,9 @@ impl ACIHarness {
 
     pub fn grep(&mut self, query: &str) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
+        if let Some(blocked) = self.estop_gate(call_id.clone(), "grep") {
+            return blocked;
+        }
         let all_files = self.runtime.list_files();
         let mut results = String::new();
 
@@ -602,6 +752,7 @@ impl ACIHarness {
             // their contents dumped into results. Non-sensitive files only.
             let decision = self.taint_engine.evaluate_path_policy("read", &file, &[]);
             if !decision.allowed {
+                self.record_critical("TAINT-PATH-SECRET", &decision.reason.clone());
                 self.log_event(
                     "POLICY_BLOCK",
                     "grep",
@@ -638,6 +789,9 @@ impl ACIHarness {
         mock_content: Option<&str>,
     ) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
+        if let Some(blocked) = self.estop_gate(call_id.clone(), "fetch") {
+            return blocked;
+        }
 
         // Enforce network egress policy against the FULL tainted ledger, not
         // an empty source list (RT-06): once untrusted data is in play, the
@@ -664,6 +818,55 @@ impl ACIHarness {
         let target_path = save_as
             .map(|s| s.to_string())
             .unwrap_or_else(|| format!("downloads/{}.txt", Uuid::new_v4().simple()));
+
+        // RT-3 claim C3: fetch's internal write must pass the SAME walls
+        // as the write tool — Ouroboros (protected paths) and the
+        // sensitive-path policy. save_as may not poison `.env` or friends.
+        let ouroboros = crate::walls::ouroboros::OuroborosWall::new();
+        if let Err(e) = ouroboros.check_write(&target_path, "") {
+            let reason = e.to_string();
+            self.record_critical("OUROBOROS-FETCH-GUARD", &reason);
+            self.log_event(
+                "POLICY_BLOCK",
+                "fetch",
+                serde_json::json!({ "save_as": target_path, "reason": reason }),
+            );
+            return ToolResult {
+                call_id,
+                tool_name: "fetch".to_string(),
+                status: "BLOCKED_BY_POLICY".to_string(),
+                output: serde_json::Value::Null,
+                error: Some(format!("Policy violation: {}", reason)),
+                provenance: None,
+                policy_decision: Some(crate::models::PolicyDecision {
+                    allowed: false,
+                    rule_id: Some("OUROBOROS-FETCH-GUARD".to_string()),
+                    action: "write".to_string(),
+                    reason,
+                    taint_records: vec![],
+                }),
+            };
+        }
+        let write_decision = self
+            .taint_engine
+            .evaluate_path_policy("write", &target_path, &[]);
+        if !write_decision.allowed {
+            self.record_critical("TAINT-PATH-SECRET", &write_decision.reason.clone());
+            self.log_event(
+                "POLICY_BLOCK",
+                "fetch",
+                serde_json::json!({ "save_as": target_path, "reason": write_decision.reason }),
+            );
+            return ToolResult {
+                call_id,
+                tool_name: "fetch".to_string(),
+                status: "BLOCKED_BY_POLICY".to_string(),
+                output: serde_json::Value::Null,
+                error: Some(format!("Policy violation: {}", write_decision.reason)),
+                provenance: None,
+                policy_decision: Some(write_decision),
+            };
+        }
 
         let payload = if let Some(mock) = mock_content {
             mock.to_string()
@@ -701,6 +904,8 @@ impl ACIHarness {
                 }
             }
         };
+
+        self.semantic_scan("fetch_payload", &payload);
 
         if let Err(e) = self.runtime.write_file(&target_path, &payload) {
             return ToolResult {
@@ -744,6 +949,13 @@ impl ACIHarness {
 
     pub fn exec(&mut self, program: &str, args: &[String]) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
+        if let Some(blocked) = self.estop_gate(call_id.clone(), "exec") {
+            return blocked;
+        }
+        {
+            let joined = args.join(" ");
+            self.semantic_scan("exec_args", &joined);
+        }
 
         let mut target_url = "https://unknown-egress".to_string();
         let stem = program_stem(program);
@@ -786,6 +998,7 @@ impl ACIHarness {
                 for target in extract_redirect_targets(arg) {
                     if let Err(e) = ouroboros.check_write(&target, "") {
                         let reason = e.to_string();
+                        self.record_critical("OUROBOROS-EXEC-GUARD", &reason);
                         self.log_event(
                             "POLICY_BLOCK",
                             action,
@@ -814,6 +1027,7 @@ impl ACIHarness {
                     let path_decision =
                         self.taint_engine.evaluate_path_policy("write", &target, &[]);
                     if !path_decision.allowed {
+                        self.record_critical("TAINT-PATH-SECRET", &path_decision.reason.clone());
                         self.log_event(
                             "POLICY_BLOCK",
                             action,
@@ -836,10 +1050,23 @@ impl ACIHarness {
                 }
             }
 
-            // RT-16/RT-21: shell payloads that reference sensitive paths
-            // (`type .env`, `cat ~/.ethos/config.json`) must be walled the
-            // same way the read tool is. Scan normalized args against the
-            // sensitive-path list, case-folded and separator-normalized.
+            // RT-16/RT-21 sensitive-arg scanning now lives in the universal
+            // guard block below (applies to ALL programs, wrappers included).
+        }
+
+        // Universal exec guards (RT-3 claim class): these apply to EVERY
+        // program, not just shell wrappers — non-wrapper programs (`type`,
+        // `cat`, interpreters, downloaders) must not be a blind spot.
+        //
+        //   1. Sensitive-path references in any arg, case-folded and
+        //      separator-normalized (`type .env` on any program).
+        //   2. Absolute host paths — exec args never pass resolve_path, so
+        //      drive letters / UNC / unix roots are host-file access vectors.
+        //   3. Windows %VAR% expansion patterns (cmd expands these at run
+        //      time into host paths: `type %USERPROFILE%\.gitconfig`).
+        //   4. Separator-anchored traversal (`../`, `..\`) — reaches files
+        //      outside the sandbox root via the exec cwd.
+        {
             let sensitive_tokens: Vec<String> = self
                 .taint_engine
                 .config
@@ -849,16 +1076,38 @@ impl ACIHarness {
                 .collect();
             for arg in args {
                 let normalized = arg.replace('\\', "/").to_lowercase();
-                if sensitive_tokens.iter().any(|t| normalized.contains(t)) {
-                    let reason = format!(
-                        "Sensitive path protection: exec payload references a protected path (matched sensitive-path rule)"
-                    );
+
+                let violation = if sensitive_tokens.iter().any(|t| normalized.contains(t)) {
+                    Some("SENSITIVE-PATH-EXEC-GUARD")
+                } else if is_absolute_host_path(arg) {
+                    Some("HOST-PATH-EXEC-GUARD")
+                } else if normalized.contains("../") {
+                    Some("TRAVERSAL-EXEC-GUARD")
+                } else if arg.matches('%').count() >= 2 {
+                    Some("ENV-EXPANSION-EXEC-GUARD")
+                } else {
+                    None
+                };
+
+                if let Some(rule_id) = violation {
+                    let reason = match rule_id {
+                        "SENSITIVE-PATH-EXEC-GUARD" =>
+                            "Sensitive path protection: exec argument references a protected path",
+                        "HOST-PATH-EXEC-GUARD" =>
+                            "Sandbox boundary: exec arguments must stay sandbox-relative (absolute host paths are blocked)",
+                        "TRAVERSAL-EXEC-GUARD" =>
+                            "Sandbox boundary: exec arguments must not traverse outside the sandbox root",
+                        _ =>
+                            "Sandbox boundary: environment-variable expansion in exec arguments is blocked",
+                    }.to_string();
+                    self.record_critical(rule_id, &reason);
                     self.log_event(
                         "POLICY_BLOCK",
                         action,
                         serde_json::json!({
                             "program": program,
-                            "sensitive_reference": true
+                            "rule": rule_id,
+                            "arg": arg
                         }),
                     );
                     return ToolResult {
@@ -870,7 +1119,7 @@ impl ACIHarness {
                         provenance: None,
                         policy_decision: Some(crate::models::PolicyDecision {
                             allowed: false,
-                            rule_id: Some("SENSITIVE-PATH-EXEC-GUARD".to_string()),
+                            rule_id: Some(rule_id.to_string()),
                             action: "exec".to_string(),
                             reason,
                             taint_records: vec![],
@@ -1030,6 +1279,12 @@ impl ACIHarness {
         self.step_counter += 1;
         let files = self.runtime.list_files();
         let tainted = self.taint_engine.list_tainted_resources();
+
+        // Secret file NAMES are not disclosed in observations either.
+        let files: Vec<String> = files
+            .into_iter()
+            .filter(|f| !self.taint_engine.config.is_path_sensitive(f))
+            .collect();
 
         let mut prov_context = HashMap::new();
         for t in &tainted {

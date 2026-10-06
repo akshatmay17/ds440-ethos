@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-10-06T23:17:13.427497+00:00",
+  "git_rev": "9ad1b0e",
+  "seed": 440,
+  "hf": false,
+  "labels": {
+    "0": "BENIGN",
+    "1": "INJECTION",
+    "2": "JAILBREAK"
+  },
+  "counts": {
+    "train": {
+      "0": 169,
+      "1": 32,
+      "2": 4
+    },
+    "eval": {
+      "0": 20,
+      "1": 3,
+      "2": 1
+    },
+    "test": {
+      "0": 20,
+      "2": 1,
+      "1": 3
+    }
+  },
+  "splits": {
+    "train": 205,
+    "eval": 24,
+    "test": 24
+  },
+  "sha256": {
+    "train": "5f3c73193ff14128454250c2044d629640a44713b36056bb8987a39cc75b7e01",
+    "eval": "19fa3da93093d3e8ff4052b764dfbb866d8ba6478c7d1ff18c546e75612469ae",
+    "test": "a46098ab1f5d4a8dba95cf0c86a558214b4e01fd5c460b0ca86dbc24e64b380e"
+  }
+}

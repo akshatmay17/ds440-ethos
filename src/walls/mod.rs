@@ -3,6 +3,8 @@ pub mod halluscan;
 pub mod ouroboros;
 pub mod promptinject;
 pub mod semantic;
+#[cfg(feature = "semantic-ml")]
+pub mod semantic_neural;
 
 pub use estop::EmergencyStop;
 pub use halluscan::HalluScan;

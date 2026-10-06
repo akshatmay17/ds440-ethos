@@ -314,6 +314,67 @@ Pushes with tags matching `v*` (or manual triggers via GitHub Actions `workflow_
 
 ---
 
-## 10. License
+## 10. Technology Stack, Prior Art & Inspirations
+
+Ethos stands on well-vetted infrastructure and borrows proven interaction
+design. Crediting the load-bearing pieces:
+
+### Core Runtime Stack (Rust 2021)
+- **[`tokio`](https://tokio.rs)** — async runtime powering the daemon, agent loop, and eval drivers.
+- **[`axum`](https://github.com/tokio-rs/axum)** — REST daemon (`/v1/*` API) with loopback-only binding.
+- **[`ratatui`](https://ratatui.rs) + [`crossterm`](https://github.com/crossterm-rs/crossterm)** — the Cyber Obsidian Zen TUI (`ethos tui`): tabs, slash-command popups, and the models.dev catalog browser overlay.
+- **[`sqlx`](https://github.com/launchbadge/sqlx)** — optional persistent session store (parameterized Postgres, schema in `migrations/`).
+- **[`reqwest`](https://github.com/seanmonstar/reqwest)** — LLM provider + `fetch()` HTTP channel (content taint-tagged on ingest).
+- **[`clap`](https://docs.rs/clap)**, **[`serde`](https://serde.rs)**, **[`uuid`](https://github.com/uuid-rs/uuid)**, **[`sha2`](https://github.com/RustCrypto/hashes) — CLI parsing, schemas, snapshot hashing.
+- **[`tempfile`](https://github.com/Stebalien/tempfile)** — isolated sandbox workspaces.
+
+### Sandboxing & Isolation
+- **Google [`gVisor`](https://gvisor.dev) (`runsc`)** — user-space application-kernel syscall interception on Linux/WSL2, with a policy-only `LocalIsolatedRuntime` fallback on Windows/macOS (see documented residuals).
+
+### Model Catalog
+- **[models.dev](https://models.dev)** — live provider/model catalog (228+ providers, 8,300+ models), 7-day TTL cache; Ethos hardcodes no provider specs.
+
+### Desktop & Distribution
+- **[`Tauri v2`](https://tauri.app)** — native desktop shell; spawns the daemon as a sidecar and serves the shared web UI.
+- **WiX MSI + NSIS** installers (Windows), `.dmg`/`.app` bundles (macOS), `.deb` + **AppImage** (Linux), built by the `v*`-tag release workflows.
+
+### Agent UX & Interaction Design
+- **[opencode](https://opencode.ai)** — the browser/TUI chrome Ethos's dashboard and Zen TUI borrow from: sidebar + tab layout, command palette (Ctrl+P), and the searchable per-provider model picker with favorites/recents.
+
+### Semantic Safety Wall ("System 1" classifier slots)
+`SemanticGuard` (`src/walls/semantic.rs`) is wired into the harness: every
+write/exec/fetch is semantically scanned (`SEMANTIC_SCAN` telemetry) and the
+agent loop annotates high-risk tool arguments with LLM-safe digests. The
+`EmergencyStop` circuit breaker is active — three attack-class policy blocks
+(secret access, wall tampering, escape attempts) wall every tool until an
+operator reset (`POST /v1/sandboxes/:id/estop/reset`).
+
+**Neural tier (shipped, opt-in).** Build with `--features semantic-ml` to add
+pure-Rust transformer inference (`candle` + `tokenizers`); enable with
+`ETHOS_SEMANTIC_NEURAL=1`. Weights download once to
+`~/.ethos/models/<repo>/` on first use; without the flag/env the wall uses
+the deterministic marker-density scorer as a guaranteed fallback.
+
+| Model | Architecture | Status |
+| :--- | :--- | :--- |
+| `mrm8488/bert-tiny-ft-prompt-injection` (default) | BERT-tiny, ungated | ✅ loads & scores today (demo-scale; can false-positive on code-like text) |
+| `meta-llama/Prompt-Guard-86M` | **DeBERTa-v2**, gated (license + `HF_TOKEN`) | ⏳ needs DeBERTa candle support (next step) |
+| `protectai/deberta-v3-base-prompt-injection-v2` | **DeBERTa-v3**, ungated | ⏳ same DeBERTa requirement |
+| Laya System 1 (`nandhakishorm/laya`) | reported ~250MB / 33ms engine | ⏳ evaluation pending architecture spec |
+
+**Fine-tuning path:** train any BERT-family classifier in Python (HF
+`Trainer`), export `config.json` + `tokenizer.json` + `model.safetensors`,
+point `ETHOS_SEMANTIC_MODEL_DIR` at the directory — no Rust changes needed.
+The loaders were verified end-to-end against real downloaded weights
+(injection → 0.99, benign prose → 0.01).
+
+### Evaluation Datasets & Local Inference
+- **[InjecAgent](https://injecagent.ai)**, **[HackAPrompt](https://hackaprompt.ai)**, **[AgentHijack](https://agenthijack.com)** (UIUC Kang Lab) + procedural synthetic evasion corpus — `data/injections/`.
+- **[LM Studio](https://lmstudio.ai)** (ports 1234/2277) and **[Ollama](https://ollama.com)** (port 11434) — local inference for live evals, with a deterministic offline driver fallback.
+- **[Spider Cloud](https://spider.cloud)** — optional crawl/fetch backend for web ingestion.
+
+---
+
+## 11. License
 
 Public domain under [The Unlicense](LICENSE).

@@ -436,5 +436,8 @@ paper/
 !docs/*.md
 scratch/
 
+# SemanticGuard training corpora & weights (regenerate via scripts/)
+data/semantic_guard/
+
 scripts/build_paper1_*.py
 scripts/generate_nature_*.py

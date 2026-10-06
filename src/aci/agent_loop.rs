@@ -232,6 +232,29 @@ impl AgentLoop {
                         });
                     }
 
+                    // "System 1" semantic wall: fast risk annotation of the
+                    // same tool arguments (label + score only, never raw
+                    // payload text). Advisory — the enforcing walls are the
+                    // taint policy + Ouroboros + exec guards.
+                    {
+                        let guard = crate::walls::semantic::SemanticGuard::default();
+                        let assessment = guard.evaluate(&args_str);
+                        if assessment.is_violation {
+                            let digest = format!(
+                                "[SemanticGuard] System 1 risk: {} (score {:.2}, backend {}, model {})",
+                                format!("{:?}", assessment.label),
+                                assessment.risk_score,
+                                assessment.backend,
+                                assessment.model
+                            );
+                            history.push(AgentMessage {
+                                role: AgentRole::Tool,
+                                content: digest,
+                                tool_name: Some("semantic_guard".to_string()),
+                            });
+                        }
+                    }
+
                     let tool_result = execute_tool(harness, &name, &arguments);
 
                     // Scan tool output for injection patterns

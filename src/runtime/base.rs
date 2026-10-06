@@ -80,6 +80,18 @@ impl LocalIsolatedRuntime {
                 if path == self.snapshots_dir {
                     continue;
                 }
+                // Symlink-safe walk: use the DirEntry file type (which does
+                // NOT follow links) and skip links entirely. A symlink or
+                // junction planted inside the sandbox must not enumerate
+                // the host tree, and fs::copy must not follow it into host
+                // files during snapshotting.
+                let ftype = match entry.file_type() {
+                    Ok(ft) => ft,
+                    Err(_) => continue,
+                };
+                if ftype.is_symlink() {
+                    continue;
+                }
                 let file_name = entry.file_name().to_string_lossy().to_string();
                 let rel = if rel_prefix.is_empty() {
                     file_name
@@ -87,9 +99,9 @@ impl LocalIsolatedRuntime {
                     format!("{}/{}", rel_prefix, file_name)
                 };
 
-                if path.is_dir() {
+                if ftype.is_dir() {
                     self.collect_files_recursive(&path, &rel, files);
-                } else if path.is_file() {
+                } else if ftype.is_file() {
                     files.push(rel.replace('\\', "/"));
                 }
             }

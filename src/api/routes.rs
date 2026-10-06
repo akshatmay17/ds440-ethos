@@ -138,6 +138,8 @@ pub fn create_router(state: AppState) -> Router {
         .route("/v1/sandboxes/:id/rewind", post(rewind_snapshot))
         .route("/v1/sandboxes/:id/observe", get(observe_sandbox))
         .route("/v1/sandboxes/:id/telemetry", get(export_telemetry))
+        .route("/v1/sandboxes/:id/estop", get(get_estop_status))
+        .route("/v1/sandboxes/:id/estop/reset", post(reset_estop))
         .route("/v1/metrics", get(get_metrics_summary))
         .route("/v1/metrics/events", get(get_recent_events))
         .route("/v1/providers", get(get_providers).post(update_providers))
@@ -513,6 +515,46 @@ async fn export_telemetry(
         "sandbox_id": id,
         "count": events.len(),
         "events": events
+    })))
+}
+
+/// EmergencyStop circuit-breaker status for a sandbox.
+async fn get_estop_status(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<serde_json::Value>, StatusCode> {
+    let harness_arc = state
+        .session_manager
+        .get_session(&id)
+        .await
+        .ok_or(StatusCode::NOT_FOUND)?;
+    let harness = harness_arc.lock().await;
+    let (tripped, reason, violations) = harness.emergency_stop_status();
+    Ok(Json(serde_json::json!({
+        "sandbox_id": id,
+        "tripped": tripped,
+        "reason": reason,
+        "critical_violations": violations,
+        "threshold": crate::aci::harness::CRITICAL_TRIP_THRESHOLD,
+    })))
+}
+
+/// Operator action: clear the EmergencyStop for a sandbox.
+async fn reset_estop(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Result<Json<serde_json::Value>, StatusCode> {
+    let harness_arc = state
+        .session_manager
+        .get_session(&id)
+        .await
+        .ok_or(StatusCode::NOT_FOUND)?;
+    let mut harness = harness_arc.lock().await;
+    harness.reset_emergency_stop();
+    Ok(Json(serde_json::json!({
+        "sandbox_id": id,
+        "tripped": false,
+        "status": "reset"
     })))
 }
 

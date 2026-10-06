@@ -13,6 +13,9 @@ pub enum SemanticLabel {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SemanticRiskAssessment {
     pub model: String,
+    /// Which tier produced the score: "heuristic" (marker density) or
+    /// "neural" (loaded classifier weights).
+    pub backend: String,
     pub risk_score: f32,
     pub label: SemanticLabel,
     pub is_violation: bool,
@@ -59,9 +62,26 @@ impl SemanticGuard {
     }
 
     /// Evaluates text for adversarial semantic intent.
-    /// In production, this can hook to an embedded ONNX runtime (ort/candle) or local endpoint.
-    /// Provides fast deterministic semantic scoring based on attention marker density.
+    /// Neural tier first (feature `semantic-ml` + `ETHOS_SEMANTIC_NEURAL`
+    /// opt-in + weights present), deterministic heuristic as the guaranteed
+    /// fallback — the wall never fails closed on a missing model.
     pub fn evaluate(&self, text: &str) -> SemanticRiskAssessment {
+        #[cfg(feature = "semantic-ml")]
+        {
+            if let Some(nn) = crate::walls::semantic_neural::global() {
+                match nn.assess(text, self.threshold, self.enabled) {
+                    Ok(a) => return a,
+                    Err(e) => {
+                        tracing::warn!("SemanticGuard neural inference failed, falling back: {e:#}");
+                        eprintln!("[SemanticGuard] neural inference failed: {e:#}");
+                    }
+                }
+            }
+        }
+        self.heuristic_evaluate(text)
+    }
+
+    fn heuristic_evaluate(&self, text: &str) -> SemanticRiskAssessment {
         let start = std::time::Instant::now();
         let lower = text.to_lowercase();
 
@@ -121,6 +141,7 @@ impl SemanticGuard {
 
         SemanticRiskAssessment {
             model: model_name.to_string(),
+            backend: "heuristic".to_string(),
             risk_score: score,
             label,
             is_violation,

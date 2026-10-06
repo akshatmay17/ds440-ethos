@@ -34,7 +34,13 @@ impl Default for TaintPolicyConfig {
         }
 
         let mut valid_tokens = HashSet::new();
-        valid_tokens.insert("SEC-OVERRIDE-TOKEN-VALIDATED".to_string());
+        // Operator-configurable via ETHOS_DECLASSIFY_TOKEN; the demo default
+        // is retained for the TUI walkthrough (the token is not
+        // agent-callable — no tool maps to declassify).
+        valid_tokens.insert(
+            std::env::var("ETHOS_DECLASSIFY_TOKEN")
+                .unwrap_or_else(|_| "SEC-OVERRIDE-TOKEN-VALIDATED".to_string()),
+        );
 
         Self {
             profile: PolicyProfile::Standard,
@@ -53,6 +59,12 @@ impl Default for TaintPolicyConfig {
                 ".ethos/config.json".to_string(),
                 ".taintbox/config.json".to_string(),
                 "models_dev_cache.json".to_string(),
+                // Common host credential files reachable via exec.
+                ".netrc".to_string(),
+                ".npmrc".to_string(),
+                ".aws/credentials".to_string(),
+                ".gitconfig".to_string(),
+                "authorized_keys".to_string(),
             ],
             network_allowlist: Vec::new(),
             valid_tokens,
