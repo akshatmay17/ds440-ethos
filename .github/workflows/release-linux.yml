@@ -98,10 +98,10 @@ jobs:
           tar -czf "ethos-linux-x86_64-cli.tar.gz" ethos
           cp ../../scripts/install_linux.sh install-linux.sh
           chmod +x install-linux.sh
-          rm -f SHA256SUMS.txt
+          rm -f SHA256SUMS-linux.txt
           for f in *; do
             if [ -f "$f" ]; then
-              sha256sum "$f" >> SHA256SUMS.txt
+              sha256sum "$f" >> SHA256SUMS-linux.txt
             fi
           done
           echo "Staged Linux Release Artifacts:"
@@ -135,7 +135,7 @@ jobs:
             dist/linux/*.deb
             dist/linux/*.AppImage
             dist/linux/*.tar.gz
-            dist/linux/SHA256SUMS.txt
+            dist/linux/SHA256SUMS-linux.txt
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

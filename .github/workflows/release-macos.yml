@@ -107,8 +107,8 @@ jobs:
           # 4. Generate SHA256 Checksums
           cd dist/macos
           for file in *; do
-              if [ -f "$file" ] && [ "$file" != "SHA256SUMS.txt" ]; then
-                  shasum -a 256 "$file" >> SHA256SUMS.txt
+              if [ -f "$file" ] && [ "$file" != "SHA256SUMS-macos-${{ matrix.arch }}.txt" ]; then
+                  shasum -a 256 "$file" >> SHA256SUMS-macos-${{ matrix.arch }}.txt
               fi
           done
           cd ../..
@@ -134,7 +134,7 @@ jobs:
           files: |
             dist/macos/*.dmg
             dist/macos/*.tar.gz
-            dist/macos/SHA256SUMS.txt
+            dist/macos/SHA256SUMS-macos-${{ matrix.arch }}.txt
           body: |
             # Ethos macOS Release (${{ inputs.release_tag || github.ref_name }})
 
