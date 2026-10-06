@@ -111,4 +111,16 @@ impl PromptInjectScanner {
 
         findings
     }
+
+    /// LLM-safe findings digest: pattern names and categories only. Never
+    /// embed `match_excerpt` into agent-facing context — the raw excerpt is
+    /// attacker text and re-delivering it verbatim is itself an injection
+    /// channel (RT-13).
+    pub fn summarize_findings(findings: &[Finding]) -> String {
+        findings
+            .iter()
+            .map(|f| format!("{}[{}]", f.pattern_name, f.category))
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
 }

@@ -216,9 +216,14 @@ impl AgentLoop {
                     let args_str = arguments.to_string();
                     let arg_findings = scanner.scan(&args_str);
                     if !arg_findings.is_empty() {
+                        // RT-13: summarize without raw excerpts — echoing
+                        // attacker match text back into the LLM context is
+                        // itself an injection channel.
                         let warning = format!(
-                            "[PromptInjectScanner] {} injection pattern(s) detected in tool arguments for '{}': {:?}",
-                            arg_findings.len(), name, arg_findings
+                            "[PromptInjectScanner] {} injection pattern(s) detected in tool arguments for '{}': {}",
+                            arg_findings.len(),
+                            name,
+                            PromptInjectScanner::summarize_findings(&arg_findings)
                         );
                         history.push(AgentMessage {
                             role: AgentRole::Tool,
@@ -233,9 +238,12 @@ impl AgentLoop {
                     let output_str_for_scan = tool_result.output.to_string();
                     let output_findings = scanner.scan(&output_str_for_scan);
                     if !output_findings.is_empty() {
+                        // RT-13: sanitized digest, no raw attacker excerpts.
                         let warning = format!(
-                            "[PromptInjectScanner] {} injection pattern(s) detected in '{}' output: {:?}",
-                            output_findings.len(), name, output_findings
+                            "[PromptInjectScanner] {} injection pattern(s) detected in '{}' output: {}",
+                            output_findings.len(),
+                            name,
+                            PromptInjectScanner::summarize_findings(&output_findings)
                         );
                         history.push(AgentMessage {
                             role: AgentRole::Tool,

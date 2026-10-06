@@ -1,701 +1,858 @@
-// Ethos 1:1 Desktop Web Application Controller
-// Drives exact OpenCode UI, models.dev live import, and reactive context inspection
+// ================================================================
+// ETHOS — Web controller (opencode-style chrome, Cyber Obsidian)
+// Real daemon wiring: sandboxes, full models.dev catalog, attack
+// lab, taint/security telemetry. No demo data. No build step.
+// ================================================================
 
-const getPref = (key, fallback) => localStorage.getItem("ethos_" + key) || localStorage.getItem("tbox_" + key) || fallback;
-const setPref = (key, val) => { localStorage.setItem("ethos_" + key, val); };
+"use strict";
 
-// Built-in models.dev catalog fallback
-const DEFAULT_MODELS = [
-  { id: "deepseek-r1", name: "DeepSeek R1 (LM Studio Local)", provider: "lmstudio", context: 65536 },
-  { id: "deepseek-r1:8b", name: "DeepSeek R1 Distill 8B", provider: "ollama", context: 65536 },
-  { id: "qwen2.5-coder:7b", name: "Qwen 2.5 Coder 7B", provider: "ollama", context: 32768 },
-  { id: "deepseek-v4-pro", name: "DeepSeek V4 Pro", provider: "deepseek", context: 1000000 },
-  { id: "gpt-4o", name: "GPT-4o (Omni Frontier)", provider: "openai", context: 128000 },
-  { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet v2", provider: "anthropic", context: 200000 },
-  { id: "anthropic/claude-3.5-sonnet", name: "OpenRouter: Claude 3.5 Sonnet", provider: "openrouter", context: 200000 }
-];
+// ---------- helpers ----------
 
-// App State
-const state = {
-  activeView: "welcome", // 'welcome', 'sessions', 'conversation'
-  menuOpen: false,
-  inspectorOpen: true,
-  provider: getPref("provider", "deepseek"),
-  apiUrl: getPref("api_url", "https://api.deepseek.com/v1"),
-  apiKey: getPref("api_key", ""),
-  model: getPref("model", "DeepSeek V4 Pro"),
-  contextLimit: 1000000,
-  modelsCatalog: [...DEFAULT_MODELS],
-  activeSession: {
-    id: "test-conversation",
-    title: "Test conversation",
-    messages: [
-      { role: "user", content: "test", id: "msg_08968da5f001RW28Oh60AlBzsx", time: "Sep 9, 2026, 11:42 PM" },
-      { role: "assistant", content: "Hello! I'm Ethos, ready to help with your coding tasks. What would you like to do?", time: "Sep 9, 2026, 11:42 PM" }
-    ],
-    tokens: {
-      input: 8283,
-      output: 23,
-      reasoning: 26,
-      total: 8332,
-      cost: 0.00
-    },
-    created: "Sep 9, 2026, 11:42 PM",
-    lastActivity: "Sep 9, 2026, 11:42 PM"
-  },
-  sessions: [
-    { id: "audit-sandbox", title: "Sandbox security audit & taint flow analysis", project: "Default Project" },
-    { id: "eval-bench", title: "ExploitBench defense evaluation suite", project: "Default Project" },
-    { id: "harness-agent", title: "Autonomous agent tool execution & walls", project: "Default Project" }
-  ]
-};
-
-// Elements
-const viewWelcome = document.getElementById("view-welcome");
-const viewSessions = document.getElementById("view-sessions");
-const viewConversation = document.getElementById("view-conversation");
-const hamburgerMenu = document.getElementById("hamburger-menu");
-const settingsModal = document.getElementById("settings-modal-overlay");
-const contextPane = document.getElementById("context-inspector-pane");
-
-const tabActive = document.getElementById("tab-active-session");
-const tabTitle = document.getElementById("tab-title-text");
-const tabBadge = document.getElementById("tab-badge-icon");
-
-const mainPromptInput = document.getElementById("main-prompt-input");
-const chatPromptInput = document.getElementById("chat-prompt-input");
-const activeModelLabel = document.getElementById("active-model-label");
-const chatModelLabel = document.getElementById("chat-model-label");
-
-// Routing & View Switcher
-function setView(viewName) {
-  state.activeView = viewName;
-  const viewKanban = document.getElementById("view-kanban");
-  viewWelcome.style.display = viewName === "welcome" ? "flex" : "none";
-  viewSessions.style.display = viewName === "sessions" ? "flex" : "none";
-  viewConversation.style.display = viewName === "conversation" ? "flex" : "none";
-  if (viewKanban) viewKanban.style.display = viewName === "kanban" ? "flex" : "none";
-
-  const btnGrid = document.getElementById("btn-grid-overview");
-  const btnInspector = document.getElementById("btn-toggle-inspector");
-
-  const penSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z"/></svg>`;
-
-  if (viewName === "welcome") {
-    tabTitle.textContent = "New session";
-    tabBadge.innerHTML = penSvg;
-    tabActive.classList.add("active");
-    if (btnGrid) btnGrid.classList.remove("active");
-    if (btnInspector) btnInspector.style.display = "none";
-  } else if (viewName === "kanban") {
-    tabTitle.textContent = "Agent Kanban Board";
-    tabBadge.innerHTML = `<span style="font-size: 11px;">📋</span>`;
-    tabActive.classList.add("active");
-    if (btnGrid) btnGrid.classList.remove("active");
-    if (btnInspector) btnInspector.style.display = "none";
-  } else if (viewName === "sessions") {
-    tabTitle.textContent = "New session";
-    tabBadge.innerHTML = penSvg;
-    tabActive.classList.remove("active");
-    if (btnGrid) btnGrid.classList.add("active");
-    if (btnInspector) btnInspector.style.display = "none";
-  } else if (viewName === "conversation") {
-    tabTitle.textContent = state.activeSession.title;
-    tabBadge.innerHTML = `<span class="project-badge-sm">D</span>`;
-    tabActive.classList.add("active");
-    if (btnGrid) btnGrid.classList.remove("active");
-    if (btnInspector) {
-      btnInspector.style.display = "flex";
-      btnInspector.classList.add("active");
-    }
-    renderConversation();
-    updateContextMetrics();
-  }
-}
-
-// Render Conversation Messages
-function renderConversation() {
-  const stream = document.getElementById("chat-messages-stream");
-  stream.innerHTML = "";
-
-  document.getElementById("active-session-title").textContent = state.activeSession.title;
-
-  state.activeSession.messages.forEach(msg => {
-    if (msg.role === "user") {
-      const wrapper = document.createElement("div");
-      wrapper.className = "user-bubble-wrapper";
-      wrapper.innerHTML = `<div class="user-bubble">${escapeHtml(msg.content)}</div>`;
-      stream.appendChild(wrapper);
-    } else {
-      const wrapper = document.createElement("div");
-      wrapper.className = "assistant-bubble-wrapper";
-      wrapper.innerHTML = `<div class="assistant-bubble">${escapeHtml(msg.content)}</div>`;
-      stream.appendChild(wrapper);
-    }
-  });
-
-  stream.scrollTop = stream.scrollHeight;
-}
-
-// Update Context Inspector (Screenshot 4 Right Pane)
-function updateContextMetrics() {
-  const s = state.activeSession;
-  document.getElementById("meta-session-name").textContent = s.title;
-  document.getElementById("meta-message-count").textContent = (s.messages.length + 1).toString();
-  document.getElementById("meta-provider-name").textContent = state.provider === "deepseek" ? "DeepSeek" : (state.provider.charAt(0).toUpperCase() + state.provider.slice(1));
-  document.getElementById("meta-model-name").textContent = state.model;
-  document.getElementById("meta-context-limit").textContent = state.contextLimit.toLocaleString();
-  document.getElementById("meta-total-tokens").textContent = s.tokens.total.toLocaleString();
-
-  const usagePct = Math.max(1, Math.round((s.tokens.total / state.contextLimit) * 100));
-  document.getElementById("meta-usage-pct").textContent = `${usagePct}%`;
-
-  document.getElementById("meta-input-tokens").textContent = s.tokens.input.toLocaleString();
-  document.getElementById("meta-output-tokens").textContent = s.tokens.output.toLocaleString();
-  document.getElementById("meta-reasoning-tokens").textContent = s.tokens.reasoning.toLocaleString();
-
-  const userMsgs = s.messages.filter(m => m.role === "user").length;
-  const asstMsgs = s.messages.filter(m => m.role === "assistant").length;
-  document.getElementById("meta-user-msgs").textContent = "2";
-  document.getElementById("meta-assistant-msgs").textContent = asstMsgs.toString();
-  document.getElementById("meta-total-cost").textContent = `$${s.tokens.cost.toFixed(2)}`;
-  document.getElementById("meta-created-at").textContent = s.created;
-  document.getElementById("meta-last-activity").textContent = s.lastActivity;
-
-  // Context Breakdown Percentages
-  const userTokens = s.messages.filter(m => m.role === "user").reduce((acc, m) => acc + m.content.length / 4, 0);
-  const asstTokens = s.tokens.output;
-  const userPct = ((userTokens / state.contextLimit) * 100).toFixed(1);
-  const asstPct = Math.max(0.6, ((asstTokens / state.contextLimit) * 100)).toFixed(1);
-  const otherPct = (100 - parseFloat(userPct) - parseFloat(asstPct)).toFixed(1);
-
-  document.getElementById("bar-user-segment").style.width = `${Math.max(0.2, userPct)}%`;
-  document.getElementById("bar-assistant-segment").style.width = `${asstPct}%`;
-  document.getElementById("bar-other-segment").style.width = `${otherPct}%`;
-
-  document.getElementById("legend-user-pct").textContent = `User ${Math.round(userPct)}%`;
-  document.getElementById("legend-assistant-pct").textContent = `Assistant ${asstPct}%`;
-  document.getElementById("legend-other-pct").textContent = `Other ${otherPct}%`;
-
-  // Raw Messages List
-  const rawList = document.getElementById("raw-messages-list");
-  rawList.innerHTML = "";
-  s.messages.filter(m => m.role === "user").forEach(m => {
-    const item = document.createElement("div");
-    item.className = "raw-message-item";
-    item.innerHTML = `
-      <span>user &bull; <code>${m.id || "msg_" + Math.random().toString(36).substr(2, 9)}</code></span>
-      <span style="font-size: 11px; opacity: 0.6;">${m.time || s.lastActivity}</span>
-    `;
-    rawList.appendChild(item);
-  });
-}
-
-// Prompt Submission Handler
-function handleSendPrompt(inputEl) {
-  const text = inputEl.value.trim();
-  if (!text) return;
-  inputEl.value = "";
-
-  const now = "Sep 9, 2026, 11:43 PM";
-  const newMsg = {
-    role: "user",
-    content: text,
-    id: `msg_${Math.random().toString(36).substr(2, 24)}`,
-    time: now
-  };
-
-  if (state.activeView === "welcome") {
-    state.activeSession = {
-      id: `session-${Date.now()}`,
-      title: text.length > 30 ? text.substring(0, 30) + "..." : text,
-      messages: [
-        newMsg,
-        {
-          role: "assistant",
-          content: `I'll help you with "${text}". Running inside isolated Ethos sandbox.`,
-          time: now
-        }
-      ],
-      tokens: {
-        input: 8283 + Math.round(text.length / 4),
-        output: 45,
-        reasoning: 30,
-        total: 8332 + Math.round(text.length / 4) + 75,
-        cost: 0.00
-      },
-      created: now,
-      lastActivity: now
-    };
-    setView("conversation");
-  } else {
-    state.activeSession.messages.push(newMsg);
-    state.activeSession.messages.push({
-      role: "assistant",
-      content: `Received instruction: "${text}". Analyzing workspace AST and sandbox policy rules.`,
-      time: now
-    });
-    state.activeSession.tokens.input += Math.round(text.length / 4);
-    state.activeSession.tokens.output += 32;
-    state.activeSession.tokens.total += Math.round(text.length / 4) + 32;
-    renderConversation();
-    updateContextMetrics();
-  }
-}
-
-let allProvidersCatalog = [];
-
-// Fetch models and providers dynamically from backend models.dev single source of truth
-async function fetchModelsDevCatalog(forceRefresh = false) {
-  const btn = document.getElementById("btn-fetch-models-dev");
-  if (btn) btn.innerHTML = "<span>&#8635; Syncing models.dev...</span>";
-
-  try {
-    if (forceRefresh) {
-      await fetch("/v1/models/refresh", { method: "POST" }).catch(() => {});
-    }
-
-    // 1. Fetch all providers
-    const provRes = await fetch("/v1/models/providers");
-    if (provRes.ok) {
-      allProvidersCatalog = await provRes.json();
-      populateProvidersSelect();
-    }
-
-    // 2. Fetch models for selected provider
-    const provId = state.provider || "deepseek";
-    const modelsRes = await fetch(`/v1/models?provider=${encodeURIComponent(provId)}`);
-    if (modelsRes.ok) {
-      const data = await modelsRes.json();
-      if (Array.isArray(data) && data.length > 0) {
-        state.modelsCatalog = data.map(m => ({
-          id: m.id,
-          name: m.name || m.id,
-          provider: m.provider,
-          context: m.context_window || 128000,
-          cost_in: m.cost_input_per_million || 0,
-          cost_out: m.cost_output_per_million || 0,
-          has_tools: m.has_tools,
-          has_vision: m.has_vision,
-          has_reasoning: m.has_reasoning,
-        }));
-      }
-    }
-  } catch (e) {
-    console.log("Using built-in models.dev catalog fallback:", e);
-  } finally {
-    if (btn) btn.innerHTML = "<span>&#8635; Fetch models.dev</span>";
-  }
-  populateModelsSelect();
-}
-
-function populateProvidersSelect() {
-  const sel = document.getElementById("settings-provider-select");
-  if (!sel || allProvidersCatalog.length === 0) return;
-
-  const current = state.provider;
-  sel.innerHTML = "";
-  allProvidersCatalog.forEach(p => {
-    const opt = document.createElement("option");
-    opt.value = p.id;
-    const badge = p.is_popular ? " ★" : "";
-    opt.textContent = `${p.name} (${p.model_count} models)${badge}`;
-    if (p.id === current) opt.selected = true;
-    sel.appendChild(opt);
-  });
-}
-
-function populateModelsSelect() {
-  const sel = document.getElementById("settings-model-select");
-  if (!sel) return;
-  sel.innerHTML = "";
-  state.modelsCatalog.forEach(m => {
-    const opt = document.createElement("option");
-    opt.value = m.id || m.name;
-    const ctx = Math.round(m.context / 1000);
-    const pricing = (m.cost_in > 0 || m.cost_out > 0) ? ` [$${m.cost_in.toFixed(2)} in/$${m.cost_out.toFixed(2)} out]` : "";
-    const badges = [];
-    if (m.has_tools) badges.push("Tools");
-    if (m.has_vision) badges.push("Vision");
-    if (m.has_reasoning) badges.push("R1");
-    const badgeStr = badges.length > 0 ? ` [${badges.join(", ")}]` : "";
-
-    opt.textContent = `${m.name} (${ctx}k ctx)${pricing}${badgeStr}`;
-    if (m.id === state.model || m.name === state.model) opt.selected = true;
-    sel.appendChild(opt);
-  });
-}
+const $ = (id) => document.getElementById(id);
 
 function escapeHtml(str) {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return String(str ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-// Event Listeners Initialization
-document.addEventListener("DOMContentLoaded", () => {
-  // Check URL parameters for view routing (for screenshots)
-  const urlParams = new URLSearchParams(window.location.search);
-  const reqView = urlParams.get("view");
-  if (reqView === "sessions") {
-    setView("sessions");
-  } else if (reqView === "conversation") {
-    setView("conversation");
-  } else if (reqView === "menu") {
-    setView("sessions");
-    hamburgerMenu.style.display = "block";
-    state.menuOpen = true;
-  } else if (reqView === "kanban") {
-    setView("kanban");
-  } else if (reqView === "settings") {
-    setView("welcome");
-    settingsModal.style.display = "flex";
+function h(tag, attrs = {}, ...children) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") el.className = v;
+    else if (k === "text") el.textContent = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v);
+  }
+  for (const c of children) if (c != null) el.append(c);
+  return el;
+}
+
+function fmtCtx(n) {
+  if (!n) return "—";
+  if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 ? 1 : 0) + "M";
+  if (n >= 1000) return Math.round(n / 1000) + "k";
+  return String(n);
+}
+function fmtCost(m) {
+  const i = m.cost_input_per_million, o = m.cost_output_per_million;
+  if (!i && !o) return `<span class="badge free">FREE</span>`;
+  return `$${Number(i).toFixed(2)}/$${Number(o).toFixed(2)}`;
+}
+
+// Subsequence fuzzy match with start/streak bonuses. Returns score or null.
+function fuzzy(needle, hay) {
+  needle = needle.toLowerCase().trim();
+  hay = hay.toLowerCase();
+  if (!needle) return 1;
+  let score = 0, from = 0, prev = -2;
+  for (const ch of needle) {
+    const idx = hay.indexOf(ch, from);
+    if (idx === -1) return null;
+    if (idx === prev + 1) score += 4; else score += 1;
+    if (idx === 0 || " -_/.".includes(hay[idx - 1])) score += 2;
+    prev = idx; from = idx + 1;
+  }
+  return score - hay.length * 0.002;
+}
+
+// ---------- prefs / state ----------
+
+const getPref = (k, f) => localStorage.getItem("ethos_" + k) ?? f;
+const setPref = (k, v) => localStorage.setItem("ethos_" + k, v);
+
+// Inside the Tauri webview the UI is served from tauri.localhost (Win) or
+// tauri://localhost (mac/linux), NOT from the daemon — relative /v1 fetches
+// would hit the wrong origin. Default the API base to the sidecar daemon
+// (main.rs spawns `ethos daemon --port 8000` on startup).
+const IN_TAURI = location.hostname === "tauri.localhost" || location.protocol === "tauri:";
+const DEFAULT_API_BASE = IN_TAURI ? "http://localhost:8000" : "";
+
+const state = {
+  apiBase: getPref("api_base", DEFAULT_API_BASE).replace(/\/$/, ""),
+  provider: getPref("provider", ""),
+  model: getPref("model", ""),
+  providers: [],        // ProviderSummary[]
+  models: [],           // ModelSpec[] (full catalog)
+  favorites: JSON.parse(getPref("favs", "[]")),   // [{p, m}]
+  recents: JSON.parse(getPref("recent", "[]")),    // [{p, m}]
+  sessions: [],
+  activeSession: null,
+  sessionSnaps: {},     // id -> [snapshot_id]
+  selectedLab: null,
+  labResult: null,
+  openTabs: ["dashboard"],
+  activeTab: "dashboard",
+  daemonOnline: false,
+  catalogFilterProvider: null, // null = all
+  overlay: null,        // 'palette' | 'model' | 'settings'
+  selIdx: 0,            // keyboard selection inside overlay lists
+  overlayItems: [],     // current overlay item list for keyboard nav
+};
+
+const saveFavs = () => setPref("favs", JSON.stringify(state.favorites));
+const saveRecent = () => setPref("recent", JSON.stringify(state.recents.slice(0, 5)));
+const modelKey = (x) => x.p + "::" + x.m;
+const isFav = (p, m) => state.favorites.some((f) => f.p === p && f.m === m);
+
+function markRecent(p, m) {
+  state.recents = [{ p, m }, ...state.recents.filter((r) => !(r.p === p && r.m === m))].slice(0, 5);
+  saveRecent();
+}
+
+function setActiveModel(p, m) {
+  state.provider = p; state.model = m;
+  setPref("provider", p); setPref("model", m);
+  markRecent(p, m);
+  updateStatusbar(); updateModelBadge();
+  renderCatalog(); // re-highlight active row
+  toast(`Active model → ${m} (${p})`);
+}
+
+// ---------- API client ----------
+
+async function api(path, opts = {}) {
+  const url = state.apiBase + path;
+  const res = await fetch(url, {
+    headers: { "Content-Type": "application/json" },
+    ...opts,
+  }).catch(() => { throw new Error("daemon unreachable"); });
+  if (!res.ok) throw new Error(`${opts.method || "GET"} ${path} → ${res.status}`);
+  const ct = res.headers.get("content-type") || "";
+  return ct.includes("json") ? res.json() : res.text();
+}
+
+const post = (path, body) => api(path, { method: "POST", body: JSON.stringify(body ?? {}) });
+
+// ---------- toasts ----------
+
+function toast(msg, kind = "") {
+  const t = h("div", { class: "toast " + kind, text: msg });
+  $("toast-rack").append(t);
+  setTimeout(() => { t.style.opacity = "0"; t.style.transition = "opacity .3s"; }, 2600);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ---------- tabs & router ----------
+
+const VIEW_TITLES = { dashboard: "Dashboard", sessions: "Sessions", catalog: "Model Catalog", lab: "Attack Lab", security: "Security" };
+
+function renderTabs() {
+  const strip = $("tab-strip");
+  strip.replaceChildren();
+  for (const v of state.openTabs) {
+    const tab = h("div", {
+      class: "tab" + (v === state.activeTab ? " active" : ""),
+      onclick: () => switchTab(v),
+    },
+      h("span", { text: VIEW_TITLES[v] || v }),
+      h("span", { class: "tab-close", text: "×", title: "Close", onclick: (e) => { e.stopPropagation(); closeTab(v); } })
+    );
+    strip.append(tab);
+  }
+}
+
+function openTab(v) {
+  if (!state.openTabs.includes(v)) state.openTabs.push(v);
+  switchTab(v);
+}
+
+function closeTab(v) {
+  state.openTabs = state.openTabs.filter((t) => t !== v);
+  if (state.openTabs.length === 0) state.openTabs = ["dashboard"];
+  if (state.activeTab === v) switchTab(state.openTabs[state.openTabs.length - 1]);
+  renderTabs();
+}
+
+function switchTab(v) {
+  state.activeTab = v;
+  if (!state.openTabs.includes(v)) state.openTabs.push(v);
+  document.querySelectorAll(".view").forEach((el) => el.classList.toggle("active", el.dataset.view === v));
+  document.querySelectorAll(".side-item").forEach((el) => el.classList.toggle("active", el.dataset.view === v));
+  renderTabs();
+  if (v === "sessions") refreshSessions();
+  if (v === "catalog") ensureCatalog();
+  if (v === "lab") refreshLab();
+  if (v === "security") refreshSecurity();
+  if (v === "dashboard") refreshDashboard();
+}
+
+// ---------- statusbar / sidebar / health ----------
+
+function updateStatusbar() {
+  $("status-provider").textContent = state.provider || "—";
+  $("status-model").textContent = state.model || "no model";
+}
+
+function updateModelBadge() {
+  const b = $("btn-model-picker");
+  $("model-badge-text").textContent = state.model ? `${state.provider}/${state.model}` : "no model";
+  b.classList.toggle("active", !!state.model);
+}
+
+function setDaemonOnline(on) {
+  state.daemonOnline = on;
+  $("daemon-pill").classList.toggle("online", on);
+  $("daemon-text").textContent = on ? "daemon online" : "daemon offline";
+}
+
+async function checkHealth() {
+  try {
+    const j = await api("/health");
+    setDaemonOnline(j.status === "healthy");
+  } catch { setDaemonOnline(false); }
+}
+
+// ---------- dashboard ----------
+
+async function refreshDashboard() {
+  await checkHealth();
+  const grid = $("metric-grid");
+  grid.replaceChildren(h("div", { class: "side-empty", text: state.daemonOnline ? "" : "daemon offline — start with `ethos daemon` or `ethos app`" }));
+  if (!state.daemonOnline) return;
+  try {
+    const m = await api("/v1/metrics");
+    const cards = [
+      ["Active Sandboxes", m.active_sandboxes ?? 0, "live sessions"],
+      ["Total Steps", m.total_steps ?? 0, "tool invocations"],
+      ["Active Taint", m.active_taint_count ?? 0, "untrusted resources"],
+      ["PromptInject Trips", m.wall_trips_prompt_inject ?? 0, "injection patterns"],
+      ["Ouroboros Trips", m.wall_trips_ouroboros ?? 0, "immutability blocks"],
+      ["Defense Rate", `${Math.round((m.benchmark_defense_rate ?? 0) * 100)}%`, "blocked attacks"],
+    ];
+    grid.replaceChildren(...cards.map(([l, v, s]) =>
+      h("div", { class: "metric-card" },
+        h("div", { class: "metric-label", text: l }),
+        h("div", { class: "metric-value", text: String(v) }),
+        h("div", { class: "metric-sub", text: s }))
+    ));
+  } catch (e) { toast(e.message, "warn"); }
+
+  $("walls-summary").replaceChildren(
+    h("div", { class: "taint-node" },
+      h("span", { class: "res", text: "PromptInjectScanner" }), h("span", { class: "dim", text: " — 7 injection pattern families" })),
+    h("div", { class: "taint-node" },
+      h("span", { class: "res", text: "OuroborosWall" }), h("span", { class: "dim", text: " — tests/ src/taint/ src/walls/ migrations/ .git/ Cargo.toml + rewind markers" })),
+    h("div", { class: "taint-node" },
+      h("span", { class: "res", text: "Taint Boundary" }), h("span", { class: "dim", text: " — case-folded sensitive paths, merge-never-downgrade provenance" })),
+    h("div", { class: "taint-node" },
+      h("span", { class: "res", text: "HalluScan / EmergencyStop" }), h("span", { class: "dim", text: " — path validation + high-severity circuit breaker" })),
+  );
+
+  try {
+    const events = await api("/v1/metrics/events");
+    const rows = (events || []).slice().reverse().map((ev) =>
+      h("tr", {},
+        h("td", { text: new Date((ev.timestamp || 0) * 1000).toLocaleTimeString() }),
+        h("td", { text: ev.event_type || "—" }),
+        h("td", { text: ev.action || "—" }),
+        h("td", { text: JSON.stringify(ev.details || {}).slice(0, 80) }))
+    );
+    $("daemon-events").replaceChildren(
+      rows.length
+        ? h("table", { class: "mtable" }, h("thead", {}, h("tr", {}, h("th", { text: "time" }), h("th", { text: "type" }), h("th", { text: "action" }), h("th", { text: "details" }))), h("tbody", {}, ...rows))
+        : h("div", { class: "side-empty", text: "no events yet" })
+    );
+  } catch { $("daemon-events").replaceChildren(h("div", { class: "side-empty", text: "—" })); }
+}
+
+// ---------- sessions ----------
+
+async function refreshSessions() {
+  if (!state.daemonOnline) await checkHealth();
+  if (!state.daemonOnline) return;
+  try {
+    const j = await api("/v1/sandboxes");
+    state.sessions = j.sandboxes || [];
+  } catch (e) { toast(e.message, "warn"); return; }
+
+  const list = $("session-list");
+  if (!state.sessions.length) {
+    list.replaceChildren(h("div", { class: "side-empty", text: "no sandboxes — create one" }));
   } else {
-    setView("welcome");
+    list.replaceChildren(...state.sessions.map((id) =>
+      h("div", { class: "session-card" + (state.activeSession === id ? " active" : ""), onclick: () => selectSession(id) },
+        h("div", { class: "session-card-id", text: id }),
+        h("div", { class: "session-card-desc", text: "sandbox session" }))
+    ));
   }
 
-  // Hamburger Menu
-  document.getElementById("btn-hamburger").addEventListener("click", (e) => {
-    e.stopPropagation();
-    state.menuOpen = !state.menuOpen;
-    hamburgerMenu.style.display = state.menuOpen ? "block" : "none";
-  });
+  const side = $("side-sessions");
+  side.replaceChildren(...state.sessions.map((id) =>
+    h("div", { class: "side-session" + (state.activeSession === id ? " active" : ""), text: id, title: id, onclick: () => { openTab("sessions"); selectSession(id); } })
+  ));
+  if (state.activeSession && !state.sessions.includes(state.activeSession)) {
+    state.activeSession = null;
+    $("session-detail").replaceChildren(h("div", { class: "side-empty", style: "padding:48px 0", text: "select a sandbox" }));
+  }
+}
 
-  document.addEventListener("click", (e) => {
-    if (state.menuOpen && !hamburgerMenu.contains(e.target)) {
-      state.menuOpen = false;
-      hamburgerMenu.style.display = "none";
+async function createSandbox() {
+  try {
+    const j = await post("/v1/sandboxes", { description: "web session" });
+    toast(`Sandbox ${j.sandbox_id} created`);
+    await refreshSessions();
+    selectSession(j.sandbox_id);
+  } catch (e) { toast(e.message, "err"); }
+}
+
+async function selectSession(id) {
+  state.activeSession = id;
+  await refreshSessions();
+  const pane = $("session-detail");
+  pane.replaceChildren(h("div", { class: "side-empty", style: "padding:48px 0", text: "loading…" }));
+  try {
+    const obs = await api(`/v1/sandboxes/${encodeURIComponent(id)}/observe`);
+    const tel = await api(`/v1/sandboxes/${encodeURIComponent(id)}/telemetry`);
+    renderSessionDetail(id, obs, tel.events || []);
+  } catch (e) { pane.replaceChildren(h("div", { class: "side-empty", text: e.message })); }
+}
+
+function renderSessionDetail(id, obs, events) {
+  const snaps = state.sessionSnaps[id] || [];
+  const pane = $("session-detail");
+
+  const files = (obs.created_files || []).map((f) =>
+    h("span", { class: "file-chip" + ((obs.tainted_resources || []).includes(f) ? " tainted" : ""), text: f }));
+  const blocked = events.filter((e) => e.event_type === "POLICY_BLOCK");
+  const snapChips = snaps.map((s) =>
+    h("span", { class: "file-chip", title: "click to rewind", style: "cursor:pointer", onclick: () => rewindSession(id, s), text: "⟲ " + s }));
+
+  pane.replaceChildren(
+    h("div", { class: "session-detail-inner" },
+      h("div", { class: "detail-head" },
+        h("div", {},
+          h("div", { class: "detail-title", text: id }),
+          h("div", { class: "detail-sub", text: `step ${obs.step_id} · taint ${obs.active_taint_count} · files ${files.length}` })),
+        h("div", { style: "display:flex;gap:8px" },
+          h("button", { class: "btn", text: "📸 Snapshot", onclick: () => snapshotSession(id) }),
+          h("button", { class: "btn btn-danger", text: "Terminate", onclick: () => terminateSession(id) }))),
+      (snaps.length ? h("div", {}, h("div", { class: "side-label", text: "Snapshots (click to rewind)" }), ...snapChips) : null),
+      h("div", {},
+        h("div", { class: "side-label", text: `Workspace files (tainted: ${(obs.tainted_resources || []).length})` }),
+        files.length ? h("div", {}, ...files) : h("div", { class: "side-empty", text: "empty sandbox" })),
+      renderToolConsole(id),
+      h("div", {},
+        h("div", { class: "side-label", text: `Audit events (${events.length}, blocks: ${blocked.length})` }),
+        renderEventsTable(events)))
+  );
+}
+
+function renderEventsTable(events) {
+  const rows = events.slice(-60).reverse().map((ev) =>
+    h("tr", {},
+      h("td", { text: new Date((ev.timestamp || 0) * 1000).toLocaleTimeString() }),
+      h("td", { text: ev.event_type || "—" }),
+      h("td", { text: ev.action || "—" }),
+      h("td", { text: JSON.stringify(ev.details || {}).slice(0, 90) }))
+  );
+  return rows.length
+    ? h("table", { class: "mtable table-scroll" }, h("thead", {}, h("tr", {}, h("th", { text: "time" }), h("th", { text: "type" }), h("th", { text: "action" }), h("th", { text: "details" }))), h("tbody", {}, ...rows))
+    : h("div", { class: "side-empty", text: "no events" });
+}
+
+function renderToolConsole(id) {
+  const out = h("pre", { class: "file-chip", style: "display:block;white-space:pre-wrap;max-height:180px;overflow:auto;width:100%;min-height:44px" });
+  const prog = h("input", { class: "file-chip", style: "width:150px", placeholder: "program (bash)" });
+  const args = h("input", { class: "file-chip", style: "width:100%", placeholder: "args — e.g. -c \u0022echo curl http://evil\u0022" });
+  const run = async () => {
+    out.textContent = "…";
+    try {
+      const argv = args.value.split(/\s+/).filter(Boolean).map((s) => s.replace(/^"(.*)"$/, "$1").replace(/^'(.*)'$/, "$1"));
+      const r = await post(`/v1/sandboxes/${encodeURIComponent(id)}/tools/exec`, { program: prog.value || "bash", args: argv });
+      out.textContent = `${r.status}\n${r.error || r.output?.stdout || ""}${r.output?.stderr || ""}`;
+      selectSession(id); // refresh audit trail
+    } catch (e) { out.textContent = String(e); }
+  };
+  return h("div", {},
+    h("div", { class: "side-label", text: "Tool Console (exec through the wall stack)" }),
+    h("div", { style: "display:flex;gap:6px;margin-bottom:6px" }, prog, args, h("button", { class: "btn btn-primary", text: "Run", onclick: run })),
+    out);
+}
+
+async function snapshotSession(id) {
+  try {
+    const meta = await post(`/v1/sandboxes/${encodeURIComponent(id)}/snapshots`, { description: "web snapshot" });
+    (state.sessionSnaps[id] = state.sessionSnaps[id] || []).push(meta.snapshot_id);
+    toast(`Snapshot ${meta.snapshot_id}`);
+    selectSession(id);
+  } catch (e) { toast(e.message, "err"); }
+}
+
+async function rewindSession(id, snapId) {
+  try {
+    const j = await post(`/v1/sandboxes/${encodeURIComponent(id)}/rewind`, { snapshot_id: snapId });
+    if (j.success) { toast(`Rewound to ${snapId}`); selectSession(id); }
+    else toast(`Rewind refused: ${j.error || "unknown"}`, "warn");
+  } catch (e) { toast(e.message, "err"); }
+}
+
+async function terminateSession(id) {
+  try {
+    await api(`/v1/sandboxes/${encodeURIComponent(id)}`, { method: "DELETE" });
+    toast(`Sandbox ${id} terminated`);
+    state.activeSession = null;
+    refreshSessions();
+  } catch (e) { toast(e.message, "err"); }
+}
+
+// ---------- catalog ----------
+
+let catalogLoaded = false;
+
+async function ensureCatalog(force = false) {
+  try {
+    if (force) await post("/v1/models/refresh").catch(() => {});
+    const [providers, models] = await Promise.all([
+      api("/v1/models/providers"),
+      api("/v1/models"),
+    ]);
+    state.providers = providers || [];
+    state.models = Array.isArray(models) ? models : [];
+    catalogLoaded = true;
+    renderProviderRail();
+    renderCatalog();
+    $("catalog-count").textContent = state.models.length;
+    if (force) toast(`models.dev synced — ${state.models.length} models`);
+  } catch (e) {
+    toast(e.message, "warn");
+    renderProviderRail();
+    renderCatalog();
+  }
+}
+
+function renderProviderRail() {
+  const rail = $("provider-rail");
+  const byProvider = {};
+  for (const m of state.models) (byProvider[m.provider] = (byProvider[m.provider] || 0) + 1);
+
+  const mk = (pid, name, count, extra = "") =>
+    h("button", {
+      class: "rail-item" + (state.catalogFilterProvider === pid ? " active" : ""),
+      onclick: () => { state.catalogFilterProvider = pid; renderProviderRail(); renderCatalog(); },
+    }, h("span", { text: name + extra }), h("span", { class: "rail-count", text: String(count) }));
+
+  rail.replaceChildren(
+    h("div", { class: "rail-header", text: "Providers" }),
+    mk(null, "All providers", state.models.length),
+    mk("__fav", "★ Favorites", state.favorites.length),
+    h("div", { class: "rail-header", text: `Catalog (${state.providers.length})` }),
+    ...state.providers
+      .slice()
+      .sort((a, b) => (a.is_popular === b.is_popular ? a.name.localeCompare(b.name) : a.is_popular ? -1 : 1))
+      .map((p) => mk(p.id, p.name + (p.is_popular ? " ★" : ""), byProvider[p.id] ?? 0)),
+  );
+}
+
+function modelBadges(m) {
+  const b = [];
+  if (m.has_tools) b.push(h("span", { class: "badge tools", text: "TOOLS" }));
+  if (m.has_vision) b.push(h("span", { class: "badge vision", text: "VISION" }));
+  if (m.has_reasoning) b.push(h("span", { class: "badge reason", text: "REASON" }));
+  if (m.is_open_weights) b.push(h("span", { class: "badge openw", text: "OPEN" }));
+  return h("span", { class: "badge-row" }, ...b);
+}
+
+function filteredModels() {
+  const q = $("catalog-search").value;
+  const tools = $("catalog-tools-only").checked;
+  const vision = $("catalog-vision-only").checked;
+  const reasoning = $("catalog-reasoning-only").checked;
+  const favs = $("catalog-favs-only").checked;
+
+  let list = state.models;
+  if (state.catalogFilterProvider === "__fav") list = list.filter((m) => isFav(m.provider, m.id));
+  else if (state.catalogFilterProvider) list = list.filter((m) => m.provider === state.catalogFilterProvider);
+  if (tools) list = list.filter((m) => m.has_tools);
+  if (vision) list = list.filter((m) => m.has_vision);
+  if (reasoning) list = list.filter((m) => m.has_reasoning);
+  if (favs) list = list.filter((m) => isFav(m.provider, m.id));
+
+  if (q.trim()) {
+    list = state.models // search always spans the whole catalog, opencode-style
+      .map((m) => ({ m, s: fuzzy(q, m.name + " " + m.provider + " " + m.id) }))
+      .filter((x) => x.s != null && passesFilters(x.m))
+      .sort((a, b) => b.s - a.s)
+      .map((x) => x.m);
+  }
+  return list;
+
+  function passesFilters(m) {
+    if (tools && !m.has_tools) return false;
+    if (vision && !m.has_vision) return false;
+    if (reasoning && !m.has_reasoning) return false;
+    if (favs && !isFav(m.provider, m.id)) return false;
+    if (state.catalogFilterProvider === "__fav") return isFav(m.provider, m.id);
+    if (state.catalogFilterProvider && m.provider !== state.catalogFilterProvider) return false;
+    return true;
+  }
+}
+
+function renderCatalog() {
+  const listEl = $("catalog-list");
+  if (!catalogLoaded && !state.models.length) {
+    listEl.replaceChildren(h("div", { class: "cat-empty", text: state.daemonOnline ? "loading catalog…" : "daemon offline — catalog unavailable" }));
+    return;
+  }
+  const models = filteredModels();
+  if (!models.length) {
+    listEl.replaceChildren(h("div", { class: "cat-empty", text: "no models match" }));
+    return;
+  }
+
+  // group by provider
+  const groups = new Map();
+  for (const m of models) {
+    if (!groups.has(m.provider)) groups.set(m.provider, []);
+    groups.get(m.provider).push(m);
+  }
+
+  const frag = [];
+  for (const [pid, items] of groups) {
+    const p = state.providers.find((x) => x.id === pid);
+    frag.push(h("div", { class: "cat-section", text: `${p ? p.name : pid} — ${items.length} models` }));
+    for (const m of items) {
+      const active = state.provider === m.provider && state.model === m.id;
+      const fav = isFav(m.provider, m.id);
+      frag.push(h("div", {
+        class: "model-row" + (active ? " active" : "") + (fav ? " fav-star" : ""),
+        onclick: () => setActiveModel(m.provider, m.id),
+      },
+        h("button", {
+          class: "star", text: fav ? "★" : "☆", title: "favorite",
+          onclick: (e) => { e.stopPropagation(); toggleFav(m.provider, m.id); },
+        }),
+        h("span", {}, h("div", { class: "model-name", text: m.name || m.id }), h("div", { class: "model-id", text: m.id })),
+        h("span", { class: "model-provider", text: m.provider }),
+        h("span", { class: "model-ctx", text: fmtCtx(m.context_window) + " ctx" }),
+        h("span", { class: "model-cost", onclick: (e) => e.stopPropagation() }),
+        modelBadges(m)));
+      // cost is html — patch separately to keep escapeHtml discipline
+      frag[frag.length - 1].children[4].innerHTML = fmtCost(m);
     }
-  });
+  }
+  listEl.replaceChildren(...frag);
+}
 
-  // Grid Overview Button (Screenshot 2 Toggle)
-  document.getElementById("btn-grid-overview").addEventListener("click", () => {
-    setView(state.activeView === "sessions" ? "welcome" : "sessions");
-  });
+function toggleFav(p, m) {
+  if (isFav(p, m)) state.favorites = state.favorites.filter((f) => !(f.p === p && f.m === m));
+  else state.favorites.push({ p, m });
+  saveFavs();
+  renderProviderRail();
+  renderCatalog();
+}
 
-  // New Tab / Session
-  document.getElementById("btn-new-tab").addEventListener("click", () => {
-    setView("welcome");
-  });
-  document.getElementById("btn-create-session-right").addEventListener("click", () => {
-    setView("welcome");
-  });
+// ---------- model picker overlay (opencode DialogModel style) ----------
 
-  // Click on Session Cards (Screenshot 2 -> Screenshot 4)
-  document.querySelectorAll(".session-card").forEach(card => {
-    card.addEventListener("click", () => {
-      const title = card.querySelector(".session-card-title").textContent;
-      state.activeSession = {
-        id: card.dataset.sessionId,
-        title: title,
-        messages: [
-          { role: "user", content: "Solve issues in this project repository", id: `msg_${Math.random().toString(36).substr(2, 18)}`, time: "Sep 9, 2026, 11:42 PM" },
-          { role: "assistant", content: `Hello! I'm Ethos, ready to help with "${title}". All virtual sandbox boundaries are armed.`, time: "Sep 9, 2026, 11:42 PM" }
-        ],
-        tokens: { input: 8283, output: 23, reasoning: 26, total: 8332, cost: 0.00 },
-        created: "Sep 9, 2026, 11:42 PM",
-        lastActivity: "Sep 9, 2026, 11:42 PM"
-      };
-      setView("conversation");
+function openOverlay(name) {
+  closeOverlay();
+  state.overlay = name;
+  $(name === "palette" ? "overlay-palette" : name === "model" ? "overlay-model-picker" : "overlay-settings").hidden = false;
+  if (name === "model") { $("model-search").value = ""; state.selIdx = 0; renderModelPicker(); setTimeout(() => $("model-search").focus(), 30); }
+  if (name === "palette") { $("palette-input").value = ""; state.selIdx = 0; renderPalette(); setTimeout(() => $("palette-input").focus(), 30); }
+  if (name === "settings") loadSettingsForm();
+}
+
+function closeOverlay() {
+  ["overlay-palette", "overlay-model-picker", "overlay-settings"].forEach((id) => $(id).hidden = true);
+  state.overlay = null; state.selIdx = 0;
+}
+
+function modelPickerItems() {
+  const q = $("model-search").value;
+  const items = [];
+  const add = (section, m) => {
+    items.push({
+      section, m,
+      title: m.name || m.id,
+      desc: m.provider,
+      active: state.provider === m.provider && state.model === m.id,
+      fav: isFav(m.provider, m.id),
     });
-  });
+  };
+  const needle = q.trim();
+  const match = (m) => !needle || fuzzy(needle, `${m.name} ${m.provider} ${m.id}`) != null;
 
-  // Prompt Submissions
-  document.getElementById("btn-main-send").addEventListener("click", () => handleSendPrompt(mainPromptInput));
-  mainPromptInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendPrompt(mainPromptInput);
+  if (!needle) {
+    let lastSection = null;
+    for (const r of state.recents) {
+      const m = state.models.find((x) => x.provider === r.p && x.id === r.m);
+      if (m) { add("Recents", m); lastSection = "Recents"; }
     }
-  });
-
-  document.getElementById("btn-chat-send").addEventListener("click", () => handleSendPrompt(chatPromptInput));
-  chatPromptInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendPrompt(chatPromptInput);
-    }
-  });
-
-  // Inspector Toggle
-  document.getElementById("btn-toggle-inspector").addEventListener("click", () => {
-    state.inspectorOpen = !state.inspectorOpen;
-    contextPane.style.display = state.inspectorOpen ? "flex" : "none";
-  });
-
-  // Settings Modal
-  document.getElementById("btn-open-settings").addEventListener("click", () => {
-    settingsModal.style.display = "flex";
-    populateModelsSelect();
-  });
-  document.getElementById("btn-close-settings").addEventListener("click", () => {
-    settingsModal.style.display = "none";
-  });
-  document.getElementById("btn-cancel-settings").addEventListener("click", () => {
-    settingsModal.style.display = "none";
-  });
-  document.getElementById("btn-save-settings").addEventListener("click", () => {
-    state.provider = document.getElementById("settings-provider-select").value;
-    state.apiUrl = document.getElementById("settings-api-url").value;
-    state.apiKey = document.getElementById("settings-api-key").value;
-    state.model = document.getElementById("settings-model-select").value;
-
-    setPref("provider", state.provider);
-    setPref("api_url", state.apiUrl);
-    setPref("api_key", state.apiKey);
-    setPref("model", state.model);
-    setPref("configured", "true");
-    localStorage.setItem("ethos_configured", "true");
-
-    activeModelLabel.textContent = state.model;
-    chatModelLabel.textContent = state.model;
-
-    const matched = state.modelsCatalog.find(m => m.name === state.model);
-    if (matched) state.contextLimit = matched.context;
-
-    updateContextMetrics();
-    settingsModal.style.display = "none";
-  });
-
-  document.getElementById("btn-fetch-models-dev").addEventListener("click", () => fetchModelsDevCatalog(true));
-
-  const providerSel = document.getElementById("settings-provider-select");
-  if (providerSel) {
-    providerSel.addEventListener("change", async (e) => {
-      const pId = e.target.value;
-      if (pId === "lmstudio") {
-        document.getElementById("settings-api-url").value = "http://localhost:1234/v1";
-      } else if (pId === "ollama") {
-        document.getElementById("settings-api-url").value = "http://localhost:11434/v1";
-      } else if (pId === "deepseek") {
-        document.getElementById("settings-api-url").value = "https://api.deepseek.com/v1";
-      } else {
-        const matched = allProvidersCatalog.find(p => p.id === pId);
-        if (matched && matched.default_api) {
-          document.getElementById("settings-api-url").value = matched.default_api;
-        }
-      }
-      try {
-        const res = await fetch(`/v1/models?provider=${encodeURIComponent(pId)}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            state.modelsCatalog = data.map(m => ({
-              id: m.id,
-              name: m.name || m.id,
-              provider: m.provider,
-              context: m.context_window || 128000,
-              cost_in: m.cost_input_per_million || 0,
-              cost_out: m.cost_output_per_million || 0,
-              has_tools: m.has_tools,
-              has_vision: m.has_vision,
-              has_reasoning: m.has_reasoning,
-            }));
-            populateModelsSelect();
-          }
-        }
-      } catch (err) {
-        console.log("Failed to fetch models for provider:", err);
-      }
-    });
+    if (lastSection) items[0].section = "Recents";
   }
-
-  // Model Pill Click in prompt cards opens settings
-  document.getElementById("btn-model-select").addEventListener("click", () => {
-    settingsModal.style.display = "flex";
-    populateModelsSelect();
-  });
-  document.getElementById("btn-chat-model-select").addEventListener("click", () => {
-    settingsModal.style.display = "flex";
-    populateModelsSelect();
-  });
-
-  // Initial population from backend models.dev engine
-  fetchModelsDevCatalog(false);
-
-  // Auto-launch Setup / Settings modal if credentials or provider are unconfigured
-  const isConfigured = localStorage.getItem("ethos_configured") || localStorage.getItem("tbox_configured");
-  const hasKey = state.apiKey && state.apiKey.trim().length > 0;
-  const isLocal = state.provider === "ollama" || state.provider === "lmstudio";
-  if (!isConfigured || (!hasKey && !isLocal)) {
-    settingsModal.style.display = "flex";
-    populateModelsSelect();
+  // all models grouped by provider, ordered providers-first like opencode
+  const groups = new Map();
+  for (const m of state.models) if (match(m)) {
+    if (!groups.has(m.provider)) groups.set(m.provider, []);
+    groups.get(m.provider).push(m);
   }
-});
+  const ordered = state.providers.filter((p) => groups.has(p.id)).sort((a, b) => a.name.localeCompare(b.name));
+  for (const p of ordered) {
+    for (const m of groups.get(p.id)) add(p.name, m);
+  }
+  if (needle) items.sort((a, b) => fuzzy(needle, a.title + " " + a.desc) - fuzzy(needle, b.title + " " + b.desc)).reverse();
+  return items;
+}
 
-// Wire up Kanban navigation
-const menuOpenKanban = document.getElementById("menu-open-kanban");
-if (menuOpenKanban) {
-  menuOpenKanban.addEventListener("click", () => {
-    setView("kanban");
-    if (hamburgerMenu) hamburgerMenu.style.display = "none";
+function renderModelPicker() {
+  const items = modelPickerItems();
+  state.overlayItems = items;
+  const list = $("model-list");
+  let lastSection = null;
+  const frag = [];
+  items.forEach((it, i) => {
+    if (it.section && it.section !== lastSection) { frag.push(h("div", { class: "dl-section", text: it.section })); lastSection = it.section; }
+    frag.push(h("div", {
+      class: "dl-item" + (i === state.selIdx ? " sel" : ""),
+      onclick: () => { setActiveModel(it.m.provider, it.m.id); closeOverlay(); },
+    },
+      h("span", {},
+        (it.active ? h("span", { class: "mark", text: "● " }) : null),
+        (it.fav ? h("span", { class: "mark", text: "★ " }) : null),
+        h("span", { text: it.title })),
+      h("span", { class: "desc", text: it.desc }),
+      h("span", { class: "desc", text: fmtCtx(it.m.context_window) })));
   });
+  list.replaceChildren(...frag);
+  const sel = list.querySelector(".dl-item.sel");
+  if (sel) sel.scrollIntoView({ block: "nearest" });
 }
 
-const btnSidebarKanban = document.getElementById("btn-sidebar-kanban");
-if (btnSidebarKanban) {
-  btnSidebarKanban.addEventListener("click", () => {
-    setView("kanban");
-  });
+function toggleFavFromPicker() {
+  const it = state.overlayItems[state.selIdx];
+  if (!it) return;
+  toggleFav(it.m.provider, it.m.id);
+  renderModelPicker();
 }
 
-const btnCloseKanban = document.getElementById("btn-close-kanban");
-if (btnCloseKanban) {
-  btnCloseKanban.addEventListener("click", () => {
-    setView("conversation");
-  });
+// ---------- command palette ----------
+
+function paletteCommands() {
+  return [
+    { title: "Go to Dashboard", desc: "view", run: () => openTab("dashboard") },
+    { title: "Go to Sessions", desc: "view", run: () => openTab("sessions") },
+    { title: "Go to Model Catalog", desc: "view", run: () => openTab("catalog") },
+    { title: "Go to Attack Lab", desc: "view", run: () => openTab("lab") },
+    { title: "Go to Security", desc: "view", run: () => openTab("security") },
+    { title: "Select model…", desc: "picker", run: () => openOverlay("model") },
+    { title: "New sandbox", desc: "session", run: () => { openTab("sessions"); createSandbox(); } },
+    { title: "Sync models.dev catalog", desc: "catalog", run: () => { openTab("catalog"); ensureCatalog(true); } },
+    { title: "Open settings", desc: "config", run: () => openOverlay("settings") },
+    { title: "Toggle sidebar", desc: "layout", run: () => $("sidebar").classList.toggle("hidden") },
+    { title: "Refresh daemon events", desc: "dashboard", run: () => { openTab("dashboard"); refreshDashboard(); } },
+  ];
 }
 
-const btnAddAgentTask = document.getElementById("btn-add-agent-task");
-if (btnAddAgentTask) {
-  btnAddAgentTask.addEventListener("click", () => {
-    const title = prompt("Enter goal/task for autonomous agent:", "Security audit on new pull request");
-    if (title && title.trim()) {
-      const col = document.getElementById("col-backlog");
-      if (col) {
-        const idNum = Math.floor(Math.random() * 800) + 110;
-        const card = document.createElement("div");
-        card.className = "kanban-card";
-        card.innerHTML = `
-          <div class="card-header">
-            <span class="card-id">TSK-${idNum}</span>
-            <span class="card-badge plan">Queued</span>
-          </div>
-          <div class="card-body">${escapeHtml(title.trim())}</div>
-          <div class="card-footer">
-            <span class="card-agent">👤 Auto Dispatcher</span>
-            <span class="card-tag">Taint Tracking</span>
-          </div>
-        `;
-        col.prepend(card);
-      }
-    }
-  });
+function renderPalette() {
+  const q = $("palette-input").value;
+  const cmds = paletteCommands()
+    .map((c) => ({ c, s: fuzzy(q, c.title) }))
+    .filter((x) => x.s != null)
+    .sort((a, b) => b.s - a.s)
+    .map((x) => x.c);
+  state.overlayItems = cmds.map((c) => ({ run: c.run }));
+  const list = $("palette-list");
+  list.replaceChildren(...cmds.map((c, i) =>
+    h("div", {
+      class: "dl-item" + (i === state.selIdx ? " sel" : ""),
+      onclick: () => { closeOverlay(); c.run(); },
+    }, h("span", { text: c.title }), h("span", { class: "desc", text: c.desc }))));
+  const sel = list.querySelector(".dl-item.sel");
+  if (sel) sel.scrollIntoView({ block: "nearest" });
 }
 
-// Load and save multi-modal settings
-function loadAdvancedSettings() {
-  const tts = getPref("tts", "kokoro");
-  const img = getPref("image_gen", "flux-schnell");
-  const vid = getPref("video_gen", "none");
-  const vdb = getPref("vectordb", "local-lancedb");
-  const mcp = getPref("mcp", "all-active");
-  const fallback = getPref("fallback", "openrouter");
-  const execMode = getPref("exec_mode", "yolo");
-  const envProt = getPref("env_prot", "true") !== "false";
-  const halluProt = getPref("hallu_prot", "true") !== "false";
-  const sentryDsn = getPref("sentry_dsn", "");
+// ---------- attack lab ----------
 
-  const selTTS = document.getElementById("settings-tts-select");
-  if (selTTS) selTTS.value = tts;
-  const selImg = document.getElementById("settings-image-select");
-  if (selImg) selImg.value = img;
-  const selVid = document.getElementById("settings-video-select");
-  if (selVid) selVid.value = vid;
-  const selVdb = document.getElementById("settings-vectordb-select");
-  if (selVdb) selVdb.value = vdb;
-  const selMcp = document.getElementById("settings-mcp-select");
-  if (selMcp) selMcp.value = mcp;
-  const selFb = document.getElementById("settings-fallback-provider");
-  if (selFb) selFb.value = fallback;
-  const selMode = document.getElementById("settings-exec-mode");
-  if (selMode) selMode.value = execMode;
-  const chkEnv = document.getElementById("toggle-env-protection");
-  if (chkEnv) chkEnv.checked = envProt;
-  const chkHallu = document.getElementById("toggle-halluscan-drift");
-  if (chkHallu) chkHallu.checked = halluProt;
-  const inSentry = document.getElementById("settings-sentry-dsn");
-  if (inSentry) inSentry.value = sentryDsn;
+async function refreshLab() {
+  if (!state.daemonOnline) await checkHealth();
+  if (!state.daemonOnline) return;
+  try {
+    const scenarios = await api("/v1/lab/scenarios");
+    state.labScenarios = scenarios || [];
+    const el = $("lab-scenarios");
+    if (!state.labScenarios.length) { el.replaceChildren(h("div", { class: "side-empty", text: "no scenarios found" })); return; }
+    el.replaceChildren(...state.labScenarios.map((s) =>
+      h("div", {
+        class: "lab-card" + (state.selectedLab === s.id ? " active" : ""),
+        onclick: () => { state.selectedLab = s.id; refreshLab(); runScenario(s.id); },
+      },
+        h("div", { class: "lab-card-name", text: s.name || s.id }),
+        h("div", { class: "lab-card-meta" },
+          h("span", { text: s.severity || "" }),
+          h("span", { text: s.family || "" }),
+          h("span", { text: s.target_tool || "" })))));
+  } catch (e) { toast(e.message, "warn"); }
 }
 
-// Patch save settings to include advanced options
-const originalSaveBtn = document.getElementById("btn-save-settings");
-if (originalSaveBtn) {
-  originalSaveBtn.addEventListener("click", () => {
-    const selTTS = document.getElementById("settings-tts-select");
-    if (selTTS) setPref("tts", selTTS.value);
-    const selImg = document.getElementById("settings-image-select");
-    if (selImg) setPref("image_gen", selImg.value);
-    const selVid = document.getElementById("settings-video-select");
-    if (selVid) setPref("video_gen", selVid.value);
-    const selVdb = document.getElementById("settings-vectordb-select");
-    if (selVdb) setPref("vectordb", selVdb.value);
-    const selMcp = document.getElementById("settings-mcp-select");
-    if (selMcp) setPref("mcp", selMcp.value);
-    const selFb = document.getElementById("settings-fallback-provider");
-    if (selFb) setPref("fallback", selFb.value);
-    const selMode = document.getElementById("settings-exec-mode");
-    if (selMode) setPref("exec_mode", selMode.value);
-    const chkEnv = document.getElementById("toggle-env-protection");
-    if (chkEnv) setPref("env_prot", chkEnv.checked);
-    const chkHallu = document.getElementById("toggle-halluscan-drift");
-    if (chkHallu) setPref("hallu_prot", chkHallu.checked);
-    const inSentry = document.getElementById("settings-sentry-dsn");
-    if (inSentry) setPref("sentry_dsn", inSentry.value);
-  });
+async function runScenario(id) {
+  const trace = $("lab-trace");
+  trace.replaceChildren(h("div", { class: "side-empty", text: "executing scenario…" }));
+  try {
+    const r = await post("/v1/lab/execute", { scenario_id: id });
+    const blocked = r.final_outcome === "ATTACK_BLOCKED_BY_POLICY";
+    trace.replaceChildren(
+      h("div", { class: "trace-step" },
+        h("div", { class: "trace-step-title" }, h("span", { class: blocked ? "outcome-blocked" : "outcome-vulnerable", text: r.final_outcome || "—" })),
+        h("div", { class: "trace-step-sub", text: `${r.scenario_name} · walls: ${(r.walls_tripped || []).join(", ") || "none"} · taint records: ${r.taint_records_count}` })),
+      ...(r.steps || []).map((s) =>
+        h("div", { class: "trace-step" },
+          h("div", { class: "trace-step-title", text: `${s.step}. ${s.action} [${s.status}]` }),
+          h("div", { class: "trace-step-sub", text: s.output_summary || "" }),
+          (s.wall_triggers?.length ? h("div", { class: "trace-step-sub", text: "walls: " + s.wall_triggers.join(", ") }) : null)))
+    );
+  } catch (e) { trace.replaceChildren(h("div", { class: "side-empty", text: e.message })); }
 }
 
-// Call on init
-loadAdvancedSettings();
+// ---------- security ----------
 
-// Platform Detection & macOS Native Enhancements
-const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0 || navigator.userAgent.toUpperCase().indexOf("MAC") >= 0;
-if (isMac) {
-  document.body.classList.add("is-macos");
-  document.querySelectorAll("[title]").forEach(el => {
-    el.title = el.title.replace(/Ctrl\+/gi, "⌘");
-  });
-}
+async function refreshSecurity() {
+  if (!state.daemonOnline) await checkHealth();
+  if (!state.daemonOnline) return;
+  try {
+    const g = await api("/v1/taint/graph");
+    const nodes = g.nodes || [];
+    const graphEl = $("taint-graph");
+    graphEl.replaceChildren(...(nodes.length
+      ? nodes.map((n) => h("div", { class: "taint-node" },
+          h("span", { class: "res", text: n.label || n.id }),
+          h("span", { class: "dim", text: `  ${n.trust_level || ""} (${n.sandbox_id || ""})` })))
+      : [h("div", { class: "side-empty", text: "no tainted resources — clean ledger" })]));
 
-// Window Controls (Tauri or Browser)
-document.querySelectorAll(".window-ctrl").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const isClose = btn.classList.contains("close");
-    const title = btn.getAttribute("title") || "";
-    if (window.__TAURI__?.window) {
+    let blockedRows = [];
+    for (const id of state.sessions) {
       try {
-        const win = window.__TAURI__.window.getCurrentWindow ? window.__TAURI__.window.getCurrentWindow() : window.__TAURI__.window.appWindow;
-        if (isClose) {
-          await win.close();
-        } else if (title.includes("Minimize")) {
-          await win.minimize();
-        } else if (title.includes("Maximize")) {
-          await win.toggleMaximize();
+        const tel = await api(`/v1/sandboxes/${encodeURIComponent(id)}/telemetry`);
+        for (const ev of (tel.events || [])) {
+          if (ev.event_type === "POLICY_BLOCK") blockedRows.push({ id, ev });
         }
-        return;
-      } catch (e) {
-        console.warn("Tauri window control error:", e);
-      }
+      } catch { /* session gone */ }
     }
-    if (isClose) {
-      if (confirm("Close Ethos session?")) {
-        window.close();
-      }
-    }
-  });
-});
+    $("blocks-count").textContent = String(blockedRows.length);
+    $("blocks-log").replaceChildren(...(blockedRows.length
+      ? blockedRows.map(({ id, ev }) =>
+          h("div", { class: "blocked-row" },
+            h("span", { class: "rule", text: (ev.details?.rule_id || ev.details?.reason || "POLICY").toString().slice(0, 60) }),
+            h("span", { class: "dim", text: `  ${id} · ${ev.action} · ${JSON.stringify(ev.details || {}).slice(0, 70)}` })))
+      : [h("div", { class: "side-empty", text: "no policy blocks recorded" })]));
+  } catch (e) { toast(e.message, "warn"); }
+}
 
-// Global Keyboard Accelerators (Cross-Platform Cmd/Ctrl)
+// ---------- settings ----------
+
+function loadSettingsForm() {
+  $("settings-api-base").value = state.apiBase;
+  $("settings-api-key").value = getPref("api_key", "");
+  const provSel = $("settings-provider");
+  provSel.replaceChildren(h("option", { value: "", text: "—" }));
+  for (const p of state.providers) provSel.append(h("option", { value: p.id, text: p.name + (p.is_popular ? " ★" : "") }));
+  provSel.value = state.provider || "";
+  renderSettingsModels();
+}
+
+function renderSettingsModels() {
+  const pid = $("settings-provider").value;
+  const sel = $("settings-model");
+  sel.replaceChildren(h("option", { value: "", text: "—" }));
+  for (const m of state.models.filter((m) => !pid || m.provider === pid)) {
+    sel.append(h("option", { value: m.id, text: m.name || m.id }));
+  }
+  sel.value = state.model || "";
+}
+
+function saveSettings() {
+  state.apiBase = $("settings-api-base").value.replace(/\/$/, "");
+  setPref("api_base", state.apiBase);
+  setPref("api_key", $("settings-api-key").value);
+  const pid = $("settings-provider").value;
+  const mid = $("settings-model").value;
+  if (pid && mid) setActiveModel(pid, mid);
+  toast("Settings saved");
+  closeOverlay();
+  checkHealth();
+  refreshSessions();
+}
+
+// ---------- keyboard ----------
+
 document.addEventListener("keydown", (e) => {
-  const mod = isMac ? e.metaKey : e.ctrlKey;
-  if (mod && e.key.toLowerCase() === "t") {
-    e.preventDefault();
-    setView("welcome");
-  } else if (mod && e.key.toLowerCase() === "p") {
-    e.preventDefault();
-    setView(state.activeView === "sessions" ? "welcome" : "sessions");
-  } else if (mod && e.key.toLowerCase() === "m") {
-    e.preventDefault();
-    state.menuOpen = !state.menuOpen;
-    hamburgerMenu.style.display = state.menuOpen ? "block" : "none";
-  } else if (mod && e.key === ",") {
-    e.preventDefault();
-    settingsModal.style.display = "flex";
-    populateModelsSelect();
-  } else if (e.key === "Escape") {
-    if (settingsModal.style.display === "flex") {
-      settingsModal.style.display = "none";
-    } else if (state.menuOpen) {
-      state.menuOpen = false;
-      hamburgerMenu.style.display = "none";
-    }
+  const inField = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName);
+
+  if ((e.ctrlKey || e.metaKey) && (e.key === "p" || e.key === "k")) {
+    e.preventDefault(); openOverlay("palette"); return;
   }
+  if ((e.ctrlKey || e.metaKey) && e.key === "b") {
+    e.preventDefault(); $("sidebar").classList.toggle("hidden"); return;
+  }
+  if (e.key === "Escape" && state.overlay) { closeOverlay(); return; }
+
+  if (state.overlay === "palette") {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const n = state.overlayItems.length;
+      if (n) { state.selIdx = (state.selIdx + (e.key === "ArrowDown" ? 1 : -1) + n) % n; renderPalette(); }
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      state.overlayItems[state.selIdx]?.run?.(); closeOverlay();
+    } else if (!inField) { setTimeout(renderPalette, 0); }
+    return;
+  }
+  if (state.overlay === "model") {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const n = state.overlayItems.length;
+      if (n) { state.selIdx = (state.selIdx + (e.key === "ArrowDown" ? 1 : -1) + n) % n; renderModelPicker(); }
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const it = state.overlayItems[state.selIdx];
+      if (it) { setActiveModel(it.m.provider, it.m.id); closeOverlay(); }
+    } else if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+      e.preventDefault(); toggleFavFromPicker();
+    }
+    return;
+  }
+
+  if (e.key === "/" && !inField && state.activeTab === "catalog") {
+    e.preventDefault(); $("catalog-search").focus(); return;
+  }
+});
+
+// ---------- wiring ----------
+
+document.addEventListener("DOMContentLoaded", () => {
+  // nav + tabs
+  document.querySelectorAll(".side-item").forEach((el) =>
+    el.addEventListener("click", () => openTab(el.dataset.view)));
+  $("brand-home").addEventListener("click", () => openTab("dashboard"));
+
+  $("btn-sidebar-toggle").addEventListener("click", () => $("sidebar").classList.toggle("hidden"));
+  $("btn-palette").addEventListener("click", () => openOverlay("palette"));
+  $("btn-model-picker").addEventListener("click", () => openOverlay("model"));
+  $("btn-settings").addEventListener("click", () => openOverlay("settings"));
+  $("btn-settings-close").addEventListener("click", closeOverlay);
+  $("btn-settings-save").addEventListener("click", saveSettings);
+  $("settings-provider").addEventListener("change", renderSettingsModels);
+
+  $("btn-refresh-health").addEventListener("click", refreshDashboard);
+  $("btn-quick-sandbox").addEventListener("click", createSandbox);
+  $("btn-sessions-refresh").addEventListener("click", refreshSessions);
+  $("btn-create-sandbox").addEventListener("click", createSandbox);
+  $("btn-catalog-refresh").addEventListener("click", () => ensureCatalog(true));
+  $("btn-lab-refresh").addEventListener("click", refreshLab);
+  $("btn-security-refresh").addEventListener("click", refreshSecurity);
+
+  ["catalog-search", "catalog-tools-only", "catalog-vision-only", "catalog-reasoning-only", "catalog-favs-only"]
+    .forEach((id) => $(id).addEventListener("input", renderCatalog));
+
+  ["overlay-palette", "overlay-model-picker", "overlay-settings"].forEach((id) =>
+    $(id).addEventListener("mousedown", (e) => { if (e.target.id === id) closeOverlay(); }));
+
+  $("palette-input").addEventListener("input", () => { state.selIdx = 0; renderPalette(); });
+  $("model-search").addEventListener("input", () => { state.selIdx = 0; renderModelPicker(); });
+
+  updateStatusbar(); updateModelBadge();
+  switchTab("dashboard");
+  checkHealth();
+  ensureCatalog();
+  setInterval(checkHealth, 30000);
 });

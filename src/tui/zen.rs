@@ -332,6 +332,11 @@ pub struct ZenApp {
     pub palette_selected: usize,
     pub palette_commands: Vec<PaletteCommand>,
 
+    // Models Browser Overlay (opencode-style full models.dev catalog)
+    pub models_browser_open: bool,
+    pub models_browser_query: String,
+    pub models_browser_idx: usize,
+
     // Inline Slash Autocomplete Dock
     pub slash_popup_open: bool,
     pub slash_query: String,
@@ -415,9 +420,12 @@ impl ZenApp {
             cursor_position: 0,
             is_running: false,
             progress_ticks: 0,
-            palette_open: false,
-            palette_query: String::new(),
-            palette_selected: 0,
+        palette_open: false,
+        palette_query: String::new(),
+        palette_selected: 0,
+        models_browser_open: false,
+        models_browser_query: String::new(),
+        models_browser_idx: 0,
             slash_popup_open: false,
             slash_query: String::new(),
             slash_selected: 0,
@@ -631,6 +639,61 @@ impl ZenApp {
             return;
         }
 
+        // 2b. Models Browser overlay (opened via /models) — opencode-style
+        // searchable picker over the full models.dev catalog.
+        if self.models_browser_open {
+            match key.code {
+                KeyCode::Esc => {
+                    self.models_browser_open = false;
+                }
+                KeyCode::Up => {
+                    if self.models_browser_idx > 0 {
+                        self.models_browser_idx -= 1;
+                    }
+                }
+                KeyCode::Down => {
+                    let matching_len = self.get_matching_models().len();
+                    if matching_len > 0 && self.models_browser_idx + 1 < matching_len {
+                        self.models_browser_idx += 1;
+                    }
+                }
+                KeyCode::Enter => {
+                    let items = self.get_matching_models();
+                    if let Some((_, m)) = items.get(self.models_browser_idx) {
+                        let (pid, mid, mname) =
+                            (m.provider.clone(), m.id.clone(), m.name.clone());
+                        self.config.provider = pid.clone();
+                        self.config.model = mid.clone();
+                        self.model_name = mid.clone();
+                        let _ = self.config.save();
+                        self.models_browser_open = false;
+                        self.feed.push(FeedItem::AgentMessage {
+                            text: format!(
+                                "Active model → {} [{}] ({}k ctx) — session preserved.",
+                                mname,
+                                pid,
+                                m.context_window / 1000
+                            ),
+                        });
+                    }
+                }
+                KeyCode::Backspace => {
+                    self.models_browser_query.pop();
+                    self.models_browser_idx = 0;
+                }
+                KeyCode::Char('u') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    self.models_browser_query.clear();
+                    self.models_browser_idx = 0;
+                }
+                KeyCode::Char(c) if !key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    self.models_browser_query.push(c);
+                    self.models_browser_idx = 0;
+                }
+                _ => {}
+            }
+            return;
+        }
+
         // 3. Inline Floating Slash Autocomplete Intercept
         if self.slash_popup_open {
             match key.code {
@@ -813,6 +876,44 @@ impl ZenApp {
                 .cloned()
                 .collect()
         }
+    }
+
+    /// Opencode-style models.dev browser items: `(provider section header,
+    /// model)` — the header is `Some` on the first model of each provider.
+    /// Query is a case-insensitive subsequence match over name+provider+id.
+    pub fn get_matching_models(
+        &self,
+    ) -> Vec<(Option<String>, crate::config::models_dev::ModelSpec)> {
+        let providers =
+            crate::config::models_dev::ModelCatalog::list_providers(None);
+        let q = self.models_browser_query.to_lowercase();
+        let mut out: Vec<(Option<String>, crate::config::models_dev::ModelSpec)> = Vec::new();
+
+        for p in providers.iter() {
+            let mut first_in_provider = true;
+            for m in crate::config::models_dev::ModelCatalog::get_models_for_provider(&p.id) {
+                if !q.is_empty() {
+                    let hay = format!("{} {} {}", m.name, m.provider, m.id).to_lowercase();
+                    if !subsequence_match(&q, &hay) {
+                        continue;
+                    }
+                }
+                if out.len() >= 200 {
+                    break; // render cap keeps the overlay snappy
+                }
+                let section = if first_in_provider {
+                    Some(format!("{} — {} models", p.name, p.model_count))
+                } else {
+                    None
+                };
+                first_in_provider = false;
+                out.push((section, m));
+            }
+            if out.len() >= 200 {
+                break;
+            }
+        }
+        out
     }
 
     pub fn update_slash_state(&mut self) {
@@ -1028,46 +1129,15 @@ impl ZenApp {
                     ),
                 });
             } else {
-                let catalog = crate::config::models_dev::ModelCatalog::get_models_for_provider(
-                    &self.config.provider,
-                );
-                let mut list = format!(
-                    "models.dev Catalog for '{}' ({} models):\n",
-                    self.config.provider,
-                    catalog.len()
-                );
-                for m in catalog.iter().take(10) {
-                    let active = if m.id == self.model_name {
-                        " [ACTIVE]"
-                    } else {
-                        ""
-                    };
-                    let price = if m.cost_input_per_million > 0.0 || m.cost_output_per_million > 0.0
-                    {
-                        format!(
-                            " [${:.2} in / ${:.2} out /M]",
-                            m.cost_input_per_million, m.cost_output_per_million
-                        )
-                    } else {
-                        "".to_string()
-                    };
-                    list.push_str(&format!(
-                        "  • {} ({}) [ctx: {}k]{}{}\n",
-                        m.name,
-                        m.id,
-                        m.context_window / 1000,
-                        price,
-                        active
-                    ));
-                }
-                if catalog.len() > 10 {
-                    list.push_str(&format!(
-                        "  ... and {} more models available from models.dev\n",
-                        catalog.len() - 10
-                    ));
-                }
-                list.push_str("Commands: /models <id> to switch | /models --refresh to sync latest models.dev");
-                self.feed.push(FeedItem::AgentMessage { text: list });
+                // Opencode-style full-catalog browser overlay.
+                self.models_browser_open = true;
+                self.models_browser_query.clear();
+                self.models_browser_idx = 0;
+                self.slash_popup_open = false;
+                self.feed.push(FeedItem::AgentMessage {
+                    text: "Models browser open — type to search all models.dev models, ↑↓ navigate, ↵ select, esc close. /models <id> still switches directly; /models --refresh syncs."
+                        .to_string(),
+                });
             }
         } else if cmd == "/diff" {
             let files = if let Some(harness) = &self.harness {
@@ -2455,6 +2525,8 @@ impl ZenApp {
             self.draw_setup_modal(frame, area);
         } else if self.palette_open {
             self.draw_command_palette(frame, area);
+        } else if self.models_browser_open {
+            self.draw_models_browser(frame, area);
         }
     }
 
@@ -3161,6 +3233,195 @@ impl ZenApp {
         let list_p = Paragraph::new(list_lines);
         frame.render_widget(list_p, chunks[2]);
     }
+
+    fn draw_models_browser(&self, frame: &mut Frame, area: Rect) {
+        let modal_w = 100.min(area.width.saturating_sub(4));
+        let modal_h = 26.min(area.height.saturating_sub(2));
+        let modal_x = (area.width.saturating_sub(modal_w)) / 2;
+        let modal_y = (area.height.saturating_sub(modal_h)) / 2;
+        let modal_rect = Rect::new(modal_x, modal_y, modal_w, modal_h);
+
+        frame.render_widget(Clear, modal_rect);
+
+        let modal_block = Block::default()
+            .title(Span::styled(
+                " Model Catalog — models.dev (all providers) ",
+                Style::default()
+                    .fg(COLOR_PEACH)
+                    .add_modifier(Modifier::BOLD),
+            ))
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(COLOR_PEACH))
+            .style(Style::default().bg(COLOR_CARD_BG));
+        frame.render_widget(modal_block, modal_rect);
+
+        let inner = Rect {
+            x: modal_rect.x + 1,
+            y: modal_rect.y + 1,
+            width: modal_rect.width.saturating_sub(2),
+            height: modal_rect.height.saturating_sub(2),
+        };
+
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Min(4),
+                Constraint::Length(1),
+            ])
+            .split(inner);
+
+        let search_line = Line::from(vec![
+            Span::styled(
+                "🔍 ",
+                Style::default()
+                    .fg(COLOR_PEACH)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(
+                &self.models_browser_query,
+                Style::default().fg(COLOR_WHITE),
+            ),
+            Span::styled("█", Style::default().fg(COLOR_PEACH)),
+        ]);
+        frame.render_widget(Paragraph::new(search_line), chunks[0]);
+
+        let divider = Paragraph::new(Line::from(Span::styled(
+            "─".repeat(chunks[1].width as usize),
+            Style::default().fg(COLOR_BORDER),
+        )));
+        frame.render_widget(divider, chunks[1]);
+
+        let items = self.get_matching_models();
+        let mut list_lines: Vec<Line> = Vec::new();
+        let mut rendered = 0usize;
+        // Keep the selection visible in long lists.
+        let visible_rows = chunks[2].height.saturating_sub(2) as usize;
+        let skip = self
+            .models_browser_idx
+            .saturating_sub(visible_rows.saturating_sub(4));
+
+        for (idx, (section, m)) in items.iter().enumerate() {
+            if idx < skip {
+                continue;
+            }
+            if rendered >= visible_rows {
+                break;
+            }
+            if let Some(sec) = section {
+                list_lines.push(Line::from(Span::styled(
+                    format!("── {} ", sec.to_uppercase()),
+                    Style::default()
+                        .fg(COLOR_PEACH)
+                        .add_modifier(Modifier::BOLD),
+                )));
+                if rendered >= visible_rows {
+                    break;
+                }
+                rendered += 1;
+            }
+
+            let is_sel = idx == self.models_browser_idx;
+            let is_active = m.id == self.model_name && m.provider == self.config.provider;
+
+            let (prefix, name_style, meta_style) = if is_sel {
+                (
+                    "▶ ".to_string(),
+                    Style::default()
+                        .fg(COLOR_BG)
+                        .bg(COLOR_PEACH)
+                        .add_modifier(Modifier::BOLD),
+                    Style::default().fg(COLOR_BG).bg(COLOR_PEACH),
+                )
+            } else if is_active {
+                (
+                    "● ".to_string(),
+                    Style::default().fg(COLOR_GREEN).add_modifier(Modifier::BOLD),
+                    Style::default().fg(COLOR_GREEN),
+                )
+            } else {
+                (
+                    "  ".to_string(),
+                    Style::default().fg(COLOR_WHITE),
+                    Style::default().fg(COLOR_DIM),
+                )
+            };
+
+            let price = if m.cost_input_per_million > 0.0 || m.cost_output_per_million > 0.0 {
+                format!(
+                    "${:.2}/${:.2}M",
+                    m.cost_input_per_million, m.cost_output_per_million
+                )
+            } else {
+                "FREE".to_string()
+            };
+
+            let mut badges = String::new();
+            if m.has_tools {
+                badges.push('T');
+            }
+            if m.has_vision {
+                badges.push('V');
+            }
+            if m.has_reasoning {
+                badges.push('R');
+            }
+            let badge_str = if badges.is_empty() {
+                String::new()
+            } else {
+                format!("[{}]", badges)
+            };
+
+            let name: String = m.name.chars().take(34).collect();
+            list_lines.push(Line::from(vec![
+                Span::styled(prefix, name_style),
+                Span::styled(format!("{:<34} ", name), name_style),
+                Span::styled(format!("{:<13} ", m.provider), meta_style),
+                Span::styled(
+                    format!("{:>6}k  ", m.context_window / 1000),
+                    meta_style,
+                ),
+                Span::styled(format!("{:<14} ", price), meta_style),
+                Span::styled(badge_str, meta_style),
+            ]));
+            rendered += 1;
+        }
+
+        if items.is_empty() {
+            list_lines.push(Line::from(Span::styled(
+                "No models match this query.",
+                Style::default().fg(COLOR_DIM),
+            )));
+        }
+
+        frame.render_widget(Paragraph::new(list_lines), chunks[2]);
+
+        let footer = Line::from(vec![
+            Span::styled(
+                format!(" {} shown / 8,000+ total ", items.len()),
+                Style::default().fg(COLOR_DIM),
+            ),
+            Span::styled(
+                "│ ↑↓ navigate │ ↵ set active │ esc close │ ctrl+u clear",
+                Style::default().fg(COLOR_MUTED),
+            ),
+        ]);
+        frame.render_widget(Paragraph::new(footer), chunks[3]);
+    }
+}
+
+/// Case-insensitive subsequence match: every char of `needle` appears in
+/// `hay` in order. Good enough for a fuzzy pick list.
+fn subsequence_match(needle: &str, hay: &str) -> bool {
+    let mut from = 0usize;
+    for ch in needle.chars() {
+        match hay[from..].find(ch) {
+            Some(i) => from += i + ch.len_utf8(),
+            None => return false,
+        }
+    }
+    true
 }
 
 pub async fn run_zen_tui(dir: Option<PathBuf>) -> anyhow::Result<()> {

@@ -146,20 +146,20 @@ fn parse_wsl_list_output(raw_bytes: &[u8]) -> Vec<WslDistroInfo> {
     distros
 }
 
+fn daemon_port_open() -> bool {
+    // Cheap liveness probe: something already serves on the daemon port
+    // (e.g. the user ran `ethos daemon` themselves) — no sidecar needed.
+    std::net::TcpStream::connect("127.0.0.1:8000").is_ok()
+}
+
 fn try_spawn_sidecar() -> Option<Child> {
+    // The only binary the root crate ships is `ethos` (tbox/taintbox are
+    // stale names from the pre-Rewrite prototype).
     let sidecar_candidates = [
         "ethos",
-        "tbox",
-        "taintbox",
         "./ethos",
-        "./tbox",
-        "./taintbox",
         "target/release/ethos",
-        "target/release/tbox",
-        "target/release/taintbox",
         "target/debug/ethos",
-        "target/debug/tbox",
-        "target/debug/taintbox",
     ];
 
     for candidate in &sidecar_candidates {
@@ -192,11 +192,13 @@ fn main() {
                 }
             }
 
-            // Check if daemon is responding at http://127.0.0.1:8000/health
-            // If not, try spawning local daemon
+            // Check if daemon is already listening on http://127.0.0.1:8000.
+            // If not, try spawning the local daemon sidecar.
             let state = app.state::<AppState>();
-            if let Some(child) = try_spawn_sidecar() {
-                *state.sidecar_process.lock().unwrap() = Some(child);
+            if !daemon_port_open() {
+                if let Some(child) = try_spawn_sidecar() {
+                    *state.sidecar_process.lock().unwrap() = Some(child);
+                }
             }
             Ok(())
         })

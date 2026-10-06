@@ -145,7 +145,9 @@ pub fn open_browser(url: &str) {
 async fn run_app(port: u16) -> anyhow::Result<()> {
     let state = AppState::new(SessionManager::new());
     let app = create_router(state);
-    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
+    // RT-19: loopback-only bind. The daemon has no authentication layer and
+    // exposes provider keys + host exec; it must not accept LAN traffic.
+    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
     let browser_url = format!("http://localhost:{}", port);
 
     println!("============================================================");
@@ -165,7 +167,8 @@ async fn run_app(port: u16) -> anyhow::Result<()> {
 async fn run_daemon(port: u16) -> anyhow::Result<()> {
     let state = AppState::new(SessionManager::new());
     let app = create_router(state);
-    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
+    // RT-19: loopback-only bind (see run_app).
+    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
 
     println!("============================================================");
     println!("  ETHOS DAEMON (Rust) - Listening on http://{}", addr);

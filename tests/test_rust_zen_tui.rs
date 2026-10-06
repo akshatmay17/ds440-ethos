@@ -249,3 +249,77 @@ fn test_zen_app_auto_opens_setup_when_no_credentials() {
     assert_eq!(app.setup_step, 0);
 }
 
+
+
+#[test]
+fn test_zen_models_browser_search_and_select() {
+    let mut app = ZenApp::default();
+    assert!(!app.models_browser_open);
+
+    // Open via /models (no args)
+    app.execute_command_str("/models");
+    assert!(app.models_browser_open);
+
+    // Full catalog available and grouped with provider section headers
+    let items = app.get_matching_models();
+    assert!(!items.is_empty(), "catalog should expose models");
+    assert!(
+        items.iter().any(|(s, _)| s.is_some()),
+        "first model of a provider carries a section header"
+    );
+
+    // Fuzzy search narrows the list (both sides capped at 200 for render,
+    // so assert <= plus per-item relevance instead of strict narrowing)
+    for ch in "claude".chars() {
+        app.handle_key(KeyEvent::new(KeyCode::Char(ch), KeyModifiers::NONE));
+    }
+    let filtered = app.get_matching_models();
+    assert!(!filtered.is_empty());
+    assert!(filtered.len() <= items.len());
+    for (_, m) in filtered.iter() {
+        let hay = format!("{} {} {}", m.name, m.provider, m.id).to_lowercase();
+        let mut from = 0usize;
+        for ch in "claude".chars() {
+            match hay[from..].find(ch) {
+                Some(i) => from += i + ch.len_utf8(),
+                None => panic!("non-matching model passed filter: {}", m.id),
+            }
+        }
+    }
+
+    // A nonsense query yields an empty list
+    for ch in "zzzz".chars() {
+        app.handle_key(KeyEvent::new(KeyCode::Char(ch), KeyModifiers::NONE));
+    }
+    assert!(app.get_matching_models().is_empty());
+
+    // Clear the query, navigate and select
+    app.handle_key(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
+    app.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    app.handle_key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+    assert!(!app.models_browser_open);
+    assert!(!app.config.model.is_empty());
+
+    // Escape path also closes cleanly
+    app.execute_command_str("/models");
+    assert!(app.models_browser_open);
+    app.handle_key(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
+    assert!(!app.models_browser_open);
+}
+
+#[test]
+fn test_zen_models_browser_renders_without_panic() {
+    let mut app = ZenApp::default();
+    app.execute_command_str("/models");
+
+    let backend = TestBackend::new(120, 40);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal.draw(|f| app.draw(f)).unwrap();
+
+    // Query that matches nothing must also render cleanly
+    for ch in "zzzz-no-such-model".chars() {
+        app.handle_key(KeyEvent::new(KeyCode::Char(ch), KeyModifiers::NONE));
+    }
+    assert!(app.get_matching_models().is_empty());
+    terminal.draw(|f| app.draw(f)).unwrap();
+}

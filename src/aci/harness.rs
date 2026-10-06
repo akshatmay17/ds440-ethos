@@ -12,6 +12,52 @@ use crate::taint::TaintEngine;
 
 pub const NETWORK_PROGRAMS: &[&str] = &["curl", "wget", "nc", "ncat", "ssh", "scp", "ftp"];
 pub const DELETE_PROGRAMS: &[&str] = &["rm", "del", "unlink", "shred"];
+pub const SHELL_WRAPPERS: &[&str] = &["bash", "sh", "dash", "zsh", "cmd", "powershell", "pwsh"];
+
+/// Case- and path-folded program identity. Defeats `curl.exe`,
+/// `C:\Windows\System32\cmd.exe`, `CURL`, etc.
+fn program_stem(program: &str) -> String {
+    let base = program
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or(program);
+    let stripped = base.strip_suffix(".exe").unwrap_or(base);
+    stripped.to_lowercase()
+}
+
+/// Extracts file redirect targets (`>`, `>>`) from a shell command string so
+/// Ouroboros + sensitive-path walls can police exec-side writes.
+fn extract_redirect_targets(cmd: &str) -> Vec<String> {
+    let mut targets = Vec::new();
+    let chars: Vec<char> = cmd.chars().collect();
+    let mut i = 0;
+    while i < chars.len() {
+        if chars[i] == '>' {
+            i += 1;
+            while i < chars.len() && chars[i] == '>' {
+                i += 1;
+            }
+            while i < chars.len() && chars[i].is_whitespace() {
+                i += 1;
+            }
+            let start = i;
+            while i < chars.len()
+                && !chars[i].is_whitespace()
+                && ![';', '|', '&', '<', '>'].contains(&chars[i])
+            {
+                i += 1;
+            }
+            let target: String = chars[start..i].iter().collect();
+            let target = target.trim_matches(|c| c == '"' || c == '\'').to_string();
+            if !target.is_empty() && !targets.contains(&target) {
+                targets.push(target);
+            }
+        } else {
+            i += 1;
+        }
+    }
+    targets
+}
 
 pub struct ACIHarness {
     pub runtime: Box<dyn SandboxRuntime>,
@@ -188,7 +234,10 @@ impl ACIHarness {
         }
         match self.runtime.write_file(path, content) {
             Ok(_) => {
-                let rec = if let Some(sources) = &source_ids {
+                // Capture prior provenance BEFORE any ledger write: rewrites
+                // must merge, never downgrade, existing severity (RT-05).
+                let prev = self.taint_engine.get_provenance(path).cloned();
+                let mut rec = if let Some(sources) = &source_ids {
                     self.taint_engine.propagate(sources, path, None)
                 } else {
                     let new_rec = ProvenanceRecord {
@@ -202,6 +251,18 @@ impl ACIHarness {
                     self.taint_engine.record_provenance(path, new_rec.clone());
                     new_rec
                 };
+                if let Some(p) = prev {
+                    if p.trust_level > rec.trust_level {
+                        rec.trust_level = p.trust_level;
+                        for c in p.chain_of_custody {
+                            if !rec.chain_of_custody.contains(&c) {
+                                rec.chain_of_custody.push(c);
+                            }
+                        }
+                        rec.metadata["laundering_attempt_blocked"] = serde_json::json!(true);
+                        self.taint_engine.record_provenance(path, rec.clone());
+                    }
+                }
 
                 self.log_event(
                     "TOOL_WRITE",
@@ -345,7 +406,10 @@ impl ACIHarness {
         let modified = current.replacen(target_content, replacement_content, 1);
         match self.runtime.write_file(path, &modified) {
             Ok(_) => {
-                let rec = if let Some(sources) = &source_ids {
+                // Merge, never downgrade (RT-05): capture prior provenance
+                // before propagate() replaces the ledger record.
+                let prev = self.taint_engine.get_provenance(path).cloned();
+                let mut rec = if let Some(sources) = &source_ids {
                     self.taint_engine.propagate(sources, path, None)
                 } else {
                     let prev_rec = self.taint_engine.get_provenance(path).cloned();
@@ -362,6 +426,18 @@ impl ACIHarness {
                         new_rec
                     })
                 };
+                if let Some(p) = prev {
+                    if p.trust_level > rec.trust_level {
+                        rec.trust_level = p.trust_level;
+                        for c in p.chain_of_custody {
+                            if !rec.chain_of_custody.contains(&c) {
+                                rec.chain_of_custody.push(c);
+                            }
+                        }
+                        rec.metadata["laundering_attempt_blocked"] = serde_json::json!(true);
+                        self.taint_engine.record_provenance(path, rec.clone());
+                    }
+                }
 
                 self.log_event(
                     "TOOL_EDIT_BLOCK",
@@ -411,6 +487,25 @@ impl ACIHarness {
 
     pub fn view_lines(&mut self, path: &str, start_line: usize, end_line: usize) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
+        // RT-14: view_lines is a read — it must pass the same sensitive-path
+        // and taint policy gate as the read tool.
+        let decision = self.taint_engine.evaluate_path_policy("read", path, &[]);
+        if !decision.allowed {
+            self.log_event(
+                "POLICY_BLOCK",
+                "view_lines",
+                serde_json::json!({ "path": path, "reason": decision.reason }),
+            );
+            return ToolResult {
+                call_id,
+                tool_name: "view_lines".to_string(),
+                status: "BLOCKED_BY_POLICY".to_string(),
+                output: serde_json::Value::Null,
+                error: Some(format!("Policy violation: {}", decision.reason)),
+                provenance: None,
+                policy_decision: Some(decision),
+            };
+        }
         match self.runtime.read_file(path) {
             Ok(content) => {
                 let lines: Vec<&str> = content.lines().collect();
@@ -503,6 +598,17 @@ impl ACIHarness {
         let mut results = String::new();
 
         for file in all_files {
+            // RT-15: grep is a bulk read — sensitive paths must not have
+            // their contents dumped into results. Non-sensitive files only.
+            let decision = self.taint_engine.evaluate_path_policy("read", &file, &[]);
+            if !decision.allowed {
+                self.log_event(
+                    "POLICY_BLOCK",
+                    "grep",
+                    serde_json::json!({ "file": file, "reason": decision.reason }),
+                );
+                continue;
+            }
             if let Ok(content) = self.runtime.read_file(&file) {
                 for (idx, line) in content.lines().enumerate() {
                     if line.contains(query) {
@@ -533,8 +639,11 @@ impl ACIHarness {
     ) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
 
-        // Enforce network egress policy
-        let decision = self.taint_engine.evaluate_network_egress(url, &[]);
+        // Enforce network egress policy against the FULL tainted ledger, not
+        // an empty source list (RT-06): once untrusted data is in play, the
+        // fetch channel is walled exactly like exec egress.
+        let tainted_refs = self.taint_engine.list_tainted_resources();
+        let decision = self.taint_engine.evaluate_network_egress(url, &tainted_refs);
         if !decision.allowed {
             self.log_event(
                 "POLICY_BLOCK",
@@ -637,46 +746,136 @@ impl ACIHarness {
         let call_id = Uuid::new_v4().to_string();
 
         let mut target_url = "https://unknown-egress".to_string();
-        let mut action = if NETWORK_PROGRAMS
-            .iter()
-            .any(|&p| p.eq_ignore_ascii_case(program))
-        {
+        let stem = program_stem(program);
+        let mut action = if NETWORK_PROGRAMS.contains(&stem.as_str()) {
             "network_egress"
-        } else if DELETE_PROGRAMS
-            .iter()
-            .any(|&p| p.eq_ignore_ascii_case(program))
-        {
+        } else if DELETE_PROGRAMS.contains(&stem.as_str()) {
             "file_delete"
-        } else if ["bash", "sh", "dash", "zsh", "cmd", "powershell", "pwsh"]
-            .iter()
-            .any(|&p| p.eq_ignore_ascii_case(program))
-        {
+        } else if SHELL_WRAPPERS.contains(&stem.as_str()) {
             "exec_privileged"
         } else {
             "exec"
         };
 
-        let is_shell_wrapper = ["bash", "sh", "dash", "zsh", "cmd", "powershell", "pwsh"]
-            .iter()
-            .any(|&p| p.eq_ignore_ascii_case(program));
+        let is_shell_wrapper = SHELL_WRAPPERS.contains(&stem.as_str());
 
-        if action == "exec_privileged" {
-            for i in 0..args.len() {
-                if args[i] == "-c" || args[i] == "-Command" {
-                    if let Some(cmd) = args.get(i + 1) {
-                        if NETWORK_PROGRAMS.iter().any(|&p| cmd.contains(p)) {
-                            action = "network_egress";
-                            if let Some(url) = cmd.split_whitespace().find(|a| {
-                                a.starts_with("http://")
-                                    || a.starts_with("https://")
-                                    || a.contains("://")
-                            }) {
-                                target_url = url.to_string();
-                            }
-                        } else if DELETE_PROGRAMS.iter().any(|&p| cmd.contains(p)) {
-                            action = "file_delete";
-                        }
+        if is_shell_wrapper {
+            // Inspect the ENTIRE arg vector, case-folded: script-carrier flags
+            // vary across interpreters (-c, /c, -Command, -EncodedCommand), so
+            // scanning only the token after a known flag is trivially evaded.
+            let joined = args.join(" ").to_lowercase();
+            let encoded = args.iter().any(|a| {
+                let la = a.to_lowercase();
+                la == "-encodedcommand" || la.starts_with("-enc")
+            });
+            if encoded {
+                // Encoded payloads are uninspectable: assume worst-case intent.
+                action = "network_egress";
+            } else if NETWORK_PROGRAMS.iter().any(|&p| joined.contains(p)) {
+                action = "network_egress";
+            } else if DELETE_PROGRAMS.iter().any(|&p| joined.contains(p)) {
+                action = "file_delete";
+            }
+        }
+
+        // RT-09 guard: shell redirects are writes — route them through the
+        // same walls as the write tool (Ouroboros + sensitive-path policy).
+        if is_shell_wrapper {
+            let ouroboros = crate::walls::ouroboros::OuroborosWall::new();
+            for arg in args {
+                for target in extract_redirect_targets(arg) {
+                    if let Err(e) = ouroboros.check_write(&target, "") {
+                        let reason = e.to_string();
+                        self.log_event(
+                            "POLICY_BLOCK",
+                            action,
+                            serde_json::json!({
+                                "program": program,
+                                "redirect_target": target,
+                                "reason": reason
+                            }),
+                        );
+                        return ToolResult {
+                            call_id,
+                            tool_name: "exec".to_string(),
+                            status: "BLOCKED_BY_POLICY".to_string(),
+                            output: serde_json::Value::Null,
+                            error: Some(format!("Policy violation: {}", reason)),
+                            provenance: None,
+                            policy_decision: Some(crate::models::PolicyDecision {
+                                allowed: false,
+                                rule_id: Some("OUROBOROS-EXEC-GUARD".to_string()),
+                                action: "write".to_string(),
+                                reason,
+                                taint_records: vec![],
+                            }),
+                        };
                     }
+                    let path_decision =
+                        self.taint_engine.evaluate_path_policy("write", &target, &[]);
+                    if !path_decision.allowed {
+                        self.log_event(
+                            "POLICY_BLOCK",
+                            action,
+                            serde_json::json!({
+                                "program": program,
+                                "redirect_target": target,
+                                "reason": path_decision.reason
+                            }),
+                        );
+                        return ToolResult {
+                            call_id,
+                            tool_name: "exec".to_string(),
+                            status: "BLOCKED_BY_POLICY".to_string(),
+                            output: serde_json::Value::Null,
+                            error: Some(format!("Policy violation: {}", path_decision.reason)),
+                            provenance: None,
+                            policy_decision: Some(path_decision),
+                        };
+                    }
+                }
+            }
+
+            // RT-16/RT-21: shell payloads that reference sensitive paths
+            // (`type .env`, `cat ~/.ethos/config.json`) must be walled the
+            // same way the read tool is. Scan normalized args against the
+            // sensitive-path list, case-folded and separator-normalized.
+            let sensitive_tokens: Vec<String> = self
+                .taint_engine
+                .config
+                .sensitive_paths
+                .iter()
+                .map(|s| s.to_lowercase())
+                .collect();
+            for arg in args {
+                let normalized = arg.replace('\\', "/").to_lowercase();
+                if sensitive_tokens.iter().any(|t| normalized.contains(t)) {
+                    let reason = format!(
+                        "Sensitive path protection: exec payload references a protected path (matched sensitive-path rule)"
+                    );
+                    self.log_event(
+                        "POLICY_BLOCK",
+                        action,
+                        serde_json::json!({
+                            "program": program,
+                            "sensitive_reference": true
+                        }),
+                    );
+                    return ToolResult {
+                        call_id,
+                        tool_name: "exec".to_string(),
+                        status: "BLOCKED_BY_POLICY".to_string(),
+                        output: serde_json::Value::Null,
+                        error: Some(format!("Policy violation: {}", reason)),
+                        provenance: None,
+                        policy_decision: Some(crate::models::PolicyDecision {
+                            allowed: false,
+                            rule_id: Some("SENSITIVE-PATH-EXEC-GUARD".to_string()),
+                            action: "exec".to_string(),
+                            reason,
+                            taint_records: vec![],
+                        }),
+                    };
                 }
             }
         }

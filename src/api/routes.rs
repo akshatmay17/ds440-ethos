@@ -8,7 +8,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 
 use crate::aci::ACIHarness;
-use crate::config::providers::{ProviderManager, ProviderRegistry};
+use crate::config::providers::ProviderManager;
 use crate::metrics::{MetricsCollector, MetricsSummary};
 use crate::models::{
     Observation, PolicyDecision, ProvenanceRecord, ProvenanceTag, SnapshotMetadata, ToolResult,
@@ -162,46 +162,89 @@ async fn static_ui_handler(uri: axum::http::Uri) -> impl IntoResponse {
     let path = uri.path().trim_start_matches('/');
     let target = if path.is_empty() { "index.html" } else { path };
 
-    // 1. Try local filesystem (for live reload during dev)
-    let fs_path = std::path::Path::new("apps/desktop/ui").join(target);
-    if fs_path.exists() {
-        if let Ok(bytes) = std::fs::read(&fs_path) {
-            let mime = if target.ends_with(".css") {
-                "text/css; charset=utf-8"
-            } else if target.ends_with(".js") {
-                "application/javascript; charset=utf-8"
-            } else {
-                "text/html; charset=utf-8"
-            };
-            return (
-                StatusCode::OK,
-                [(axum::http::header::CONTENT_TYPE, mime)],
-                bytes,
-            )
-                .into_response();
+    // 1. Try local filesystem (for live reload during dev) — only after a
+    // canonicalized containment check: `..`, drive-letter absolute paths,
+    // and other traversals must not turn this handler into an arbitrary
+    // local file read (RT-18).
+    let local_ui_base = std::path::Path::new("apps/desktop/ui");
+    if let (Ok(base), Ok(fs_path), Ok(canon_fs_path)) = (
+        local_ui_base.canonicalize(),
+        {
+            let joined = local_ui_base.join(target);
+            joined
+                .exists()
+                .then_some(joined)
+                .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, "missing"))
+        },
+        local_ui_base.join(target).canonicalize(),
+    ) {
+        if canon_fs_path.starts_with(&base) && fs_path.is_file() {
+            if let Ok(bytes) = std::fs::read(&fs_path) {
+                let mime = if target.ends_with(".css") {
+                    "text/css; charset=utf-8"
+                } else if target.ends_with(".js") {
+                    "application/javascript; charset=utf-8"
+                } else {
+                    "text/html; charset=utf-8"
+                };
+                return (
+                    StatusCode::OK,
+                    [
+                        (axum::http::header::CONTENT_TYPE, mime),
+                        (
+                            axum::http::header::HeaderName::from_static(
+                                "content-security-policy",
+                            ),
+                            "default-src 'self'; style-src 'self' 'unsafe-inline'",
+                        ),
+                    ],
+                    bytes,
+                )
+                    .into_response();
+            }
         }
     }
 
-    // 2. Embedded fallback (allows running ethos.exe from any directory)
+    // 2. Embedded fallback (allows running ethos.exe from any directory).
+    // Whitelisted asset names only — never a caller-controlled path.
+    let csp = "default-src 'self'; style-src 'self' 'unsafe-inline'";
     match target {
         "index.html" => (
             StatusCode::OK,
-            [(axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8")],
+            [
+                (axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8"),
+                (
+                    axum::http::header::HeaderName::from_static("content-security-policy"),
+                    csp,
+                ),
+            ],
             EMBEDDED_INDEX_HTML.as_bytes().to_vec(),
         )
             .into_response(),
         "style.css" => (
             StatusCode::OK,
-            [(axum::http::header::CONTENT_TYPE, "text/css; charset=utf-8")],
+            [
+                (axum::http::header::CONTENT_TYPE, "text/css; charset=utf-8"),
+                (
+                    axum::http::header::HeaderName::from_static("content-security-policy"),
+                    csp,
+                ),
+            ],
             EMBEDDED_STYLE_CSS.as_bytes().to_vec(),
         )
             .into_response(),
         "app.js" => (
             StatusCode::OK,
-            [(
-                axum::http::header::CONTENT_TYPE,
-                "application/javascript; charset=utf-8",
-            )],
+            [
+                (
+                    axum::http::header::CONTENT_TYPE,
+                    "application/javascript; charset=utf-8",
+                ),
+                (
+                    axum::http::header::HeaderName::from_static("content-security-policy"),
+                    csp,
+                ),
+            ],
             EMBEDDED_APP_JS.as_bytes().to_vec(),
         )
             .into_response(),
@@ -493,8 +536,30 @@ async fn get_recent_events(State(state): State<AppState>) -> Json<Vec<crate::mod
     Json(state.metrics.get_recent_events(50))
 }
 
-async fn get_providers(State(state): State<AppState>) -> Json<ProviderRegistry> {
-    Json(state.providers.get_registry())
+async fn get_providers(State(state): State<AppState>) -> Json<serde_json::Value> {
+    // RT-19: never serialize raw API keys to HTTP responses — the daemon is
+    // reachable by any local process (and previously, any LAN host).
+    Json(redacted_provider_registry(&state.providers.get_registry()))
+}
+
+/// Serializes a ProviderRegistry with all API keys masked. Kept `pub` so the
+/// redaction guarantee is pinned by the red-team suite (RT-19).
+pub fn redacted_provider_registry(registry: &crate::config::providers::ProviderRegistry) -> serde_json::Value {
+    let mut json = serde_json::to_value(registry).unwrap_or(serde_json::json!({}));
+    for pointer in ["/spider/api_key", "/frontier/api_key"] {
+        if let Some(v) = json.pointer_mut(pointer) {
+            if v.is_string() {
+                let s = v.as_str().unwrap_or("");
+                let tail: String = s.chars().rev().take(4).collect();
+                *v = serde_json::Value::String(if s.len() <= 4 {
+                    "***".to_string()
+                } else {
+                    format!("***{}", tail)
+                });
+            }
+        }
+    }
+    json
 }
 
 async fn update_providers(
@@ -528,9 +593,10 @@ async fn update_providers(
     }
     (
         StatusCode::OK,
-        Json(
-            serde_json::json!({ "status": "updated", "providers": state.providers.get_registry() }),
-        ),
+        Json(serde_json::json!({
+            "status": "updated",
+            "providers": redacted_provider_registry(&state.providers.get_registry())
+        })),
     )
 }
 

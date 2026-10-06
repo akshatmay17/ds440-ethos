@@ -46,7 +46,19 @@ impl SessionManager {
 
     pub async fn terminate_session(&self, sandbox_id: &str) -> bool {
         let mut lock = self.sessions.write().await;
-        lock.remove(sandbox_id).is_some()
+        if let Some(harness) = lock.remove(sandbox_id) {
+            // Best-effort cleanup of the sandbox tempdir: contents (which may
+            // include fetched untrusted data or user work product) must not
+            // linger in %TEMP% after session termination.
+            if let Ok(mutex) = harness.try_lock() {
+                if let Some(root) = mutex.root_dir() {
+                    let _ = std::fs::remove_dir_all(root);
+                }
+            }
+            true
+        } else {
+            false
+        }
     }
 
     pub async fn clear_all(&self) {

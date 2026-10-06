@@ -1,793 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ethos</title>
+  <title>Ethos — Agent Sandbox Runtime</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app-window">
-    <!-- Titlebar -->
-    <header class="titlebar">
-      <div class="titlebar-left">
-        <button class="titlebar-btn" id="btn-hamburger" title="Menu (Ctrl+M)">
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-            <line x1="2.5" y1="4.5" x2="13.5" y2="4.5"></line>
-            <line x1="2.5" y1="8" x2="13.5" y2="8"></line>
-            <line x1="2.5" y1="11.5" x2="13.5" y2="11.5"></line>
-          </svg>
-        </button>
-        <button class="titlebar-btn" id="btn-grid-overview" title="Toggle Sessions Overview">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-            <rect x="2" y="2" width="5" height="5" rx="1"></rect>
-            <rect x="9" y="2" width="5" height="5" rx="1"></rect>
-            <rect x="2" y="9" width="5" height="5" rx="1"></rect>
-            <rect x="9" y="9" width="5" height="5" rx="1"></rect>
-          </svg>
-        </button>
-        <div class="titlebar-tabs" id="titlebar-tabs-container">
-          <div class="tab active" id="tab-active-session" data-view="welcome">
-            <span class="tab-badge" id="tab-badge-icon">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.375 2.625a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z"/>
-              </svg>
-            </span>
-            <span class="tab-title" id="tab-title-text">New session</span>
-            <span class="tab-close" id="tab-close-btn">&times;</span>
-          </div>
-          <button class="new-tab-btn" id="btn-new-tab" title="New Session (Ctrl+T)">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-              <line x1="8" y1="3" x2="8" y2="13"></line>
-              <line x1="3" y1="8" x2="13" y2="8"></line>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="titlebar-right">
-        <button class="titlebar-btn" id="btn-toggle-inspector" title="Toggle Context Inspector">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="2" y="2" width="12" height="12" rx="2"></rect>
-            <line x1="10" y1="2" x2="10" y2="14"></line>
-          </svg>
-        </button>
-        <button class="window-ctrl" title="Minimize">&mdash;</button>
-        <button class="window-ctrl" title="Maximize">&#9633;</button>
-        <button class="window-ctrl close" title="Close">&#10005;</button>
-      </div>
-    </header>
-
-    <!-- Hamburger Dropdown Menu (Screenshot 3) -->
-    <div class="hamburger-dropdown" id="hamburger-menu" style="display: none;">
-      <div class="dropdown-header">Ethos</div>
-      <div class="dropdown-item" id="menu-new-session">
-        <span>File</span>
-        <span class="dropdown-arrow">&#8250;</span>
-      </div>
-      <div class="dropdown-item">
-        <span>Edit</span>
-        <span class="dropdown-arrow">&#8250;</span>
-      </div>
-      <div class="dropdown-item" id="menu-toggle-view">
-        <span>View</span>
-        <span class="dropdown-arrow">&#8250;</span>
-      </div>
-      <div class="dropdown-item" id="menu-open-kanban">
-        <span style="display: flex; align-items: center; gap: 6px;">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-            <rect x="2" y="2" width="3.5" height="12" rx="1"></rect>
-            <rect x="6.5" y="2" width="3.5" height="8" rx="1"></rect>
-            <rect x="11" y="2" width="3.5" height="10" rx="1"></rect>
-          </svg>
-          Agent Kanban
-        </span>
-        <span class="dropdown-arrow">&#8250;</span>
-      </div>
-      <div class="dropdown-item">
-        <span>Go</span>
-        <span class="dropdown-arrow">&#8250;</span>
-      </div>
-      <div class="dropdown-item">
-        <span>Window</span>
-        <span class="dropdown-arrow">&#8250;</span>
-      </div>
-      <div class="dropdown-item" id="menu-help">
-        <span>Help</span>
-        <span class="dropdown-arrow">&#8250;</span>
-      </div>
+  <!-- ============ TITLEBAR ============ -->
+  <header class="titlebar">
+    <button class="icon-btn" id="btn-sidebar-toggle" title="Toggle sidebar (Ctrl+B)">☰</button>
+    <div class="brand" id="brand-home" title="Ethos ACI Runtime">
+      <span class="brand-mark">◈</span> ETHOS
     </div>
+    <nav class="tab-strip" id="tab-strip" aria-label="Open views"></nav>
+    <div class="titlebar-right">
+      <button class="icon-btn" id="btn-palette" title="Command palette (Ctrl+P)">⌘</button>
+      <button class="model-badge" id="btn-model-picker" title="Select model">
+        <span class="model-badge-dot" id="model-dot"></span>
+        <span id="model-badge-text">no model</span>
+      </button>
+      <button class="icon-btn" id="btn-settings" title="Settings">⚙</button>
+    </div>
+  </header>
 
-    <!-- Main Viewport Area -->
-    <main class="viewport-container">
-
-      <!-- View 1: Welcome / Empty Session View (Screenshot 1) -->
-      <section class="welcome-view" id="view-welcome">
-        <!-- Big Retro Block Font Watermark: ethos -->
-        <div class="watermark-container">
-          <svg class="watermark-svg" viewBox="0 0 520 120" fill="currentColor">
-            <text x="50%" y="85" text-anchor="middle" font-family="'Space Grotesk', -apple-system, sans-serif" font-weight="900" font-size="86" letter-spacing="16" fill="currentColor">ETHOS</text>
-          </svg>
+  <div class="app-body">
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar" id="sidebar">
+      <nav class="side-nav" id="side-nav">
+        <button class="side-item" data-view="dashboard"><span class="side-ico">◧</span> Dashboard</button>
+        <button class="side-item" data-view="sessions"><span class="side-ico">▣</span> Sessions</button>
+        <button class="side-item" data-view="catalog"><span class="side-ico">☰</span> Model Catalog</button>
+        <button class="side-item" data-view="lab"><span class="side-ico">☢</span> Attack Lab</button>
+        <button class="side-item" data-view="security"><span class="side-ico">⛨</span> Security</button>
+      </nav>
+      <div class="side-section">
+        <div class="side-label">Live Sandboxes</div>
+        <div class="side-list" id="side-sessions">
+          <div class="side-empty">no sandboxes</div>
         </div>
+      </div>
+      <div class="side-footer">
+        <div class="daemon-pill" id="daemon-pill">
+          <span class="pill-dot"></span><span id="daemon-text">daemon offline</span>
+        </div>
+      </div>
+    </aside>
 
-        <!-- Centered Floating Prompt Card -->
-        <div class="prompt-container">
-          <div class="prompt-card">
-            <textarea class="prompt-textarea" id="main-prompt-input" rows="1" placeholder="Ask anything, / for commands, @ for context..."></textarea>
-            <div class="prompt-toolbar">
-              <div class="prompt-toolbar-left">
-                <button class="prompt-toolbar-btn" title="Add images and files">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-                    <line x1="8" y1="3" x2="8" y2="13"></line>
-                    <line x1="3" y1="8" x2="13" y2="8"></line>
-                  </svg>
-                </button>
-                <button class="prompt-toolbar-btn" id="btn-model-select" title="Choose Model">
-                  <svg class="badge-icon" width="13" height="13" viewBox="0 0 40 40" fill="currentColor">
-                    <path d="M35.6638 9.91965C35.3251 9.75432 35.1785 10.0703 34.9811 10.2316C34.9131 10.2836 34.8558 10.3516 34.7985 10.413C34.3025 10.9423 33.7238 11.289 32.9678 11.2476C31.8625 11.1863 30.9186 11.533 30.0839 12.3783C29.9066 11.3356 29.3173 10.7143 28.4213 10.3143C27.9519 10.1063 27.4773 9.89965 27.148 9.44766C26.9186 9.12633 26.856 8.76767 26.7413 8.41568C26.668 8.20235 26.5946 7.98502 26.3506 7.94902C26.084 7.90769 25.98 8.13035 25.876 8.31702C25.4587 9.07967 25.2973 9.91965 25.3133 10.7703C25.3493 12.6849 26.1573 14.2102 27.764 15.2942C27.9466 15.4182 27.9933 15.5435 27.9359 15.7249C27.8266 16.0982 27.696 16.4609 27.5813 16.8355C27.508 17.0742 27.3986 17.1248 27.1426 17.0222C26.2777 16.6504 25.4919 16.1164 24.828 15.4489C23.6854 14.3449 22.6534 13.1263 21.3654 12.1716C21.067 11.9511 20.7606 11.7416 20.4468 11.5436C19.1335 10.2676 20.6201 9.21967 20.9641 9.09567C21.3241 8.965 21.0881 8.51968 19.9254 8.52501C18.7628 8.53035 17.6988 8.91834 16.3428 9.43699C16.1413 9.51421 15.934 9.57529 15.7229 9.61966C14.4557 9.38091 13.1598 9.33506 11.8789 9.48366C9.36565 9.76365 7.35902 10.953 5.88305 12.9809C4.10975 15.4182 3.69243 18.1888 4.20308 21.0768C4.74041 24.122 6.29504 26.6433 8.683 28.6139C11.1603 30.6579 14.0122 31.6592 17.2668 31.4672C19.2428 31.3539 21.4441 31.0886 23.9254 28.9873C24.552 29.2993 25.208 29.4233 26.2986 29.5166C27.1386 29.5953 27.9466 29.4766 28.5719 29.3459C29.5519 29.1379 29.4839 28.23 29.1306 28.0646C26.2573 26.726 26.888 27.2713 26.3133 26.83C27.7746 25.102 29.9746 23.3074 30.8359 17.4928C30.9026 17.0302 30.8452 16.7395 30.8359 16.3662C30.8306 16.1395 30.8826 16.0502 31.1426 16.0249C31.8639 15.95 32.5637 15.7349 33.2025 15.3915C35.0638 14.3742 35.8158 12.7049 35.9931 10.7023C36.0198 10.3956 35.9878 10.081 35.6638 9.91965ZM19.4414 27.9433C16.6562 25.754 15.3055 25.0327 14.7482 25.0634C14.2256 25.0954 14.3202 25.6913 14.4349 26.0807C14.5549 26.4647 14.7109 26.7286 14.9295 27.066C15.0815 27.2886 15.1855 27.6206 14.7789 27.87C13.8816 28.4246 12.3229 27.6833 12.2496 27.6473C10.435 26.578 8.91632 25.1673 7.84834 23.2381C6.81637 21.3808 6.21638 19.3888 6.11771 17.2622C6.09105 16.7475 6.24171 16.5662 6.7537 16.4729C7.42583 16.3442 8.11451 16.3267 8.79233 16.4209C11.6349 16.8368 14.0536 18.1075 16.0828 20.1194C17.2402 21.2661 18.1161 22.6354 19.0188 23.974C19.9788 25.3953 21.0108 26.75 22.3254 27.8593C22.7894 28.2486 23.1587 28.5446 23.5134 28.7619C22.4441 28.8819 20.6601 28.9086 19.4414 27.9433ZM20.7748 19.3568C20.7745 19.2906 20.7904 19.2253 20.8211 19.1666C20.8517 19.1078 20.8962 19.0575 20.9507 19.0198C21.0052 18.9821 21.068 18.9583 21.1337 18.9503C21.1995 18.9424 21.2662 18.9505 21.3281 18.9741C21.407 19.0024 21.475 19.0546 21.5228 19.1235C21.5706 19.1923 21.5958 19.2743 21.5947 19.3581C21.5949 19.4123 21.5843 19.4659 21.5636 19.5159C21.5428 19.5659 21.5123 19.6113 21.4738 19.6494C21.4354 19.6875 21.3897 19.7176 21.3395 19.7378C21.2893 19.7581 21.2356 19.7682 21.1814 19.7675C21.1277 19.7676 21.0745 19.7571 21.0248 19.7365C20.9752 19.7158 20.9302 19.6855 20.8925 19.6473C20.8548 19.609 20.825 19.5636 20.805 19.5138C20.785 19.4639 20.7739 19.4105 20.7748 19.3568ZM24.9213 21.4848C24.6547 21.5928 24.3893 21.6861 24.1347 21.6981C23.7516 21.7114 23.3756 21.5918 23.0707 21.3594C22.7054 21.0528 22.4441 20.8821 22.3347 20.3488C22.297 20.0881 22.3042 19.823 22.3561 19.5648C22.4494 19.1288 22.3454 18.8488 22.0374 18.5955C21.7881 18.3875 21.4694 18.3302 21.1201 18.3302C21.0005 18.3232 20.8843 18.2875 20.7814 18.2262C20.6348 18.1542 20.5148 17.9728 20.6294 17.7488C20.6668 17.6768 20.8428 17.5008 20.8854 17.4688C21.3601 17.1995 21.9081 17.2875 22.4134 17.4902C22.8827 17.6822 23.2374 18.0342 23.748 18.5328C24.2694 19.1341 24.364 19.3008 24.6613 19.7515C24.896 20.1048 25.1093 20.4674 25.2547 20.8821C25.344 21.1421 25.2293 21.3541 24.9213 21.4848Z"/>
-                  </svg>
-                  <span id="active-model-label">DeepSeek V4 Pro</span>
-                  <span style="font-size: 9px; opacity: 0.7;">&#9662;</span>
-                </button>
-                <button class="prompt-toolbar-btn" id="btn-mode-select" title="Choose Variant">
-                  <span id="active-mode-label">Max</span>
-                  <span style="font-size: 9px; opacity: 0.7;">&#9662;</span>
-                </button>
-              </div>
-              <button class="prompt-send-btn" id="btn-main-send" title="Send Prompt (Enter)">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="8" y1="12" x2="8" y2="4"></line>
-                  <polyline points="4 8 8 4 12 8"></polyline>
-                </svg>
-              </button>
-            </div>
+    <!-- ============ MAIN VIEWS ============ -->
+    <main class="main-area" id="main-area">
+
+      <!-- DASHBOARD -->
+      <section class="view" id="view-dashboard" data-view="dashboard">
+        <div class="view-head">
+          <h1>Dashboard</h1>
+          <div class="view-actions">
+            <button class="btn" id="btn-refresh-health">Recheck</button>
+            <button class="btn btn-primary" id="btn-quick-sandbox">＋ New Sandbox</button>
           </div>
-
-          <!-- Project & VCS Indicator -->
-          <div class="project-vcs-pill">
-            <button class="project-pill-btn" id="btn-project-select">
-              <span class="project-badge-sm">D</span>
-              <span>Default Project</span>
-              <span style="font-size: 9px;">&#9662;</span>
-            </button>
-            <span>/</span>
-            <div style="display: flex; align-items: center; gap: 4px;">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="5" cy="5" r="2"></circle>
-                <circle cx="11" cy="5" r="2"></circle>
-                <path d="M5 7v4a2 2 0 0 0 2 2h4"></path>
-              </svg>
-              <span>No Git</span>
-            </div>
+        </div>
+        <div class="metric-grid" id="metric-grid"></div>
+        <div class="panel-row">
+          <div class="panel">
+            <div class="panel-head">Wall Configuration</div>
+            <div class="panel-body" id="walls-summary"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">Recent Daemon Events</div>
+            <div class="panel-body table-scroll" id="daemon-events"></div>
           </div>
         </div>
       </section>
 
-      <!-- View 2: Sessions & Projects Overview (Screenshot 2) -->
-      <section class="sessions-view" id="view-sessions" style="display: none;">
-        <div class="search-sessions-bar">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-            <circle cx="7" cy="7" r="4.5"></circle>
-            <line x1="10.5" y1="10.5" x2="14" y2="14"></line>
-          </svg>
-          <input type="text" id="sessions-search-input" placeholder="Search sessions" />
+      <!-- SESSIONS -->
+      <section class="view" id="view-sessions" data-view="sessions">
+        <div class="view-head">
+          <h1>Sandboxes</h1>
+          <div class="view-actions">
+            <button class="btn" id="btn-sessions-refresh">Refresh</button>
+            <button class="btn btn-primary" id="btn-create-sandbox">＋ New Sandbox</button>
+          </div>
         </div>
-
-        <div class="sessions-grid">
-          <!-- Left Column -->
-          <aside class="projects-sidebar">
-            <div class="sidebar-header">
-              <span>Projects</span>
-              <button class="sidebar-icon-btn" title="Add Project">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-                  <path d="M2 4h4l2 2h6v7H2z"></path>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="10" y1="10" x2="14" y2="10"></line>
-                </svg>
-              </button>
+        <div class="sessions-layout">
+          <div class="session-list-pane">
+            <div class="session-list" id="session-list">
+              <div class="side-empty">no sandboxes — create one</div>
             </div>
-            <div class="project-item">
-              <span class="project-badge-sm">D</span>
-              <span>Default Project</span>
-            </div>
-
-            <div class="sidebar-nav-bottom">
-              <button class="sidebar-nav-btn" id="btn-sidebar-kanban">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="2" y="2" width="3.5" height="12" rx="1"></rect>
-                  <rect x="6.5" y="2" width="3.5" height="8" rx="1"></rect>
-                  <rect x="11" y="2" width="3.5" height="10" rx="1"></rect>
-                </svg>
-                <span>Agent Kanban</span>
-              </button>
-              <button class="sidebar-nav-btn" id="btn-open-settings">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <circle cx="8" cy="8" r="2.5"></circle>
-                  <path d="M8 1v2m0 10v2m7-7h-2M3 8H1m11.95-4.95-1.41 1.41M4.46 12.54l-1.41 1.41m0-11.95 1.41 1.41m7.08 7.08 1.41 1.41"></path>
-                </svg>
-                <span>Settings</span>
-              </button>
-              <button class="sidebar-nav-btn" id="btn-open-help">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <circle cx="8" cy="8" r="6"></circle>
-                  <path d="M6.5 6.5a1.5 1.5 0 0 1 2.8-.7c0 1.2-1.3 1.2-1.3 2.2m0 2h.01"></path>
-                </svg>
-                <span>Help</span>
-              </button>
-            </div>
-          </aside>
-
-          <!-- Right Column -->
-          <div class="recent-sessions-column">
-            <div class="recent-sessions-header">
-              <span>Recent sessions</span>
-              <button class="new-session-action" id="btn-create-session-right">
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M12 2l2 2-8 8H4v-2l8-8z"></path>
-                </svg>
-                <span>New session</span>
-              </button>
-            </div>
-
-            <div id="recent-sessions-list">
-              <div class="session-card" data-session-id="audit-sandbox">
-                <div class="session-card-left">
-                  <span class="project-badge-sm">D</span>
-                  <span class="session-card-title">Sandbox security audit & taint flow analysis</span>
-                </div>
-                <span class="session-card-badge">Default Project</span>
-              </div>
-
-              <div class="session-card" data-session-id="eval-bench">
-                <div class="session-card-left">
-                  <span class="project-badge-sm">D</span>
-                  <span class="session-card-title">ExploitBench defense evaluation suite</span>
-                </div>
-                <span class="session-card-badge">Default Project</span>
-              </div>
-
-              <div class="session-card" data-session-id="harness-agent">
-                <div class="session-card-left">
-                  <span class="project-badge-sm">D</span>
-                  <span class="session-card-title">Autonomous agent tool execution & walls</span>
-                </div>
-                <span class="session-card-badge">Default Project</span>
-              </div>
-            </div>
+          </div>
+          <div class="session-detail-pane" id="session-detail">
+            <div class="side-empty" style="padding:48px 0;">select a sandbox</div>
           </div>
         </div>
       </section>
 
-      <!-- View 4: Split Pane Active Conversation View (Screenshot 4) -->
-      <section class="conversation-split-view" id="view-conversation" style="display: none;">
-        <!-- Left Pane: Chat Stream -->
-        <div class="chat-pane">
-          <div class="chat-header">
-            <span class="chat-title" id="active-session-title">Test conversation</span>
-            <div style="display: flex; align-items: center; gap: 2px;">
-              <button class="titlebar-btn" title="Session Status" style="color: var(--text-muted);">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-                  <circle cx="8" cy="8" r="5.5" stroke-dasharray="12 24"></circle>
-                </svg>
-              </button>
-              <button class="titlebar-btn" title="More options">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                  <circle cx="3" cy="8" r="1.5"></circle>
-                  <circle cx="8" cy="8" r="1.5"></circle>
-                  <circle cx="13" cy="8" r="1.5"></circle>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div class="chat-messages-container" id="chat-messages-stream">
-            <!-- User Prompt Bubble -->
-            <div class="user-bubble-wrapper">
-              <div class="user-bubble">test</div>
-            </div>
-
-            <!-- Assistant Greeting Message -->
-            <div class="assistant-bubble-wrapper">
-              <div class="assistant-bubble">
-                Hello! I'm Ethos, ready to help with your coding tasks. What would you like to do?
-              </div>
-            </div>
-          </div>
-
-          <!-- Pinned Prompt Dock at Bottom -->
-          <div class="pinned-prompt-dock">
-            <div class="prompt-card">
-              <textarea class="prompt-textarea" id="chat-prompt-input" rows="1" placeholder="Ask anything, / for commands, @ for context..."></textarea>
-              <div class="prompt-toolbar">
-                <div class="prompt-toolbar-left">
-                  <button class="prompt-toolbar-btn" title="Add attachments">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-                      <line x1="8" y1="3" x2="8" y2="13"></line>
-                      <line x1="3" y1="8" x2="13" y2="8"></line>
-                    </svg>
-                  </button>
-                  <button class="prompt-toolbar-btn" id="btn-chat-model-select">
-                  <svg class="badge-icon" width="13" height="13" viewBox="0 0 40 40" fill="currentColor">
-                    <path d="M35.6638 9.91965C35.3251 9.75432 35.1785 10.0703 34.9811 10.2316C34.9131 10.2836 34.8558 10.3516 34.7985 10.413C34.3025 10.9423 33.7238 11.289 32.9678 11.2476C31.8625 11.1863 30.9186 11.533 30.0839 12.3783C29.9066 11.3356 29.3173 10.7143 28.4213 10.3143C27.9519 10.1063 27.4773 9.89965 27.148 9.44766C26.9186 9.12633 26.856 8.76767 26.7413 8.41568C26.668 8.20235 26.5946 7.98502 26.3506 7.94902C26.084 7.90769 25.98 8.13035 25.876 8.31702C25.4587 9.07967 25.2973 9.91965 25.3133 10.7703C25.3493 12.6849 26.1573 14.2102 27.764 15.2942C27.9466 15.4182 27.9933 15.5435 27.9359 15.7249C27.8266 16.0982 27.696 16.4609 27.5813 16.8355C27.508 17.0742 27.3986 17.1248 27.1426 17.0222C26.2777 16.6504 25.4919 16.1164 24.828 15.4489C23.6854 14.3449 22.6534 13.1263 21.3654 12.1716C21.067 11.9511 20.7606 11.7416 20.4468 11.5436C19.1335 10.2676 20.6201 9.21967 20.9641 9.09567C21.3241 8.965 21.0881 8.51968 19.9254 8.52501C18.7628 8.53035 17.6988 8.91834 16.3428 9.43699C16.1413 9.51421 15.934 9.57529 15.7229 9.61966C14.4557 9.38091 13.1598 9.33506 11.8789 9.48366C9.36565 9.76365 7.35902 10.953 5.88305 12.9809C4.10975 15.4182 3.69243 18.1888 4.20308 21.0768C4.74041 24.122 6.29504 26.6433 8.683 28.6139C11.1603 30.6579 14.0122 31.6592 17.2668 31.4672C19.2428 31.3539 21.4441 31.0886 23.9254 28.9873C24.552 29.2993 25.208 29.4233 26.2986 29.5166C27.1386 29.5953 27.9466 29.4766 28.5719 29.3459C29.5519 29.1379 29.4839 28.23 29.1306 28.0646C26.2573 26.726 26.888 27.2713 26.3133 26.83C27.7746 25.102 29.9746 23.3074 30.8359 17.4928C30.9026 17.0302 30.8452 16.7395 30.8359 16.3662C30.8306 16.1395 30.8826 16.0502 31.1426 16.0249C31.8639 15.95 32.5637 15.7349 33.2025 15.3915C35.0638 14.3742 35.8158 12.7049 35.9931 10.7023C36.0198 10.3956 35.9878 10.081 35.6638 9.91965ZM19.4414 27.9433C16.6562 25.754 15.3055 25.0327 14.7482 25.0634C14.2256 25.0954 14.3202 25.6913 14.4349 26.0807C14.5549 26.4647 14.7109 26.7286 14.9295 27.066C15.0815 27.2886 15.1855 27.6206 14.7789 27.87C13.8816 28.4246 12.3229 27.6833 12.2496 27.6473C10.435 26.578 8.91632 25.1673 7.84834 23.2381C6.81637 21.3808 6.21638 19.3888 6.11771 17.2622C6.09105 16.7475 6.24171 16.5662 6.7537 16.4729C7.42583 16.3442 8.11451 16.3267 8.79233 16.4209C11.6349 16.8368 14.0536 18.1075 16.0828 20.1194C17.2402 21.2661 18.1161 22.6354 19.0188 23.974C19.9788 25.3953 21.0108 26.75 22.3254 27.8593C22.7894 28.2486 23.1587 28.5446 23.5134 28.7619C22.4441 28.8819 20.6601 28.9086 19.4414 27.9433ZM20.7748 19.3568C20.7745 19.2906 20.7904 19.2253 20.8211 19.1666C20.8517 19.1078 20.8962 19.0575 20.9507 19.0198C21.0052 18.9821 21.068 18.9583 21.1337 18.9503C21.1995 18.9424 21.2662 18.9505 21.3281 18.9741C21.407 19.0024 21.475 19.0546 21.5228 19.1235C21.5706 19.1923 21.5958 19.2743 21.5947 19.3581C21.5949 19.4123 21.5843 19.4659 21.5636 19.5159C21.5428 19.5659 21.5123 19.6113 21.4738 19.6494C21.4354 19.6875 21.3897 19.7176 21.3395 19.7378C21.2893 19.7581 21.2356 19.7682 21.1814 19.7675C21.1277 19.7676 21.0745 19.7571 21.0248 19.7365C20.9752 19.7158 20.9302 19.6855 20.8925 19.6473C20.8548 19.609 20.825 19.5636 20.805 19.5138C20.785 19.4639 20.7739 19.4105 20.7748 19.3568ZM24.9213 21.4848C24.6547 21.5928 24.3893 21.6861 24.1347 21.6981C23.7516 21.7114 23.3756 21.5918 23.0707 21.3594C22.7054 21.0528 22.4441 20.8821 22.3347 20.3488C22.297 20.0881 22.3042 19.823 22.3561 19.5648C22.4494 19.1288 22.3454 18.8488 22.0374 18.5955C21.7881 18.3875 21.4694 18.3302 21.1201 18.3302C21.0005 18.3232 20.8843 18.2875 20.7814 18.2262C20.6348 18.1542 20.5148 17.9728 20.6294 17.7488C20.6668 17.6768 20.8428 17.5008 20.8854 17.4688C21.3601 17.1995 21.9081 17.2875 22.4134 17.4902C22.8827 17.6822 23.2374 18.0342 23.748 18.5328C24.2694 19.1341 24.364 19.3008 24.6613 19.7515C24.896 20.1048 25.1093 20.4674 25.2547 20.8821C25.344 21.1421 25.2293 21.3541 24.9213 21.4848Z"/>
-                  </svg>
-                    <span id="chat-model-label">DeepSeek V4 Pro</span>
-                    <span style="font-size: 9px; opacity: 0.7;">&#9662;</span>
-                  </button>
-                  <button class="prompt-toolbar-btn" id="btn-chat-mode-select">
-                    <span>Max</span>
-                    <span style="font-size: 9px; opacity: 0.7;">&#9662;</span>
-                  </button>
-                </div>
-                <button class="prompt-send-btn" id="btn-chat-send" title="Send Prompt">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="8" y1="12" x2="8" y2="4"></line>
-                    <polyline points="4 8 8 4 12 8"></polyline>
-                  </svg>
-                </button>
-              </div>
-            </div>
+      <!-- MODEL CATALOG -->
+      <section class="view" id="view-catalog" data-view="catalog">
+        <div class="view-head">
+          <h1>Model Catalog <span class="count-chip" id="catalog-count">0</span></h1>
+          <div class="view-actions">
+            <button class="btn" id="btn-catalog-refresh" title="Sync models.dev">⟳ Sync models.dev</button>
           </div>
         </div>
-
-        <!-- Right Pane: Review & Context Inspector (Screenshot 4) -->
-        <div class="context-pane" id="context-inspector-pane">
-          <div class="context-header-tabs">
-            <div class="context-tabs-left">
-              <div class="context-tab" id="tab-review-btn">
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <circle cx="5" cy="5" r="2"></circle>
-                  <circle cx="11" cy="5" r="2"></circle>
-                  <path d="M5 7v4a2 2 0 0 0 2 2h4"></path>
-                </svg>
-                <span>Review</span>
-              </div>
-              <div class="context-tab active" id="tab-context-btn">
-                <span style="display: inline-block; width: 7px; height: 7px; border: 1.5px solid currentColor; border-radius: 50%;"></span>
-                <span>Context</span>
-                <span style="opacity: 0.6; font-size: 10px; margin-left: 2px;">&times;</span>
-              </div>
-              <button class="new-tab-btn" style="width: 20px; height: 20px;">+</button>
+        <div class="catalog-layout">
+          <div class="provider-rail" id="provider-rail"></div>
+          <div class="catalog-pane">
+            <div class="catalog-search-row">
+              <input type="text" id="catalog-search" placeholder="Search all models — name, provider, capability… ( / )" autocomplete="off" />
+              <label class="toggle"><input type="checkbox" id="catalog-tools-only" /> tools</label>
+              <label class="toggle"><input type="checkbox" id="catalog-vision-only" /> vision</label>
+              <label class="toggle"><input type="checkbox" id="catalog-reasoning-only" /> reasoning</label>
+              <label class="toggle"><input type="checkbox" id="catalog-favs-only" /> ★ favorites</label>
             </div>
-            <button class="titlebar-btn" title="Open Workspace Folder">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="#eab308">
-                <path d="M2 4h4l2 2h6v7H2z"></path>
-              </svg>
-            </button>
-          </div>
-
-          <div class="context-scroll-content">
-            <!-- 2-Column Metadata Grid -->
-            <div class="context-meta-grid">
-              <div class="meta-item">
-                <span class="meta-label">Session</span>
-                <span class="meta-value" id="meta-session-name">Test conversation</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Messages</span>
-                <span class="meta-value" id="meta-message-count">3</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Provider</span>
-                <span class="meta-value" id="meta-provider-name">DeepSeek</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Model</span>
-                <span class="meta-value" id="meta-model-name">DeepSeek V4 Pro</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Context Limit</span>
-                <span class="meta-value" id="meta-context-limit">1,000,000</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Total Tokens</span>
-                <span class="meta-value" id="meta-total-tokens">8,332</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Usage</span>
-                <span class="meta-value" id="meta-usage-pct">1%</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Input Tokens</span>
-                <span class="meta-value" id="meta-input-tokens">8,283</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Output Tokens</span>
-                <span class="meta-value" id="meta-output-tokens">23</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Reasoning Tokens</span>
-                <span class="meta-value" id="meta-reasoning-tokens">26</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Cache Tokens (read/write)</span>
-                <span class="meta-value">0 / 0</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">User Messages</span>
-                <span class="meta-value" id="meta-user-msgs">2</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Assistant Messages</span>
-                <span class="meta-value" id="meta-assistant-msgs">1</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Total Cost</span>
-                <span class="meta-value" id="meta-total-cost">$0.00</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Session Created</span>
-                <span class="meta-value" id="meta-created-at">Sep 9, 2026, 11:42 PM</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">Last Activity</span>
-                <span class="meta-value" id="meta-last-activity">Sep 9, 2026, 11:42 PM</span>
-              </div>
-            </div>
-
-            <!-- Context Breakdown Section -->
-            <div class="breakdown-section">
-              <span class="breakdown-title">Context Breakdown</span>
-              <div class="breakdown-bar">
-                <div class="breakdown-segment user" id="bar-user-segment"></div>
-                <div class="breakdown-segment assistant" id="bar-assistant-segment"></div>
-                <div class="breakdown-segment other" id="bar-other-segment"></div>
-              </div>
-              <div class="breakdown-legend">
-                <div class="legend-item">
-                  <span class="legend-dot user"></span>
-                  <span id="legend-user-pct">User 0%</span>
-                </div>
-                <div class="legend-item">
-                  <span class="legend-dot assistant"></span>
-                  <span id="legend-assistant-pct">Assistant 0.6%</span>
-                </div>
-                <div class="legend-item">
-                  <span class="legend-dot other"></span>
-                  <span id="legend-other-pct">Other 99.4%</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Raw Messages Section -->
-            <div class="raw-messages-section">
-              <div class="raw-header">
-                <span class="raw-title">Raw messages</span>
-                <button class="export-btn" id="btn-export-session">
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-                    <line x1="8" y1="2" x2="8" y2="11"></line>
-                    <polyline points="4 7 8 11 12 7"></polyline>
-                    <line x1="2" y1="14" x2="14" y2="14"></line>
-                  </svg>
-                  <span>Export session</span>
-                </button>
-              </div>
-
-              <div id="raw-messages-list">
-                <div class="raw-message-item">
-                  <span>user &bull; <code>msg_08968da5f001RW28Oh60AlBzsx</code></span>
-                  <span style="font-size: 11px; opacity: 0.6;">Sep 9, 2026, 11:42 PM</span>
-                </div>
-              </div>
-            </div>
+            <div class="catalog-list table-scroll" id="catalog-list"></div>
           </div>
         </div>
       </section>
-    
-      <!-- View 5: Multi-Agent Kanban Orchestration Board (Overkill Port) -->
-      <section class="kanban-view" id="view-kanban" style="display: none;">
-        <div class="kanban-top-bar">
-          <div class="kanban-title-area">
-            <h2 class="kanban-title">Agent Task Orchestrator & Taint Flow Kanban</h2>
-            <div class="kanban-telemetry-chips">
-              <span class="chip clean">● 4 Active Subagents</span>
-              <span class="chip tainted">● 1 Intercepted Violation</span>
-              <span class="chip yolo">⚡ YOLO Auto-Mode Active</span>
-              <span class="chip vault">🔒 .env Vault Masked</span>
-            </div>
-          </div>
-          <div class="kanban-actions">
-            <button class="btn-primary" id="btn-add-agent-task" style="padding: 6px 12px; font-size: 12px;">+ Dispatch Goal</button>
-            <button class="btn-secondary" id="btn-close-kanban" style="padding: 6px 10px; font-size: 12px;">Back to Chat</button>
+
+      <!-- ATTACK LAB -->
+      <section class="view" id="view-lab" data-view="lab">
+        <div class="view-head">
+          <h1>Attack Lab</h1>
+          <div class="view-actions">
+            <button class="btn" id="btn-lab-refresh">Refresh</button>
           </div>
         </div>
-
-        <div class="kanban-board-container">
-          <!-- Column 1: Backlog -->
-          <div class="kanban-column" data-col="backlog">
-            <div class="kanban-column-header">
-              <span class="col-title">1. Backlog & Goals</span>
-              <span class="col-count">2</span>
-            </div>
-            <div class="kanban-cards-list" id="col-backlog">
-              <div class="kanban-card">
-                <div class="card-header">
-                  <span class="card-id">TSK-105</span>
-                  <span class="card-badge safe">Safe Secret Sharing</span>
-                </div>
-                <div class="card-body">Vault redaction: mask .env tokens in model prompt context</div>
-                <div class="card-footer">
-                  <span class="card-agent">👤 Harsh (Scrum Master)</span>
-                  <span class="card-tag">Priority: High</span>
-                </div>
-              </div>
-              <div class="kanban-card">
-                <div class="card-header">
-                  <span class="card-id">TSK-106</span>
-                  <span class="card-badge safe">OpenRouter Fallback</span>
-                </div>
-                <div class="card-body">Configure cascading 429 failover to Claude 3.5 Sonnet</div>
-                <div class="card-footer">
-                  <span class="card-agent">👤 Saathvik (Backend)</span>
-                  <span class="card-tag">Resilience</span>
-                </div>
-              </div>
-            </div>
+        <p class="view-sub">Indirect-injection scenarios executed against a live sandbox — every step shows which walls fired (PromptInject, Ouroboros, Taint Boundary).</p>
+        <div class="lab-layout">
+          <div class="lab-scenarios table-scroll" id="lab-scenarios"></div>
+          <div class="lab-trace" id="lab-trace">
+            <div class="side-empty" style="padding:48px 0;">pick a scenario and run it</div>
           </div>
+        </div>
+      </section>
 
-          <!-- Column 2: Planning -->
-          <div class="kanban-column" data-col="planning">
-            <div class="kanban-column-header">
-              <span class="col-title">2. Agent Planning</span>
-              <span class="col-count">1</span>
-            </div>
-            <div class="kanban-cards-list" id="col-planning">
-              <div class="kanban-card">
-                <div class="card-header">
-                  <span class="card-id">TSK-103</span>
-                  <span class="card-badge plan">Intent Classifier</span>
-                </div>
-                <div class="card-body">Train 2-phase TF-IDF + ONNX DistilBERT query intent triage</div>
-                <div class="card-footer">
-                  <span class="card-agent">👤 Akshat (Security Lead)</span>
-                  <span class="card-tag clean-tag">0x00 Clean</span>
-                </div>
-              </div>
-            </div>
+      <!-- SECURITY -->
+      <section class="view" id="view-security" data-view="security">
+        <div class="view-head">
+          <h1>Security</h1>
+          <div class="view-actions">
+            <button class="btn" id="btn-security-refresh">Refresh</button>
           </div>
-
-          <!-- Column 3: Sandbox Exec -->
-          <div class="kanban-column" data-col="executing">
-            <div class="kanban-column-header">
-              <span class="col-title">3. Sandbox Execution</span>
-              <span class="col-count">1</span>
-            </div>
-            <div class="kanban-cards-list" id="col-executing">
-              <div class="kanban-card">
-                <div class="card-header">
-                  <span class="card-id">TSK-102</span>
-                  <span class="card-badge exec">Sandbox #2</span>
-                </div>
-                <div class="card-body">Refactor state tree commit history to causal 2-Phase DAG</div>
-                <div class="card-footer">
-                  <span class="card-agent">👤 Aryamaan (Team Lead)</span>
-                  <span class="card-tag running-tag">Step 4/6</span>
-                </div>
-              </div>
-            </div>
+        </div>
+        <div class="panel-row">
+          <div class="panel">
+            <div class="panel-head">Taint Ledger Graph</div>
+            <div class="panel-body table-scroll" id="taint-graph"></div>
           </div>
-
-          <!-- Column 4: Taint Audit -->
-          <div class="kanban-column" data-col="audit">
-            <div class="kanban-column-header">
-              <span class="col-title">4. Security & Taint Audit</span>
-              <span class="col-count">1</span>
-            </div>
-            <div class="kanban-cards-list" id="col-audit">
-              <div class="kanban-card intercepted">
-                <div class="card-header">
-                  <span class="card-id">TSK-101</span>
-                  <span class="card-badge alert">BLOCKED BY POLICY</span>
-                </div>
-                <div class="card-body">M365 SOX Invoice exfiltration probe: curl blocked at tool boundary</div>
-                <div class="card-footer">
-                  <span class="card-agent">👤 Ammar (CI/CD)</span>
-                  <span class="card-tag taint-tag">Bit 0: UntrustedWeb</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Column 5: Verified -->
-          <div class="kanban-column" data-col="verified">
-            <div class="kanban-column-header">
-              <span class="col-title">5. Verified / Completed</span>
-              <span class="col-count">2</span>
-            </div>
-            <div class="kanban-cards-list" id="col-verified">
-              <div class="kanban-card verified">
-                <div class="card-header">
-                  <span class="card-id">TSK-100</span>
-                  <span class="card-badge pass">Verified 1:1 Parity</span>
-                </div>
-                <div class="card-body">Complete 1:1 OpenCode UI parity verified by Subagent (99% score)</div>
-                <div class="card-footer">
-                  <span class="card-agent">👤 Harsh Rathi</span>
-                  <span class="card-tag pass-tag">60/60 Tests</span>
-                </div>
-              </div>
-              <div class="kanban-card verified">
-                <div class="card-header">
-                  <span class="card-id">TSK-104</span>
-                  <span class="card-badge pass">Single Executable</span>
-                </div>
-                <div class="card-body">Axum REST server and frontend bundled into single ethos.exe</div>
-                <div class="card-footer">
-                  <span class="card-agent">👤 Saathvik (Dashboard)</span>
-                  <span class="card-tag pass-tag">Release Ready</span>
-                </div>
-              </div>
-            </div>
+          <div class="panel">
+            <div class="panel-head">Policy Blocks <span class="count-chip" id="blocks-count">0</span></div>
+            <div class="panel-body table-scroll" id="blocks-log"></div>
           </div>
         </div>
       </section>
 
     </main>
+  </div>
 
-    <!-- Settings & Setup Modal (with models.dev Dynamic API Integration) -->
-    <div class="modal-overlay" id="settings-modal-overlay" style="display: none;">
-      <div class="settings-modal">
-        <div class="modal-header">
-          <span class="modal-title">Ethos Settings & Provider Configuration</span>
-          <button class="modal-close-btn" id="btn-close-settings">&times;</button>
-        </div>
-        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-          <!-- Section 1: Core Inference & Models -->
-          <div class="settings-section">
-            <h3 class="settings-section-title">1. Primary Inference & Model Gateway</h3>
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label">Primary Provider</label>
-                <select class="form-select" id="settings-provider-select">
-                  <option value="anthropic">Anthropic (Claude 3.7 Sonnet / 3.5)</option>
-                  <option value="openai">OpenAI (GPT-4o / o3-mini)</option>
-                  <option value="google">Google Gemini (Gemini 2.5 Flash / Pro)</option>
-                  <option value="openrouter">OpenRouter (Multi-Model Gateway)</option>
-                  <option value="deepseek" selected>DeepSeek (Direct API)</option>
-                  <option value="groq">Groq (Llama 3.3 70B Ultra-Fast)</option>
-                  <option value="ollama">Ollama / Local Bunker (Zero Egress)</option>
-                  <option value="lmstudio">LM Studio (Local DeepSeek-R1 / Qwen)</option>
-                  <option value="custom">Custom Compatible Endpoint</option>
-                </select>
-              </div>
+  <!-- ============ STATUSBAR ============ -->
+  <footer class="statusbar">
+    <span class="status-item" id="status-provider">—</span>
+    <span class="status-sep">│</span>
+    <span class="status-item" id="status-model">no model</span>
+    <span class="status-sep">│</span>
+    <span class="status-item" id="status-walls">walls: 4 active</span>
+    <span class="status-hints">Ctrl+P palette · Ctrl+B sidebar · / search catalog</span>
+  </footer>
 
-              <div class="form-group">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                  <label class="form-label" style="margin-bottom: 0;">Model (models.dev Dynamic Catalog)</label>
-                  <button class="sidebar-icon-btn" id="btn-fetch-models-dev" style="font-size: 11px; display: flex; align-items: center; gap: 4px; color: var(--accent-cyan);">
-                    <span>&#8635; Fetch models.dev</span>
-                  </button>
-                </div>
-                <select class="form-select" id="settings-model-select">
-                  <!-- Dynamically populated from models.dev API -->
-                </select>
-              </div>
-            </div>
+  <!-- ============ OVERLAYS ============ -->
+  <div class="overlay" id="overlay-palette" hidden>
+    <div class="dialog">
+      <input type="text" id="palette-input" placeholder="Type a command…" autocomplete="off" />
+      <div class="dialog-list" id="palette-list"></div>
+      <div class="dialog-hint">↑↓ navigate · ↵ run · esc close</div>
+    </div>
+  </div>
 
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label">API Endpoint URL</label>
-                <input type="text" class="form-input" id="settings-api-url" value="https://api.deepseek.com/v1" />
-              </div>
+  <div class="overlay" id="overlay-model-picker" hidden>
+    <div class="dialog dialog-wide">
+      <input type="text" id="model-search" placeholder="Search providers & models…" autocomplete="off" />
+      <div class="dialog-list" id="model-list"></div>
+      <div class="dialog-hint">↑↓ navigate · ↵ set active · ★ favorite (Ctrl+F) · esc close</div>
+    </div>
+  </div>
 
-              <div class="form-group">
-                <label class="form-label">API Key</label>
-                <input type="password" class="form-input" id="settings-api-key" placeholder="Enter provider API key (optional for LM Studio / Ollama)" />
-              </div>
-            </div>
-
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label">Fallback Provider (On 429/Failover)</label>
-                <select class="form-select" id="settings-fallback-provider">
-                  <option value="openrouter" selected>OpenRouter (Claude 3.5 Sonnet / Llama 3.3)</option>
-                  <option value="ollama">Ollama Local Bunker (qwen2.5-coder:7b)</option>
-                  <option value="lmstudio">LM Studio (deepseek-r1)</option>
-                  <option value="none">None (Fail immediately)</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Autonomous Execution Mode</label>
-                <select class="form-select" id="settings-exec-mode">
-                  <option value="yolo" selected>⚡ YOLO / Auto-Mode (Autonomous with Taint Boundary Interception)</option>
-                  <option value="safe">🔒 Safe Mode (Prompt Operator Before Every Tool Action)</option>
-                  <option value="audit">📝 Audit-Only Mode (Log Taint Violations without Blocking)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 2: Sandbox Isolation & Boundary Security -->
-          <div class="settings-section">
-            <h3 class="settings-section-title">2. Sandbox Isolation & Hardware Containment</h3>
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label">Sandbox Isolation Runtime</label>
-                <select class="form-select" id="settings-runtime-select">
-                  <option value="gvisor" selected>gVisor (runsc) User-Space Kernel [Hardware-Grade Syscall Interception]</option>
-                  <option value="local">LocalIsolatedRuntime (CoW Snapshot & Boundary Path Guard)</option>
-                  <option value="windows-sandbox">Windows Sandbox (WCOS / Hyper-V Container)</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Active Injection Benchmark Suite</label>
-                <select class="form-select" id="settings-benchmark-select">
-                  <option value="agenthijack" selected>AgentHijack (UIUC Kang Lab Multi-Turn Hijack - Aryamaan)</option>
-                  <option value="injecagent">InjecAgent (UIUC Kang Lab Indirect Injection - Harsh)</option>
-                  <option value="hackaprompt">HackAPrompt (Direct Jailbreak & Evasion - Harsh)</option>
-                  <option value="all">All Benchmark Suites (Consolidated Matrix)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 3: Integrations, MCPs & Vector DB -->
-          <div class="settings-section">
-            <h3 class="settings-section-title">3. MCP Servers, Memory & Vector DB</h3>
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label">Memory DAG Vector Database</label>
-                <select class="form-select" id="settings-vectordb-select">
-                  <option value="local-lancedb" selected>Self-Hosted Local (LanceDB Embedded)</option>
-                  <option value="local-qdrant">Self-Hosted Local (Qdrant Embedded)</option>
-                  <option value="cloud-pinecone">Cloud Service (Pinecone Serverless)</option>
-                  <option value="cloud-supabase">Cloud Service (Supabase pgvector)</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Model Context Protocol (MCP)</label>
-                <select class="form-select" id="settings-mcp-select">
-                  <option value="all-active" selected>Enabled (Filesystem, Git, Postgres, Brave Search)</option>
-                  <option value="minimal">Minimal (Filesystem & Git Only)</option>
-                  <option value="disabled">Disabled</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 4: Security, Secrets & Containment Walls -->
-          <div class="settings-section">
-            <h3 class="settings-section-title">4. Containment Boundaries & Telemetry Vault</h3>
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label">Taint Boundary Policy Profile</label>
-                <select class="form-select" id="settings-policy-select">
-                  <option value="Standard" selected>Standard (Blocks unauthorized writes & unallowlisted egress)</option>
-                  <option value="Strict">Strict (Zero unconfined execution; blocks all untrusted write/exec)</option>
-                  <option value="AuditOnly">AuditOnly (Log all actions without active blocking)</option>
-                  <option value="Paranoid">Paranoid (Full lock-down; runtime isolation required)</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Local Audit & Telemetry Flight Log</label>
-                <input type="text" class="form-input" id="settings-telemetry-path" value="reports/flight_telemetry.jsonl" readonly />
-              </div>
-            </div>
-
-            <div class="security-toggles" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
-              <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-main); cursor: pointer;">
-                <input type="checkbox" id="toggle-env-protection" checked />
-                <span><strong>Safe Secret Sharing (.env Vault)</strong>: Auto-scrub and mask all .env keys in model prompt context with &lt;SECRET:TOKEN&gt;</span>
-              </label>
-
-              <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-main); cursor: pointer;">
-                <input type="checkbox" id="toggle-halluscan-drift" checked />
-                <span><strong>Semantic Drift & HalluScan Sentinel</strong>: Pre-verify file and symbol grounding before tool execution to halt hallucination drift</span>
-              </label>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-secondary" id="btn-cancel-settings">Cancel</button>
-          <button class="btn-primary" id="btn-save-settings">Save & Apply</button>
-        </div>
+  <div class="overlay" id="overlay-settings" hidden>
+    <div class="dialog dialog-narrow">
+      <div class="dialog-title">Settings</div>
+      <label class="field">
+        <span>API base URL</span>
+        <input type="text" id="settings-api-base" placeholder="(same origin)" />
+      </label>
+      <label class="field">
+        <span>Active provider</span>
+        <select id="settings-provider"><option value="">—</option></select>
+      </label>
+      <label class="field">
+        <span>Active model</span>
+        <select id="settings-model"><option value="">—</option></select>
+      </label>
+      <label class="field">
+        <span>API key <span class="dim">(stored locally in this browser)</span></span>
+        <input type="password" id="settings-api-key" placeholder="sk-…" />
+      </label>
+      <div class="dialog-actions">
+        <button class="btn" id="btn-settings-close">Close</button>
+        <button class="btn btn-primary" id="btn-settings-save">Save</button>
       </div>
     </div>
   </div>
+
+  <div class="toast-rack" id="toast-rack"></div>
 
   <script src="app.js"></script>
 </body>
