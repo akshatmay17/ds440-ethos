@@ -424,3 +424,17 @@ target/
 apps/desktop/src-tauri/gen/
 *.exe
 *.pdb
+
+# Research papers, drafts, and text exports (GitHub is code only)
+paper/
+*.docx
+*.txt
+*.pdf
+*.md
+!README.md
+!AGENTS.md
+!docs/*.md
+scratch/
+
+scripts/build_paper1_*.py
+scripts/generate_nature_*.py

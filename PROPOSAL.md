@@ -4,7 +4,7 @@
 
 **Capstone Group:** (2) Nittany Street
 **Course:** DS 440, Data Sciences Capstone
-**Instructor:** Dr. Robert Thomson (rht5162@psu.edu)
+**Instructor:** Dr. Robert Thomson (Penn State University)
 **Deliverable type:** Business grade technical report, working sandbox runtime, and two research papers
 
 > This proposal supersedes both the earlier Cross Asset TCA proposal and
