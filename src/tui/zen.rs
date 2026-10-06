@@ -413,7 +413,7 @@ impl ZenApp {
             ],
             todos: Vec::new(),
             workspace_path: ws_path,
-            version_tag: "ethos 0.1.0".to_string(),
+            version_tag: concat!("ethos ", env!("CARGO_PKG_VERSION")).to_string(),
             agent_mode: "Build".to_string(),
             model_name: model,
             input_buffer: String::new(),
@@ -524,7 +524,7 @@ impl ZenApp {
     pub fn initialize_welcome_banner(&mut self) {
         self.feed.push(FeedItem::AgentMessage {
             text: format!(
-                "⚡ Ethos Zen Harness v0.1.0 initialized | Sandbox: {}",
+                "⚡ Ethos Zen Harness v{} initialized | Sandbox: {}", env!("CARGO_PKG_VERSION"),
                 self.workspace_path
             ),
         });

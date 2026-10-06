@@ -583,7 +583,7 @@ impl ModelCatalog {
             .get(MODELS_DEV_URL)
             .header(
                 "User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Ethos/0.1.0",
+                concat!("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Ethos/", env!("CARGO_PKG_VERSION")),
             )
             .send()
             .await?;

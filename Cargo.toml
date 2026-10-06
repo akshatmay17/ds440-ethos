@@ -1,6 +1,6 @@
 [package]
 name = "ethos"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Ethos: A Taint-Tracked Sandbox Runtime and Agent-Computer Interface for AI Agents"
 authors = ["Group 2 Nittany Street"]

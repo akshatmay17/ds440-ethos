@@ -263,7 +263,7 @@ async fn static_ui_handler(uri: axum::http::Uri) -> impl IntoResponse {
 async fn health_check() -> impl IntoResponse {
     Json(serde_json::json!({
         "status": "healthy",
-        "version": "0.1.0",
+        "version": env!("CARGO_PKG_VERSION"),
         "engine": "rust"
     }))
 }

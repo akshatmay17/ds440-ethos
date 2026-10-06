@@ -34,7 +34,7 @@ impl InteractiveHarness {
             .root_dir()
             .unwrap_or_else(|| PathBuf::from("."));
         println!("\n╔══════════════════════════════════════════════════════════════════════╗");
-        println!("║  ⚡ ETHOS HARNESS (ethos v0.1.0)                                     ║");
+        println!("║  ⚡ ETHOS HARNESS (ethos v{})                                     ║", env!("CARGO_PKG_VERSION"));
         println!("║  Autonomous Coding Agent Runtime with Taint-Tracked Boundary Defense ║");
         println!("╚══════════════════════════════════════════════════════════════════════╝");
         println!(

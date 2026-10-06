@@ -122,7 +122,7 @@ impl TuiApp {
                 "⚡ ETHOS ",
                 Style::default().fg(COLOR_CYAN).add_modifier(Modifier::BOLD),
             ),
-            Span::styled("v0.1.0", Style::default().fg(COLOR_DIM)),
+            Span::styled(concat!("v", env!("CARGO_PKG_VERSION")), Style::default().fg(COLOR_DIM)),
         ]))
         .block(
             Block::default()

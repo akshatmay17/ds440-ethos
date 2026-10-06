@@ -13,7 +13,7 @@ use std::path::PathBuf;
 pub mod interactive;
 
 #[derive(Parser)]
-#[command(name = "ethos", author = "Group 2 Nittany Street", version = "0.1.0")]
+#[command(name = "ethos", author = "Group 2 Nittany Street", version)]
 #[command(about = "Ethos (tbox): Autonomous AI Coding Agent Harness & Taint-Tracked Sandbox Runtime", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
@@ -151,7 +151,7 @@ async fn run_app(port: u16) -> anyhow::Result<()> {
     let browser_url = format!("http://localhost:{}", port);
 
     println!("============================================================");
-    println!("  ETHOS v0.1.0 - Cyber Dark Sandbox & ACI Harness");
+    println!("  ETHOS v{} - Cyber Dark Sandbox & ACI Harness", env!("CARGO_PKG_VERSION"));
     println!("  Listening on: http://{}", addr);
     println!("  Opening browser dashboard: {}", browser_url);
     println!("  Press Ctrl+C to stop the harness server.");

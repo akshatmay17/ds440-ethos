@@ -1,8 +1,10 @@
 name: Linux Release & Packages (Deb + AppImage + CLI)
 
 on:
-  # Intentionally manual: Linux release assets are built locally to conserve
-  # GitHub-hosted runner minutes.
+  # Pushing a v* tag builds all platforms and publishes to GitHub Releases;
+  # manual dispatch (with a release_tag input) remains available for ad-hoc builds.
+  push:
+    tags: ["v*"]
   workflow_dispatch:
     inputs:
       release_tag:

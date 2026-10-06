@@ -1,8 +1,10 @@
 name: macOS Release & Bundle (.DMG + .APP)
 
 on:
-  # Intentionally manual so a release tag does not rebuild every platform.
-  # For v0.1 beta, only this macOS workflow needs hosted compute.
+  # Pushing a v* tag builds all platforms and publishes to GitHub Releases;
+  # manual dispatch (with a release_tag input) remains available for ad-hoc builds.
+  push:
+    tags: ["v*"]
   workflow_dispatch:
     inputs:
       release_tag:

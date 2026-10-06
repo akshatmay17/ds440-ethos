@@ -1,6 +1,6 @@
 [package]
 name = "ethos-desktop"
-version = "0.1.0"
+version = "0.2.0"
 description = "Ethos Desktop Application (Tauri v2 Shell)"
 edition = "2021"
 
