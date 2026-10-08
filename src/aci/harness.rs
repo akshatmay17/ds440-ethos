@@ -1219,7 +1219,9 @@ impl ACIHarness {
             serde_json::json!({ "program": program, "args": args, "exit_code": exit_code }),
         );
 
-        ToolResult {
+        // Secret Redaction Wall: scrub secret values from command output on
+        // every surface that calls exec (agent loop, TUI, REST API).
+        let result = ToolResult {
             call_id,
             tool_name: "exec".to_string(),
             status: if exit_code == 0 {
@@ -1231,7 +1233,8 @@ impl ACIHarness {
             error: if exit_code != 0 { Some(stderr) } else { None },
             provenance: None,
             policy_decision: Some(decision),
-        }
+        };
+        self.redact_result(result)
     }
 
     pub fn snapshot(&mut self, description: &str) -> anyhow::Result<SnapshotMetadata> {
@@ -1424,4 +1427,76 @@ pub struct InitSummary {
     pub agents_md_status: String,
     pub warnings: Vec<String>,
     pub file_records: Vec<(String, String, bool)>,
+}
+
+// -----------------------------------------------------------------------------
+// Secret Redaction Wall integration (see src/walls/redaction.rs)
+// -----------------------------------------------------------------------------
+impl ACIHarness {
+    /// Build a redactor for the current workspace state. Rebuilt per call so
+    /// secrets created or rotated mid-session are still covered.
+    pub fn secret_redactor(&self) -> crate::walls::redaction::SecretRedactor {
+        let root = self.runtime.root_dir();
+        let config = &self.taint_engine.config;
+        crate::walls::redaction::SecretRedactor::collect(root.as_deref(), |rel| {
+            config.is_path_sensitive(rel)
+        })
+    }
+
+    /// Scrub known secret values out of a tool result before it reaches the
+    /// model. Records a SECRET_REDACTED audit event when anything was removed.
+    pub fn redact_result(&mut self, mut result: ToolResult) -> ToolResult {
+        let redactor = self.secret_redactor();
+        let mut count = redactor.redact_value(&mut result.output);
+        if let Some(err) = result.error.take() {
+            let (clean, n) = redactor.redact(&err);
+            count += n;
+            result.error = Some(clean);
+        }
+        if count > 0 {
+            self.log_event(
+                "SECRET_REDACTED",
+                &result.tool_name,
+                serde_json::json!({ "redactions": count }),
+            );
+        }
+        result
+    }
+
+    /// Refuse an outbound tool call whose arguments carry a known secret
+    /// value. Returns the blocking result, or None if the call may proceed.
+    pub fn check_secret_egress(
+        &mut self,
+        tool_name: &str,
+        arguments: &serde_json::Value,
+    ) -> Option<ToolResult> {
+        if !matches!(tool_name, "fetch" | "exec") {
+            return None;
+        }
+        if !self.secret_redactor().value_contains_secret(arguments) {
+            return None;
+        }
+        let reason =
+            "Secret egress protection: tool arguments contain a protected secret value".to_string();
+        self.log_event(
+            "POLICY_BLOCK",
+            tool_name,
+            serde_json::json!({ "reason": reason, "secret_egress": true }),
+        );
+        Some(ToolResult {
+            call_id: Uuid::new_v4().to_string(),
+            tool_name: tool_name.to_string(),
+            status: "BLOCKED_BY_POLICY".to_string(),
+            output: serde_json::Value::Null,
+            error: Some(format!("Policy violation: {}", reason)),
+            provenance: None,
+            policy_decision: Some(crate::models::PolicyDecision {
+                allowed: false,
+                rule_id: Some("SECRET-EGRESS".to_string()),
+                action: tool_name.to_string(),
+                reason,
+                taint_records: vec![],
+            }),
+        })
+    }
 }
