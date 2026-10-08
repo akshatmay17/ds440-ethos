@@ -255,7 +255,15 @@ impl AgentLoop {
                         }
                     }
 
-                    let tool_result = execute_tool(harness, &name, &arguments);
+                    // Secret Redaction Wall: refuse outbound calls that carry a
+                    // secret value, and scrub secrets from whatever comes back.
+                    let tool_result = match harness.check_secret_egress(&name, &arguments) {
+                        Some(blocked) => blocked,
+                        None => {
+                            let raw = execute_tool(harness, &name, &arguments);
+                            harness.redact_result(raw)
+                        }
+                    };
 
                     // Scan tool output for injection patterns
                     let output_str_for_scan = tool_result.output.to_string();
