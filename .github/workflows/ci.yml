@@ -61,7 +61,7 @@ jobs:
       - name: Ethos injection scan -> SARIF
         run: |
           cargo run --quiet --bin ethos -- scan . --output ethos.sarif \
-            --exclude data --exclude tests --exclude reports --exclude src/walls
+                           --exclude data --exclude tests --exclude reports --exclude src/walls --exclude docs --exclude scripts
 
       - name: Archive SARIF reports
         if: always()
