@@ -1,6 +1,6 @@
 # SemanticGuard Fine-Tuning Plan — Ethos Custom Injection Classifier
 
-**Status:** plan (GPU busy — execution queued)
+**Status:** executed — `ethos-guard-bert-base` and `ethos-guard-laya` checkpoints are trained and shipped under `models/` (Git LFS); see README §10 for the frozen-acceptance numbers and the Rust↔Python parity check.
 **Owner:** Harsh Rathi (engineering)
 **Feeds:** Paper 1 (Condition D defense telemetry + model-selection table)
 
