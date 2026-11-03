@@ -45,6 +45,9 @@ pub struct NeuralClassifier {
     classifier: candle_nn::Linear,
     tokenizer: tokenizers::Tokenizer,
     repo: String,
+    /// Operating threshold calibrated during training (ethos_model_card.json);
+    /// overrides the heuristic-tier default when present.
+    pub recommended_threshold: Option<f32>,
     /// Class indices mapped from id2label: which output means "benign"
     /// (score = 1 - P(benign)); used for both binary (NORMAL/INJECTION) and
     /// Meta Prompt-Guard's 3-class (BENIGN/INJECTION/JAILBREAK) heads.
@@ -204,6 +207,11 @@ impl NeuralClassifier {
             classifier,
             tokenizer,
             repo,
+            recommended_threshold: std::fs::read_to_string(model_dir.join("ethos_model_card.json"))
+                .ok()
+                .and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok())
+                .and_then(|v| v.get("operating_threshold").and_then(|t| t.as_f64()))
+                .map(|t| t as f32),
             benign_class,
             risk_classes,
         })

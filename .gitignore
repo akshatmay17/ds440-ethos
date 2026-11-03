@@ -438,6 +438,8 @@ scratch/
 
 # SemanticGuard training corpora & weights (regenerate via scripts/)
 data/semantic_guard/
+data/upstream/
+data/campaigns/
 
 scripts/build_paper1_*.py
 scripts/generate_nature_*.py

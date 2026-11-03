@@ -95,6 +95,29 @@ pub const CRITICAL_TRIP_THRESHOLD: usize = 3;
 
 impl ACIHarness {
     pub fn new_with_temp_dir() -> anyhow::Result<Self> {
+        let settings=crate::runtime::ExecutionSettings::configured()?;
+        let mut harness=Self::new_local_with_temp_dir()?;
+        harness.runtime=Box::new(crate::runtime::CommandRuntime::new(harness.root_dir().unwrap(),settings)?);
+        Ok(harness)
+    }
+
+    pub fn new_with_dir<P: AsRef<Path>>(dir:P)->anyhow::Result<Self> {
+        Self::new_with_execution(dir,crate::runtime::ExecutionSettings::configured()?)
+    }
+
+    pub fn new_with_execution<P: AsRef<Path>>(dir:P,settings:crate::runtime::ExecutionSettings)->anyhow::Result<Self> {
+        settings.validate()?;
+        let mut harness=Self::new_local_with_dir(&dir)?;
+        if let Some(path)=&settings.source_path {
+            anyhow::ensure!(!path.starts_with(harness.root_dir().unwrap().canonicalize()?),"Execution configuration must be outside the agent workspace");
+        }
+        harness.runtime=Box::new(crate::runtime::CommandRuntime::new(dir,settings)?);
+        Ok(harness)
+    }
+
+    /// Explicit unconfined adapter for component tests and trusted legacy callers.
+    /// Application entry points use the configured constructors above.
+    pub fn new_local_with_temp_dir() -> anyhow::Result<Self> {
         #[allow(deprecated)]
         let temp_dir = tempfile::tempdir()?.into_path();
         let runtime = LocalIsolatedRuntime::new(&temp_dir)?;
@@ -115,11 +138,18 @@ impl ACIHarness {
         })
     }
 
-    pub fn new_with_dir<P: AsRef<Path>>(dir: P) -> anyhow::Result<Self> {
+    pub fn new_local_with_dir<P: AsRef<Path>>(dir: P) -> anyhow::Result<Self> {
         let runtime = LocalIsolatedRuntime::new(dir)?;
+        let mut taint_engine = TaintEngine::new();
+        if runtime.root_dir().is_some_and(|root| root.join(".ethos_provenance.json").symlink_metadata().is_ok()) {
+            let saved: serde_json::Value = serde_json::from_str(&runtime.read_file(".ethos_provenance.json")?)?;
+            anyhow::ensure!(saved["version"] == 1, "Unsupported provenance state version");
+            let ledger: HashMap<String, ProvenanceRecord> = serde_json::from_value(saved["ledger"].clone())?;
+            taint_engine.restore_state(serde_json::to_value(ledger)?);
+        }
         Ok(Self {
             runtime: Box::new(runtime),
-            taint_engine: TaintEngine::new(),
+            taint_engine,
             snapshots: HashMap::new(),
             step_counter: 0,
             audit_events: Vec::new(),
@@ -131,6 +161,39 @@ impl ACIHarness {
 
     pub fn root_dir(&self) -> Option<std::path::PathBuf> {
         self.runtime.root_dir()
+    }
+
+    fn persist_provenance(&self) -> anyhow::Result<()> {
+        use std::io::Write;
+        if let Some(root) = self.root_dir() {
+            let mut file = tempfile::Builder::new().prefix(".ethos-provenance-").tempfile_in(&root)?;
+            serde_json::to_writer(file.as_file_mut(), &serde_json::json!({"version":1,"ledger":self.taint_engine.export_state()}))?;
+            file.flush()?;
+            file.persist(root.join(".ethos_provenance.json")).map_err(|e|e.error)?;
+        }
+        Ok(())
+    }
+
+    fn persist_tool_result(&mut self, mut result: ToolResult) -> ToolResult {
+        if result.status == "SUCCESS" {
+            if let Err(error) = self.persist_provenance() {
+                result.status = "ERROR".into();
+                result.output = serde_json::Value::Null;
+                result.error = Some(format!("Failed to persist provenance: {error}"));
+            }
+        }
+        result
+    }
+
+    fn register_external_read(&mut self, path: &str) {
+        if self.taint_engine.get_provenance(path).is_none() {
+            self.taint_engine.record_provenance(path, ProvenanceRecord {
+                source_id:path.into(),tag:ProvenanceTag::ExternalFile,trust_level:TrustLevel::Untrusted,
+                chain_of_custody:vec!["pre_existing_unknown_origin".into()],
+                timestamp:chrono::Utc::now().timestamp_millis() as f64/1000.0,
+                metadata:serde_json::json!({}),
+            });
+        }
     }
 
     fn log_event(&mut self, event_type: &str, action: &str, details: serde_json::Value) {
@@ -168,6 +231,24 @@ impl ACIHarness {
                 action: tool_name.to_string(),
                 reason: self.estop.trip_reason().unwrap_or_default().to_string(),
                 taint_records: vec![],
+            }),
+        })
+    }
+
+    fn file_boundary_gate(&mut self, tool: &str, path: &str) -> Option<ToolResult> {
+        let call_id = Uuid::new_v4().to_string();
+        if let Some(blocked) = self.estop_gate(call_id.clone(), tool) { return Some(blocked); }
+        let error = self.runtime.validate_file_access(path).err()?;
+        let violation = error.downcast_ref::<crate::runtime::base::FileBoundaryViolation>()?;
+        let reason = violation.to_string();
+        self.record_critical("FILESYSTEM-BOUNDARY", &reason);
+        self.log_event("FILESYSTEM_BOUNDARY_BLOCKED", tool, serde_json::json!({"path":path,"reason":reason}));
+        Some(ToolResult {
+            call_id, tool_name: tool.to_owned(), status: "BLOCKED_BY_POLICY".to_owned(),
+            output: serde_json::Value::Null, error: Some(reason.clone()), provenance: None,
+            policy_decision: Some(crate::models::PolicyDecision {
+                allowed: false, rule_id: Some("FILESYSTEM-BOUNDARY".to_owned()),
+                action: tool.to_owned(), reason, taint_records: vec![],
             }),
         })
     }
@@ -236,6 +317,16 @@ impl ACIHarness {
     }
 
     pub fn read(&mut self, path: &str) -> ToolResult {
+        if let Some(blocked) = self.file_boundary_gate("read", path) {
+            let blocked = self.persist_tool_result(blocked);
+            return self.redact_result(blocked);
+        }
+        let result = self.read_raw(path);
+        let result = self.persist_tool_result(result);
+        self.redact_result(result)
+    }
+
+    fn read_raw(&mut self, path: &str) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
         if let Some(blocked) = self.estop_gate(call_id.clone(), "read") {
             return blocked;
@@ -268,8 +359,8 @@ impl ACIHarness {
                     .unwrap_or_else(|| {
                         let new_rec = ProvenanceRecord {
                             source_id: path.to_string(),
-                            tag: ProvenanceTag::System,
-                            trust_level: TrustLevel::Internal,
+                            tag: ProvenanceTag::ExternalFile,
+                            trust_level: TrustLevel::Untrusted,
                             chain_of_custody: vec![],
                             timestamp: chrono::Utc::now().timestamp_millis() as f64 / 1000.0,
                             metadata: serde_json::json!({}),
@@ -312,6 +403,15 @@ impl ACIHarness {
         content: &str,
         source_ids: Option<Vec<String>>,
     ) -> ToolResult {
+        if let Some(blocked) = self.file_boundary_gate("write", path) {
+            let blocked = self.persist_tool_result(blocked);
+            return self.redact_result(blocked);
+        }
+        let result = self.write_raw(path, content, source_ids);
+        self.persist_tool_result(result)
+    }
+
+    fn write_raw(&mut self, path: &str, content: &str, source_ids: Option<Vec<String>>) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
         if let Some(blocked) = self.estop_gate(call_id.clone(), "write") {
             return blocked;
@@ -461,6 +561,15 @@ impl ACIHarness {
         replacement_content: &str,
         source_ids: Option<Vec<String>>,
     ) -> ToolResult {
+        if let Some(blocked) = self.file_boundary_gate("edit_block", path) {
+            let blocked = self.persist_tool_result(blocked);
+            return self.redact_result(blocked);
+        }
+        let result = self.edit_block_raw(path, target_content, replacement_content, source_ids);
+        self.persist_tool_result(result)
+    }
+
+    fn edit_block_raw(&mut self, path: &str, target_content: &str, replacement_content: &str, source_ids: Option<Vec<String>>) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
         if let Some(blocked) = self.estop_gate(call_id.clone(), "edit_block") {
             return blocked;
@@ -623,6 +732,16 @@ impl ACIHarness {
     }
 
     pub fn view_lines(&mut self, path: &str, start_line: usize, end_line: usize) -> ToolResult {
+        if let Some(blocked) = self.file_boundary_gate("view_lines", path) {
+            let blocked = self.persist_tool_result(blocked);
+            return self.redact_result(blocked);
+        }
+        let result = self.view_lines_raw(path, start_line, end_line);
+        let result = self.persist_tool_result(result);
+        self.redact_result(result)
+    }
+
+    fn view_lines_raw(&mut self, path: &str, start_line: usize, end_line: usize) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
         if let Some(blocked) = self.estop_gate(call_id.clone(), "view_lines") {
             return blocked;
@@ -650,6 +769,7 @@ impl ACIHarness {
         match self.runtime.read_file(path) {
             Ok(content) => {
                 let lines: Vec<&str> = content.lines().collect();
+                self.register_external_read(path);
                 if lines.is_empty() {
                     return ToolResult {
                         call_id,
@@ -740,6 +860,12 @@ impl ACIHarness {
     }
 
     pub fn grep(&mut self, query: &str) -> ToolResult {
+        let result = self.grep_raw(query);
+        let result = self.persist_tool_result(result);
+        self.redact_result(result)
+    }
+
+    fn grep_raw(&mut self, query: &str) -> ToolResult {
         let call_id = Uuid::new_v4().to_string();
         if let Some(blocked) = self.estop_gate(call_id.clone(), "grep") {
             return blocked;
@@ -761,6 +887,9 @@ impl ACIHarness {
                 continue;
             }
             if let Ok(content) = self.runtime.read_file(&file) {
+                if content.contains(query) {
+                    self.register_external_read(&file);
+                }
                 for (idx, line) in content.lines().enumerate() {
                     if line.contains(query) {
                         results.push_str(&format!("{}:{}: {}\n", file, idx + 1, line));
@@ -788,6 +917,26 @@ impl ACIHarness {
         save_as: Option<&str>,
         mock_content: Option<&str>,
     ) -> ToolResult {
+        if let Some(path) = save_as {
+            if let Some(blocked) = self.file_boundary_gate("fetch", path) {
+                let blocked = self.persist_tool_result(blocked);
+                return self.redact_result(blocked);
+            }
+        }
+        let result = self.fetch_raw(url, save_as, mock_content);
+        let result = self.persist_tool_result(result);
+        self.redact_result(result)
+    }
+
+    fn fetch_raw(
+        &mut self,
+        url: &str,
+        save_as: Option<&str>,
+        mock_content: Option<&str>,
+    ) -> ToolResult {
+        if let Some(blocked) = self.check_secret_egress("fetch", &serde_json::json!({"url": url, "save_as": save_as})) {
+            return blocked;
+        }
         let call_id = Uuid::new_v4().to_string();
         if let Some(blocked) = self.estop_gate(call_id.clone(), "fetch") {
             return blocked;
@@ -948,6 +1097,9 @@ impl ACIHarness {
     }
 
     pub fn exec(&mut self, program: &str, args: &[String]) -> ToolResult {
+        if let Some(blocked) = self.check_secret_egress("exec", &serde_json::json!({"program": program, "args": args})) {
+            return blocked;
+        }
         let call_id = Uuid::new_v4().to_string();
         if let Some(blocked) = self.estop_gate(call_id.clone(), "exec") {
             return blocked;
@@ -970,6 +1122,14 @@ impl ACIHarness {
         };
 
         let is_shell_wrapper = SHELL_WRAPPERS.contains(&stem.as_str());
+
+        // Once external material is in context, an unknown executable can
+        // still open sockets, decode payloads, or mutate files. Classifying
+        // only recognizable curl/rm commands leaves interpreters and renamed
+        // binaries as a bypass. Fail closed at the execution boundary.
+        if action == "exec" && !self.taint_engine.list_tainted_resources().is_empty() {
+            action = "exec_privileged";
+        }
 
         if is_shell_wrapper {
             // Inspect the ENTIRE arg vector, case-folded: script-carrier flags
@@ -1079,6 +1239,8 @@ impl ACIHarness {
 
                 let violation = if sensitive_tokens.iter().any(|t| normalized.contains(t)) {
                     Some("SENSITIVE-PATH-EXEC-GUARD")
+                } else if crate::walls::ouroboros::OuroborosWall::references_instruction_surface(arg) {
+                    Some("INSTRUCTION-PATH-EXEC-GUARD")
                 } else if is_absolute_host_path(arg) {
                     Some("HOST-PATH-EXEC-GUARD")
                 } else if normalized.contains("../") {
@@ -1093,6 +1255,8 @@ impl ACIHarness {
                     let reason = match rule_id {
                         "SENSITIVE-PATH-EXEC-GUARD" =>
                             "Sensitive path protection: exec argument references a protected path",
+                        "INSTRUCTION-PATH-EXEC-GUARD" =>
+                            "Instruction integrity: use structured read tools for protected instruction/memory files",
                         "HOST-PATH-EXEC-GUARD" =>
                             "Sandbox boundary: exec arguments must stay sandbox-relative (absolute host paths are blocked)",
                         "TRAVERSAL-EXEC-GUARD" =>
@@ -1154,7 +1318,7 @@ impl ACIHarness {
             }
         }
 
-        if action == "network_egress" || action == "file_delete" {
+        if self.taint_engine.config.privileged_actions.contains(action) {
             for t in self.taint_engine.list_tainted_resources() {
                 if !referenced_files.contains(&t) {
                     referenced_files.push(t);
@@ -1170,6 +1334,13 @@ impl ACIHarness {
             }
         }
 
+        // Disposable commands cannot reach the host workspace or network.
+        // Permit their scratch computation after external reads; host commands
+        // retain the privileged-action boundary. Explicit egress/delete guards
+        // and all path/secret checks above still apply.
+        if action == "exec_privileged" && self.runtime.execution_backend()=="docker_disposable" {
+            action="exec_disposable";
+        }
         let decision = if action == "network_egress" {
             let net_decision = self
                 .taint_engine
@@ -1213,15 +1384,28 @@ impl ACIHarness {
 
         let (exit_code, stdout, stderr) = self.runtime.execute_command(program, args);
 
+        let provenance=if self.runtime.execution_backend()=="docker_disposable" {
+            // A process can read any staged external file, including one not
+            // named in its arguments. Its output must never promote that data
+            // to trusted context merely because a command emitted it.
+            let resource=format!("command-output:{call_id}");
+            let record=ProvenanceRecord {source_id:resource.clone(),tag:ProvenanceTag::Derived,
+                trust_level:TrustLevel::Untrusted,chain_of_custody:vec!["disposable_command_workspace".into()],
+                timestamp:chrono::Utc::now().timestamp_millis() as f64/1000.0,
+                metadata:serde_json::json!({"execution_backend":"docker_disposable"})};
+            self.taint_engine.record_provenance(&resource,record.clone());
+            Some(record)
+        } else { None };
+
         self.log_event(
             "TOOL_EXEC",
             action,
-            serde_json::json!({ "program": program, "args": args, "exit_code": exit_code }),
+            serde_json::json!({ "program": program, "args": args, "exit_code": exit_code,"execution_backend":self.runtime.execution_backend() }),
         );
 
         // Secret Redaction Wall: scrub secret values from command output on
         // every surface that calls exec (agent loop, TUI, REST API).
-        let result = ToolResult {
+        let mut result = ToolResult {
             call_id,
             tool_name: "exec".to_string(),
             status: if exit_code == 0 {
@@ -1231,9 +1415,15 @@ impl ACIHarness {
             },
             output: serde_json::json!({ "exit_code": exit_code, "stdout": stdout, "stderr": stderr }),
             error: if exit_code != 0 { Some(stderr) } else { None },
-            provenance: None,
+            provenance,
             policy_decision: Some(decision),
         };
+        if result.provenance.is_some() {
+            if let Err(error)=self.persist_provenance() {
+                result.status="ERROR".into(); result.output=serde_json::Value::Null;
+                result.error=Some(format!("Failed to persist command-output provenance: {error}"));
+            }
+        }
         self.redact_result(result)
     }
 
@@ -1269,6 +1459,7 @@ impl ACIHarness {
 
         self.runtime.restore_snapshot(snapshot_id)?;
         self.taint_engine.restore_state(meta.taint_ledger_state);
+        self.persist_provenance()?;
 
         self.log_event(
             "SNAPSHOT_REWOUND",
@@ -1304,6 +1495,7 @@ impl ACIHarness {
         }
 
         Observation {
+            execution_backend:self.runtime.execution_backend().into(),
             step_id: self.step_counter,
             modified_files: vec![],
             created_files: files,
@@ -1342,7 +1534,8 @@ impl ACIHarness {
                 });
                 "Pre-existing [WARNING: Untrusted Injection Patterns Detected]".to_string()
             } else {
-                "Pre-existing [Verified Clean]".to_string()
+                self.register_external_read("AGENTS.md");
+                "Pre-existing [No known patterns; untrusted origin]".to_string()
             }
         } else {
             let template = "# AGENTS.md - Ethos Autonomous Agent Workspace\n\n\
@@ -1373,7 +1566,7 @@ impl ACIHarness {
             let hash = hex::encode(Sha256::digest(content.as_bytes()));
             let findings = scanner.scan(&content);
 
-            let is_untrusted = if !findings.is_empty() {
+            let detected = if !findings.is_empty() {
                 warnings.push(format!(
                     "File '{}' flagged: {} suspicious pattern(s)",
                     file,
@@ -1383,6 +1576,10 @@ impl ACIHarness {
             } else {
                 false
             };
+
+            let is_untrusted = detected || self.taint_engine.get_provenance(file)
+                .map(|r|r.trust_level.is_tainted())
+                .unwrap_or(file != "AGENTS.md" || agents_md_status.contains("Pre-existing"));
 
             let tag = if is_untrusted {
                 ProvenanceTag::ExternalFile
@@ -1410,6 +1607,7 @@ impl ACIHarness {
         }
 
         // 3. Create baseline snapshot
+        self.persist_provenance()?;
         let _ = self.snapshot("workspace_init_baseline");
 
         Ok(InitSummary {

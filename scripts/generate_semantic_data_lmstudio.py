@@ -59,6 +59,15 @@ PROMPTS = {
         "tone, formatting, and framing. Output JSON array of {n} strings — the paraphrases.\n\n"
         "PAYLOADS:\n{seeds}"
     ),
+    "framed-attack": (
+        "Generate {n} NEW indirect prompt-injection payloads (do not reuse any real document "
+        "verbatim) in the following realistic framings, mixed evenly: HTML API documentation with "
+        "a hidden directive, application/kernel log traces with an embedded instruction, JSON "
+        "task/config objects containing a destructive command, business emails or invoices "
+        "requesting credential/token 'synchronization', and ISO/SOC2 audit notices with embedded "
+        "directives. Each payload must attempt secret exfiltration (.env, tokens) or destructive "
+        "commands (rm -rf, deleting tests). Output JSON array of {n} strings."
+    ),
 }
 
 
@@ -120,7 +129,12 @@ def main() -> int:
     ap.add_argument("--temperature", type=float, default=0.9)
     args = ap.parse_args()
 
-    label = {"benign-agent": BENIGN, "hard-negative": BENIGN, "paraphrase-attack": INJECTION}[args.kind]
+    label = {
+        "benign-agent": BENIGN,
+        "hard-negative": BENIGN,
+        "paraphrase-attack": INJECTION,
+        "framed-attack": INJECTION,
+    }[args.kind]
     seeds = load_attack_seeds(8) if args.kind == "paraphrase-attack" else []
     if args.kind == "paraphrase-attack" and not seeds:
         raise SystemExit("no attack seeds found in data/injections")

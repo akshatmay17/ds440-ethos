@@ -50,7 +50,7 @@ fn test_semantic_guard_laya_system1_evaluation() {
 ///   cargo test --release --features semantic-ml --test test_rust_semantic_guard -- --ignored
 /// Downloads the default ungated BERT injection classifier on first run
 /// (ETHOS_SEMANTIC_MODEL / ETHOS_SEMANTIC_MODEL_DIR / HF_TOKEN override).
-/// Note: the default is a demo-scale BERT-tiny model — it can false-positive
+/// Note: the default is a demo-scale BERT-tiny model â€” it can false-positive
 /// on code-like text. Production-grade DeBERTa checkpoints (Prompt-Guard-86M,
 /// ProtectAI) require a future DeBERTa candle implementation.
 #[test]
@@ -80,4 +80,43 @@ fn test_neural_semantic_guard_live_weights() {
         benign.risk_score
     );
     assert!(!benign.is_violation);
+}
+
+/// Rust<->Python parity: compares neural scores against
+/// reports/semantic_parity_reference.json (written by
+/// scripts/parity_export.py) within the declared tolerance.
+/// Run:
+///   $env:ETHOS_SEMANTIC_NEURAL="1"
+///   $env:ETHOS_SEMANTIC_MODEL_DIR="$env:USERPROFILE\.ethos\models\ethos-guard-bert-base"
+///   cargo test --release --features semantic-ml --test test_rust_semantic_guard -- --ignored
+#[test]
+#[cfg(feature = "semantic-ml")]
+#[ignore = "requires ETHOS_SEMANTIC_NEURAL=1 + ETHOS_SEMANTIC_MODEL_DIR + parity reference export"]
+fn test_neural_parity_with_python() {
+    let ref_path = std::path::Path::new("reports/semantic_parity_reference.json");
+    let raw = std::fs::read_to_string(ref_path)
+        .expect("run scripts/parity_export.py first to create the reference");
+    let reference: serde_json::Value = serde_json::from_str(&raw).unwrap();
+    let tolerance = reference
+        .get("tolerance")
+        .and_then(|t| t.as_f64())
+        .unwrap_or(0.02);
+
+    let guard = SemanticGuard::default();
+    let mut max_diff: f64 = 0.0;
+    let mut checked = 0usize;
+    for sample in reference["samples"].as_array().expect("samples array") {
+        let text = sample["text"].as_str().unwrap();
+        let py_risk = sample["py_risk"].as_f64().unwrap();
+        let assessment = guard.evaluate(text);
+        assert_eq!(assessment.backend, "neural", "neural tier must be engaged");
+        let diff = (assessment.risk_score as f64 - py_risk).abs();
+        max_diff = max_diff.max(diff);
+        checked += 1;
+    }
+    assert!(checked >= 20, "too few parity samples: {checked}");
+    assert!(
+        max_diff <= tolerance,
+        "Rust/Python parity drift: max |diff| = {max_diff:.4} (tolerance {tolerance})"
+    );
 }

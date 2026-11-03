@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-06T23:17:13.427497+00:00",
-  "git_rev": "9ad1b0e",
+  "generated_at": "2026-10-07T01:39:36.657994+00:00",
+  "git_rev": "14e6bc9",
   "seed": 440,
-  "hf": false,
+  "hf": true,
   "labels": {
     "0": "BENIGN",
     "1": "INJECTION",
@@ -10,29 +10,29 @@
   },
   "counts": {
     "train": {
-      "0": 169,
-      "1": 32,
-      "2": 4
+      "1": 1900,
+      "0": 9106,
+      "2": 541
     },
     "eval": {
-      "0": 20,
-      "1": 3,
-      "2": 1
+      "0": 1136,
+      "1": 236,
+      "2": 67
     },
     "test": {
-      "0": 20,
-      "2": 1,
-      "1": 3
+      "0": 1136,
+      "1": 274,
+      "2": 73
     }
   },
   "splits": {
-    "train": 205,
-    "eval": 24,
-    "test": 24
+    "train": 11547,
+    "eval": 1439,
+    "test": 1483
   },
   "sha256": {
-    "train": "5f3c73193ff14128454250c2044d629640a44713b36056bb8987a39cc75b7e01",
-    "eval": "19fa3da93093d3e8ff4052b764dfbb866d8ba6478c7d1ff18c546e75612469ae",
-    "test": "a46098ab1f5d4a8dba95cf0c86a558214b4e01fd5c460b0ca86dbc24e64b380e"
+    "train": "d1997d52b531ef5af61357a0826bbc03175bb191ebeb11f279acd785a45816bf",
+    "eval": "b173c1cd2ec58ce73fcc688a1f6e06663f5af0e95e99dbab540ceda0bc68f1ac",
+    "test": "5c8c566a2d0f5a684f70ca1c7b17ccdac7b02bea6768fac6fbb88c65a8e522c5"
   }
 }

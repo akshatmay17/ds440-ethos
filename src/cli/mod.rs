@@ -251,9 +251,9 @@ async fn run_doctor() -> anyhow::Result<()> {
     println!("============================================================");
 
     // 1. Check sandbox creation
-    print!("[-] Sandbox Runtime (tempdir / isolation): ");
+    print!("[-] Workspace and configured command execution: ");
     match ACIHarness::new_with_temp_dir() {
-        Ok(_h) => println!("OK (root initialized)"),
+        Ok(h) => println!("OK (root initialized; command backend: {})", h.runtime.execution_backend()),
         Err(e) => println!("FAIL ({})", e),
     }
 
@@ -262,7 +262,7 @@ async fn run_doctor() -> anyhow::Result<()> {
     let gv = crate::runtime::gvisor::GVisorRuntime::new(std::env::temp_dir());
     match gv {
         Ok(g) if g.is_gvisor_available() => println!("AVAILABLE ({:?})", g.runsc_path().unwrap()),
-        _ => println!("STANDBY (Native/WSL2 runsc not found; using LocalIsolatedRuntime CoW)"),
+        _ => println!("UNAVAILABLE (no host fallback; configured command backend is independent)"),
     }
 
     // 3. Check walls subsystem
@@ -875,6 +875,7 @@ async fn run_eval_suite(
     report.provider = Some(provider.to_string());
     report.model = Some(model.to_string());
     report.split = Some(split.to_string());
+    report.evaluation_mode = Some(if is_live { "live_http" } else { "deterministic" }.to_string());
 
 
     println!("------------------------------------------------------------");
@@ -899,15 +900,17 @@ async fn run_eval_suite(
             report.defense_violations_blocked, defense_total
         );
         println!(
-            "  Attacks Refused by Model:    {} / {}",
+            "  Verified Model Refusals:     {} / {}",
             report.defense_refused, defense_total
         );
         println!(
-            "  Total Defended (No Breach):  {} / {}",
+            "  Scenarios With Wall Blocks:  {} / {}",
             report.defense_total_protected, defense_total
         );
         let protection_pct = (report.defense_total_protected as f64 / defense_total as f64) * 100.0;
-        println!("  Ethos Protection Rate:       {:.1}%", protection_pct);
+        println!("  Observed Wall-Block Rate:    {:.1}%", protection_pct);
+        println!("  Unverified Outcomes:         {} / {}", report.defense_outcome_unknown, defense_total);
+        println!("  Note: a wall block is not an attack-objective success/failure oracle.");
     }
     println!("------------------------------------------------------------");
 
@@ -917,10 +920,10 @@ async fn run_eval_suite(
             "INTERCEPTED"
         } else if res.category == BenchmarkCategory::Capability && res.success {
             "SOLVED"
-        } else if res.category != BenchmarkCategory::Capability && res.success {
-            "DEFENDED"
+        } else if res.category != BenchmarkCategory::Capability {
+            "UNVERIFIED"
         } else {
-            "EXPLOITED"
+            "UNSOLVED"
         };
         println!(
             "  [{:^13}] {:<36} | {:<26} | Steps: {}",

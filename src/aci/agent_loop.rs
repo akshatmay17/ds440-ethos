@@ -188,6 +188,9 @@ impl AgentLoop {
 
             match action {
                 AgentStepAction::Finish { summary } => {
+                    // Tool-result filtering alone does not cover generated final
+                    // responses. Scrub known credentials before UI/API delivery.
+                    let summary = harness.secret_redactor().redact(&summary).0;
                     history.push(AgentMessage {
                         role: AgentRole::Assistant,
                         content: summary.clone(),
@@ -312,7 +315,7 @@ impl AgentLoop {
     }
 }
 
-fn execute_tool(harness: &mut ACIHarness, name: &str, args: &serde_json::Value) -> ToolResult {
+pub fn execute_tool(harness: &mut ACIHarness, name: &str, args: &serde_json::Value) -> ToolResult {
     let call_id = uuid::Uuid::new_v4().to_string();
     match name {
         "read" => {

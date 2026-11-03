@@ -133,10 +133,17 @@ automatically — benign detection + risk-class mapping already handle this.
 
 ## 8. Phases
 
-| Phase | Work | GPU |
-| :--- | :--- | :--- |
-| 0 | This plan + prep scripts + dataset manifests | none |
-| 1 | Dataset assembly, dedup, baselines | light |
-| 2 | Train `ethos-guard-bert-base` (~30–60 min on 3060) | yes |
-| 3 | Train tiny (Laya System 1) + threshold calibration + parity | yes |
-| 4 | Wire defaults, README/AGENTS update, release v0.3 | none |
+| Phase | Work | GPU | Status |
+| :--- | :--- | :--- | :--- |
+| 0 | This plan + prep scripts + dataset manifests | none | ✅ done |
+| 1 | Dataset assembly, dedup, baselines | light | ✅ 13k records; heuristic baseline recall 0.25 |
+| 2 | Train `ethos-guard-bert-base` (~30–60 min on 3060) | yes | ✅ macro-F1 0.982; **acceptance 44/44, 0/19 FP** |
+| 3 | Train fast tier (`ethos-guard-laya`, BERT-small) + calibration + parity | yes | ✅ 42/44; Rust↔Python parity ≤ 0.02 |
+| 4 | Wire defaults, README/AGENTS update, release | none | ✅ docs updated; weights in `~/.ethos/models/` |
+
+Notes from execution: augment with LM Studio paraphrases + procedural framed
+attacks (log traces, HTML docs, support tickets, symlink-setup framings, JSON
+tasks) to close the cloaked-attack misses; hard negatives must exclude source
+files that embed literal attack payloads (`synthetic.rs`); transformers v5
+saves gamma/beta LayerNorm names — `train_semantic_guard.py` normalizes to
+weight/bias for candle.

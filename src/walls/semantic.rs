@@ -69,7 +69,9 @@ impl SemanticGuard {
         #[cfg(feature = "semantic-ml")]
         {
             if let Some(nn) = crate::walls::semantic_neural::global() {
-                match nn.assess(text, self.threshold, self.enabled) {
+                // Prefer the threshold calibrated during training (model card).
+                let threshold = nn.recommended_threshold.unwrap_or(self.threshold);
+                match nn.assess(text, threshold, self.enabled) {
                     Ok(a) => return a,
                     Err(e) => {
                         tracing::warn!("SemanticGuard neural inference failed, falling back: {e:#}");

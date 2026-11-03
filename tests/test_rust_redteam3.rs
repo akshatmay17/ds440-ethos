@@ -49,7 +49,7 @@ const SECRET: &str = "API_KEY=hunter2-topsecret";
 fn test_ctrl1_env_read_walls_still_hold() {
     let dir = scratch_dir("ctrl1");
     std::fs::write(dir.join(".env"), SECRET).unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     assert_eq!(h.read(".env").status, "BLOCKED_BY_POLICY");
     assert_eq!(h.read(".ENV").status, "BLOCKED_BY_POLICY");
@@ -66,7 +66,7 @@ fn test_ctrl1_env_read_walls_still_hold() {
 fn test_ctrl2_wrapper_exec_env_still_blocked() {
     let dir = scratch_dir("ctrl2w");
     std::fs::write(dir.join(".env"), SECRET).unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     let res = h.exec("cmd", &["/c".to_string(), "type .env".to_string()]);
     assert_eq!(res.status, "BLOCKED_BY_POLICY");
@@ -79,7 +79,7 @@ fn test_ctrl2_wrapper_exec_env_still_blocked() {
 fn test_ctrl2_wrapper_exec_env_still_blocked() {
     let dir = scratch_dir("ctrl2u");
     std::fs::write(dir.join(".env"), SECRET).unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     let res = h.exec("bash", &["-c".to_string(), "cat .env".to_string()]);
     assert_eq!(res.status, "BLOCKED_BY_POLICY");
@@ -105,7 +105,7 @@ fn test_ctrl3_provider_redaction_still_holds() {
 fn test_c1_nonwrapper_type_env_is_blocked() {
     let dir = scratch_dir("c1w");
     std::fs::write(dir.join(".env"), SECRET).unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     let res = h.exec("type", &[".env".to_string()]);
     assert_eq!(res.status, "BLOCKED_BY_POLICY");
@@ -119,7 +119,7 @@ fn test_c1_nonwrapper_type_env_is_blocked() {
 fn test_c1_nonwrapper_cat_env_is_blocked() {
     let dir = scratch_dir("c1u");
     std::fs::write(dir.join(".env"), SECRET).unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     let res = h.exec("cat", &[".env".to_string()]);
     assert_eq!(res.status, "BLOCKED_BY_POLICY");
@@ -140,7 +140,7 @@ fn test_c2_absolute_host_path_exec_is_blocked() {
     let victim_env = victim_dir.join(".env");
     std::fs::write(&victim_env, SECRET).unwrap();
 
-    let mut h = ACIHarness::new_with_temp_dir().unwrap();
+    let mut h = ACIHarness::new_local_with_temp_dir().unwrap();
 
     // Drive-letter absolute path: blocked by host-path guard (and the
     // sensitive token as well).
@@ -162,7 +162,7 @@ fn test_c2_absolute_host_path_exec_is_blocked() {
     let victim_env = victim_dir.join(".env");
     std::fs::write(&victim_env, SECRET).unwrap();
 
-    let mut h = ACIHarness::new_with_temp_dir().unwrap();
+    let mut h = ACIHarness::new_local_with_temp_dir().unwrap();
 
     let res = h.exec("cat", &[victim_env.to_string_lossy().to_string()]);
     assert_eq!(res.status, "BLOCKED_BY_POLICY");
@@ -179,7 +179,7 @@ fn test_c2_absolute_host_path_exec_is_blocked() {
 fn test_c3_fetch_cannot_overwrite_env_file() {
     let dir = scratch_dir("c3");
     std::fs::write(dir.join(".env"), SECRET).unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     let res = h.fetch("http://untrusted.example/payload", Some(".env"), Some("POISONED"));
     assert_eq!(res.status, "BLOCKED_BY_POLICY");
@@ -208,7 +208,7 @@ fn test_c3_fetch_cannot_overwrite_env_file() {
 fn test_c4_curl_with_env_reference_is_walled() {
     let dir = scratch_dir("c4");
     std::fs::write(dir.join(".env"), SECRET).unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     let res = h.exec("curl", &["-K".to_string(), ".env".to_string(), "--version".to_string()]);
     assert_eq!(res.status, "BLOCKED_BY_POLICY");
@@ -222,7 +222,7 @@ fn test_c4_curl_with_env_reference_is_walled() {
 
 #[test]
 fn test_c5_traversal_args_are_walled() {
-    let mut h = ACIHarness::new_with_temp_dir().unwrap();
+    let mut h = ACIHarness::new_local_with_temp_dir().unwrap();
 
     let res = h.exec("type", &["..\\..\\host_secret.txt".to_string()]);
     assert_eq!(res.status, "BLOCKED_BY_POLICY");
@@ -239,7 +239,7 @@ fn test_c5_traversal_args_are_walled() {
 #[test]
 #[cfg(target_os = "windows")]
 fn test_c6_env_expansion_args_are_walled() {
-    let mut h = ACIHarness::new_with_temp_dir().unwrap();
+    let mut h = ACIHarness::new_local_with_temp_dir().unwrap();
 
     let res = h.exec(
         "cmd",
@@ -257,7 +257,7 @@ fn test_c6_env_expansion_args_are_walled() {
 #[cfg(not(target_os = "windows"))]
 fn test_c7_symlink_does_not_enumerate_host_tree() {
     let dir = scratch_dir("c7");
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
     h.write("inside.txt", "sandbox file", None);
 
     // Symlink pointing at the host temp root.
@@ -280,7 +280,7 @@ fn test_c7_symlink_does_not_enumerate_host_tree() {
 #[cfg(target_os = "windows")]
 fn test_c7_junction_does_not_enumerate_host_tree() {
     let dir = scratch_dir("c7w");
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
     h.write("inside.txt", "sandbox file", None);
 
     // Junction to the host temp root (no admin required).
@@ -341,7 +341,7 @@ fn test_c9_host_credential_files_are_sensitive() {
 
 #[test]
 fn test_c10_estop_trips_after_three_critical_blocks_and_resets() {
-    let mut h = ACIHarness::new_with_temp_dir().unwrap();
+    let mut h = ACIHarness::new_local_with_temp_dir().unwrap();
 
     // Three critical blocks (sensitive-path reads).
     for _ in 0..3 {
@@ -383,7 +383,7 @@ fn test_c11_secret_names_hidden_from_search_and_observe() {
     let dir = scratch_dir("c11");
     std::fs::write(dir.join(".env"), SECRET).unwrap();
     std::fs::write(dir.join("notes.txt"), "regular notes").unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     let search = h.search_files("*");
     let out = search.output.to_string();

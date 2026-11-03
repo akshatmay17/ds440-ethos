@@ -65,6 +65,10 @@ impl Default for TaintPolicyConfig {
                 ".aws/credentials".to_string(),
                 ".gitconfig".to_string(),
                 "authorized_keys".to_string(),
+                // Lockit stores vault material and project admission bindings.
+                // Treat both as operator-owned, including value-free bindings:
+                // modifying authorization metadata is itself security-sensitive.
+                ".lockit".to_string(),
             ],
             network_allowlist: Vec::new(),
             valid_tokens,

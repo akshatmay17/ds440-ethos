@@ -118,6 +118,12 @@ def load_ethos_negatives() -> list[dict]:
             out.append({"text": chunk, "label": BENIGN, "source": f"ethos-docs:{path.name}"})
 
     code_files = sorted((ROOT / "src").rglob("*.rs"))
+    # Exclude files that embed literal attack payloads (they are attack text,
+    # not benign code — labeling them BENIGN poisons the hard negatives).
+    code_files = [
+        p for p in code_files
+        if p.name not in ("synthetic.rs", "benchmark.rs")
+    ]
     rng = random.Random(440)
     rng.shuffle(code_files)
     for path in code_files[:40]:
@@ -215,12 +221,25 @@ def dedup(records: list[dict]) -> list[dict]:
 
 def split(records: list[dict], seed: int) -> dict[str, list[dict]]:
     rng = random.Random(seed)
+
+    # Frozen acceptance integrity: ALL Ethos attack-corpus records live in the
+    # test split only — never trained on (docs/agent_prompt benign text may
+    # still train normally; attacking content is the blind evaluation set).
+    frozen_attacks = [
+        r for r in records
+        if r["label"] != BENIGN and r["source"].startswith("ethos:")
+    ]
+    records = [
+        r for r in records
+        if not (r["label"] != BENIGN and r["source"].startswith("ethos:"))
+    ]
+
     groups: dict[tuple[int, str], list[dict]] = {}
     for rec in records:
         bucket = rec["source"].split(":")[0].split("/")[0]
         groups.setdefault((rec["label"], bucket), []).append(rec)
 
-    splits = {"train": [], "eval": [], "test": []}
+    splits = {"train": [], "eval": [], "test": list(frozen_attacks)}
     for items in groups.values():
         rng.shuffle(items)
         n = len(items)

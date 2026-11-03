@@ -4,7 +4,49 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+/// An intentional filesystem policy denial, distinct from an I/O failure.
+#[derive(Debug, thiserror::Error)]
+#[error("{0}")]
+pub struct FileBoundaryViolation(pub String);
+
+macro_rules! require_file_boundary {
+    ($condition:expr, $message:expr) => {
+        if !$condition { return Err(FileBoundaryViolation($message.to_owned()).into()); }
+    };
+}
+
+/// Reject aliases at the filesystem boundary rather than guessing their target
+/// from the spelling provided to a tool. Multiple names must not bypass policy.
+fn check_file_identity(path:&Path)->anyhow::Result<()> {
+    let metadata=fs::symlink_metadata(path)?;
+    require_file_boundary!(!metadata.file_type().is_symlink(),"Symbolic links are not supported by agent file tools");
+    #[cfg(windows)]
+    {
+        use std::os::windows::{fs::MetadataExt,io::AsRawHandle};
+        require_file_boundary!(metadata.file_attributes() & 0x400 == 0,"Reparse points are not supported by agent file tools");
+        if metadata.is_file() {
+            let file=fs::File::open(path)?;
+            let mut information=std::mem::MaybeUninit::<windows_sys::Win32::Storage::FileSystem::BY_HANDLE_FILE_INFORMATION>::uninit();
+            // The owned file keeps the handle valid; Windows initializes the
+            // complete information structure only when the call succeeds.
+            let success=unsafe {windows_sys::Win32::Storage::FileSystem::GetFileInformationByHandle(file.as_raw_handle(),information.as_mut_ptr())};
+            anyhow::ensure!(success!=0,"Cannot establish file identity: {}",std::io::Error::last_os_error());
+            let information=unsafe {information.assume_init()};
+            require_file_boundary!(information.nNumberOfLinks==1,"Hard-linked files are not supported by agent file tools");
+        }
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        if metadata.is_file() { require_file_boundary!(metadata.nlink()==1,"Hard-linked files are not supported by agent file tools"); }
+    }
+    require_file_boundary!(metadata.is_file() || metadata.is_dir(),"Special filesystem objects are not supported by agent file tools");
+    Ok(())
+}
+
 pub trait SandboxRuntime: Send + Sync {
+    fn validate_file_access(&self, _path: &str) -> anyhow::Result<()> { Ok(()) }
+    fn execution_backend(&self) -> &'static str { "custom" }
     fn read_file(&self, rel_path: &str) -> anyhow::Result<String>;
     fn write_file(&self, rel_path: &str, content: &str) -> anyhow::Result<()>;
     fn file_exists(&self, rel_path: &str) -> bool;
@@ -38,12 +80,31 @@ impl LocalIsolatedRuntime {
     fn resolve_path(&self, rel_path: &str) -> anyhow::Result<PathBuf> {
         let cleaned = Path::new(rel_path);
         if cleaned.is_absolute() {
-            return Err(anyhow::anyhow!(
-                "Absolute paths not allowed in sandbox: {}",
-                rel_path
-            ));
+            return Err(FileBoundaryViolation(format!("Absolute paths not allowed in sandbox: {}", rel_path)).into());
         }
         let resolved = self.root_path.join(cleaned);
+
+        // Resolve from the trusted root while rejecting linked path components,
+        // including an in-root alias to an otherwise protected file.
+        let mut cursor=self.root_path.canonicalize()?;
+        for component in cleaned.components() {
+            require_file_boundary!(matches!(component,std::path::Component::Normal(_)|std::path::Component::CurDir),"Invalid path: only ordinary relative file paths are supported by agent file tools");
+            #[cfg(windows)]
+            {
+                let name=component.as_os_str().to_string_lossy();
+                require_file_boundary!(!name.contains(':'),"Alternate data streams are not supported by agent file tools");
+                let base=name.split('.').next().unwrap_or("").trim_end_matches(' ').to_ascii_uppercase();
+                let device=matches!(base.as_str(),"CON"|"PRN"|"AUX"|"NUL") ||
+                    ["COM","LPT"].iter().any(|prefix|base.strip_prefix(prefix).is_some_and(|n|n.len()==1 && matches!(n.as_bytes()[0],b'1'..=b'9')));
+                require_file_boundary!(!device,"Windows device names are not supported by agent file tools");
+            }
+            cursor.push(component.as_os_str());
+            match fs::symlink_metadata(&cursor) {
+                Ok(_)=>check_file_identity(&cursor)?,
+                Err(error) if error.kind()==std::io::ErrorKind::NotFound=>{},
+                Err(error)=>return Err(error.into()),
+            }
+        }
 
         let mut current = resolved.as_path();
         let mut to_append = Vec::new();
@@ -61,14 +122,24 @@ impl LocalIsolatedRuntime {
                 }
                 current = parent;
             } else {
-                return Err(anyhow::anyhow!("Invalid path: {}", rel_path));
+                return Err(FileBoundaryViolation(format!("Invalid path: {}", rel_path)).into());
             }
         };
 
         let canon_root = fs::canonicalize(&self.root_path)?;
         if !canonical_resolved.starts_with(&canon_root) {
-            return Err(anyhow::anyhow!("Path escape detected: {}", rel_path));
+            return Err(FileBoundaryViolation(format!("Path escape detected: {}", rel_path)).into());
         }
+        #[cfg(windows)]
+        {
+            let actual=canonical_resolved.strip_prefix(&canon_root)?.to_string_lossy().replace('\\',"/").to_lowercase();
+            let requested=cleaned.components().filter_map(|part|match part {
+                std::path::Component::Normal(name)=>Some(name.to_string_lossy().into_owned()),_=>None
+            }).collect::<Vec<_>>().join("/").to_lowercase();
+            require_file_boundary!(actual==requested,"Short-name and normalized filesystem aliases are not supported by agent file tools");
+        }
+
+        if canonical_resolved.exists() { check_file_identity(&canonical_resolved)?; }
 
         Ok(canonical_resolved)
     }
@@ -93,6 +164,9 @@ impl LocalIsolatedRuntime {
                     continue;
                 }
                 let file_name = entry.file_name().to_string_lossy().to_string();
+                if file_name == ".ethos_provenance.json" || file_name.starts_with(".ethos-provenance-") {
+                    continue;
+                }
                 let rel = if rel_prefix.is_empty() {
                     file_name
                 } else {
@@ -102,14 +176,29 @@ impl LocalIsolatedRuntime {
                 if ftype.is_dir() {
                     self.collect_files_recursive(&path, &rel, files);
                 } else if ftype.is_file() {
-                    files.push(rel.replace('\\', "/"));
+                    if check_file_identity(&path).is_ok() { files.push(rel.replace('\\', "/")); }
                 }
             }
         }
     }
+
+    fn validate_snapshot_files(&self,dir:&Path)->anyhow::Result<()> {
+        for entry in fs::read_dir(dir)? {
+            let entry=entry?;
+            let path=entry.path();
+            if path==self.snapshots_dir || path==self.root_path.join(".taintbox_snapshots") { continue; }
+            let kind=entry.file_type()?;
+            if kind.is_symlink() { continue; } // Existing snapshots do not follow or preserve symlinks.
+            check_file_identity(&path)?;
+            if kind.is_dir() { self.validate_snapshot_files(&path)?; }
+        }
+        Ok(())
+    }
 }
 
 impl SandboxRuntime for LocalIsolatedRuntime {
+    fn validate_file_access(&self, path: &str) -> anyhow::Result<()> { self.resolve_path(path).map(|_| ()) }
+    fn execution_backend(&self) -> &'static str { "local_unconfined" }
     fn read_file(&self, rel_path: &str) -> anyhow::Result<String> {
         let path = self.resolve_path(rel_path)?;
         if !path.exists() {
@@ -142,19 +231,21 @@ impl SandboxRuntime for LocalIsolatedRuntime {
     }
 
     fn execute_command(&self, program: &str, args: &[String]) -> (i32, String, String) {
-        #[cfg(target_os = "windows")]
-        let mut cmd = {
-            let mut c = Command::new("cmd");
-            c.arg("/c").arg(program).args(args);
-            c
-        };
-        #[cfg(not(target_os = "windows"))]
         let mut cmd = {
             let mut c = Command::new(program);
             c.args(args);
             c
         };
         cmd.current_dir(&self.root_path);
+        // Provider credentials belong to the daemon, not to agent commands.
+        // Do not implicitly add a shell on Windows or inherit the host home.
+        cmd.env_clear();
+        for name in ["PATH", "SystemRoot", "WINDIR", "SystemDrive", "COMSPEC", "PATHEXT", "TEMP", "TMP", "LANG", "LC_ALL"] {
+            if let Some(value) = std::env::var_os(name) {
+                cmd.env(name, value);
+            }
+        }
+        cmd.env("HOME", &self.root_path).env("USERPROFILE", &self.root_path);
 
         match cmd.output() {
             Ok(output) => {
@@ -168,6 +259,9 @@ impl SandboxRuntime for LocalIsolatedRuntime {
     }
 
     fn create_snapshot(&self, snapshot_id: &str) -> anyhow::Result<HashMap<String, String>> {
+        // Do not silently omit a rejected hard link and later call a destructive
+        // rewind a complete restoration of the workspace.
+        self.validate_snapshot_files(&self.root_path)?;
         let target_dir = self.snapshots_dir.join(snapshot_id);
         if target_dir.exists() {
             fs::remove_dir_all(&target_dir)?;

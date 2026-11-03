@@ -1,5 +1,27 @@
 # Ethos: A Taint-Tracked Sandbox Runtime & Agent-Computer Interface
 
+> **Security status (October 15, 2026):** command execution defaults to disabled.
+> The configured Docker backend runs disposable, non-root, network-disabled
+> commands with no host fallback; see [setup and live boundary tests](docs/container-execution.md).
+> The application rejects unconfined host execution. gVisor availability alone is not proof of active confinement.
+> Semantic scoring is advisory, and 44/44 describes historical classifier
+> detections rather than full-agent attack prevention. See the
+> [measured evaluation and limitations](docs/security-evaluation.md) before
+> interpreting the earlier architectural and release summaries below.
+
+**Corpus audit:** the third named dataset is **HackAPrompt**. Official
+InjecAgent provides 1,054 base cases plus 1,054 enhanced variants locally.
+The 2,108-case live campaign recorded **92 runtime intercepts**, 2,003 goals
+not observed and 13 inconclusive trials; it does not establish 2,108 stopped
+attacks. The correct [AgentHijack](https://github.com/tmlr-group/AgentHijack)
+contains desktop corruption tasks, requiring a separate VM evaluation.
+HackAPrompt's full parquet currently requires authorized access. See
+[corpus inventory, results and reproduction commands](docs/attack-campaign.md).
+For individual threats and untested areas, see the
+[attack-surface coverage audit](docs/attack-surface-coverage.md).
+The [secret-boundary follow-up](docs/secret-boundary-review.md) documents a
+reproduced hard-link read/write bypass, its fix and obfuscated-read tests.
+
 **Penn State University — DS 440 Capstone (Fall 2026)**  
 **Instructor:** Dr. Robert Thomson (Penn State University)  
 **Repository:** [`xyzmr114/ds440-ethos`](https://github.com/xyzmr114/ds440-ethos) | **Branch:** `main`
@@ -16,7 +38,7 @@ When frontier LLMs operate in unconstrained environments, they suffer from conte
 Ethos wraps autonomous agents in an ironclad Agent-Computer Interface (ACI) featuring:
 - **Taint-Tracked I/O**: Mathematical bitmask provenance tracking where untrusted external data cannot trigger privileged tools without authorization.
 - **Time-Travel Snapshot & Rewind**: Fast Copy-on-Write state checkpointing and causal DAG branching allowing Tree-of-Thought exploration and clean rollbacks on error.
-- **Multi-Engine Isolation**: Native Google gVisor (`runsc`) user-space application-kernel sandbox on Linux/WSL2 with transparent `LocalIsolatedRuntime` CoW fallback.
+- **Command Isolation**: Optional disposable Linux Docker containers with pinned images, no network, resource limits and filtered workspace copies. Missing confinement never falls back to a host command; execution is disabled until configured.
 - **Multi-Surface Interfaces**: Native Cyber Obsidian TUI (`ethos tui`), Tauri v2 cross-platform desktop app, and Axum REST API daemon on port 8000.
 
 > **CLI Binary Note:** The primary binary is `ethos`, with `tbox` fully retained as a legacy and short typing alias (`cargo run --bin ethos -- ...` or `cargo run --bin tbox -- ...`).
@@ -51,7 +73,7 @@ The project scope has been sharpened to maximize engineering quality and academi
 │  - 100% of Desktop GUI (Tauri v2 Native Shell for Windows, macOS, Linux)   │
 │  - 100% of Cross-Platform Packaging (MSI, NSIS Setup, DMG, .app, Deb, AppImage)│
 │  - 100% of CI/CD Release Automation (GitHub Actions workflows)              │
-│  - 100% of gVisor Application-Kernel Syscall Sandbox Integration           │
+│  - Disposable Docker commands; optional gVisor remains unverified         │
 │  - Co-Leads Benchmark Testing; Executes InjecAgent & HackAPrompt Datasets   │
 │  - ZERO academic paper writing duties (100% freed for engineering velocity) │
 └──────────────────────────────────────┬──────────────────────────────────────┘
@@ -95,7 +117,7 @@ All engineering tasks belong strictly to **Harsh Rathi**.
 - [x] **Ethos Primary Binary (`src/bin/ethos.rs`)**: Standalone binary with `ethos` command line interface, retaining `tbox` as fully functional alias.
 - [x] **Pure Rust ACI Harness (`src/aci/harness.rs`)**: 1-indexed `view_lines`, exact `edit_block`, pure-Rust `search_files`, `grep`, `fetch` with untrusted tagging, shell wrapper `-c` interceptor, and `fold_output` token compression.
 - [x] **Snapshot & Rewind (`src/runtime/base.rs`)**: SHA-256 state hashing, CoW directory snapshotting, and safe destructive rollback guarded by `.ethos_sandbox` marker (with `.taintbox_sandbox` legacy compatibility).
-- [x] **gVisor Syscall Isolation Runtime (`src/runtime/gvisor.rs`)**: Application-kernel user-space sandbox detection on Linux and WSL2 (`runsc`) with seamless `LocalIsolatedRuntime` fallback.
+- [x] **Disposable Command Runtime (`src/runtime/container.rs`)**: Configured application execution uses a non-root Docker boundary with no host fallback. Legacy `runsc` probing remains separate; it does not establish active confinement.
 - [x] **Causal DAG State Tree (`src/aci/state_tree.rs`)**: Immutable branching history allowing Tree-of-Thought backtracking (`create_branch`, `switch_branch`, `commit`).
 - [x] **Taint Provenance Engine (`src/taint/`)**: Bitmask severity tracking (`Trusted`, `Internal`, `Untrusted`, `Hostile`), worst-severity propagation, sensitive path protection (`.env`, `id_rsa`), and network egress allowlisting.
 - [x] **Overkill Containment Walls (`src/walls/`)**: `PromptInjectScanner` (5 threat families), `OuroborosWall` (code immutability guard), `HalluScan` (VFS path validation), and `EmergencyStop` (high-severity circuit breaker).
@@ -136,7 +158,7 @@ All engineering tasks belong strictly to **Harsh Rathi**.
 To protect engineering velocity and ensure a publication-grade paper:
 1. ❌ **Paper 2 as a separate paper is CUT**: Consolidated into Paper 1 as **Condition D**.
 2. ❌ **SWE-bench Lite is replaced with Injection Datasets**: Evaluating boundary security across **InjecAgent**, **HackAPrompt**, **AgentHijack**, and **Synthetic Evasion**.
-3. ❌ **Bare-Metal KVM MicroVMs (Firecracker / Hyper-V) are CUT**: Replaced with gVisor (`runsc`) on Linux/WSL2, Windows Sandbox on Windows, and `LocalIsolatedRuntime` on macOS.
+3. **Current execution scope**: Disposable Linux Docker commands, including Docker Desktop's Linux engine on Windows/macOS. Firecracker, native Windows Sandbox and platform-specific VM adapters are not wired into application execution.
 4. ❌ **Sentry.io Cloud SaaS Tracing is CUT**: Local JSONL flight logs (`reports/flight_telemetry.jsonl`) capture all telemetry with zero external leakage.
 5. ❌ **Multi-Modal Out-of-Scope Features (TTS Audio, Video Gen) are CUT**: Audio and video generation have no relevance to software engineering or taint research.
 
@@ -199,7 +221,7 @@ We evaluated 8 distinct model families and reasoning conditions on our unified b
          ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                     SANDBOX RUNTIME & PERSISTENCE                           │
-│   - Google gVisor (runsc) User-Space Kernel Syscall Interception (Linux/WSL)│
+│   - Disposable Linux Docker commands; no automatic host fallback         │
 │   - LocalIsolatedRuntime (Path canonicalization, Symlink traversal guards)  │
 │   - Snapshot CoW Store with .ethos_sandbox marker safety verification       │
 │   - PostgreSQL 16 & In-Process Session State Manager                        │
@@ -267,7 +289,7 @@ cargo run --bin ethos -- doctor
 # 1. Run HackAPrompt (10 Canonical Competition Tiers) against DeepSeek-R1
 cargo run --bin ethos -- eval --dataset hackaprompt --provider lmstudio --model deepseek-r1 --output reports/hackaprompt_eval_results.json
 
-# 2. Run AgentHijack (10 Multi-Turn Trajectory Attacks) against DeepSeek-R1
+# 2. Run ten locally named AgentHijack text fixtures (not the official VM benchmark)
 cargo run --bin ethos -- eval --dataset agenthijack --provider lmstudio --model deepseek-r1 --output reports/agenthijack_eval_results.json
 
 # 3. Run InjecAgent (Indirect Tool Injections across 17 APIs)
@@ -316,6 +338,13 @@ Pushes with tags matching `v*` (or manual triggers via GitHub Actions `workflow_
 
 ## 10. Technology Stack, Prior Art & Inspirations
 
+The maintained [references and acknowledgments](docs/references.md) distinguish
+dependencies, UI/code references (including OpenCode/OpenTUI), model candidates,
+and dataset inspirations. See [security evaluation and TA answers](docs/security-evaluation.md)
+for reproducible corpus sampling, current measurements, method tradeoffs and limits.
+Optional [Lockit integration](docs/lockit-integration.md) supplies admitted
+credentials through an operator-run launcher; it does not provide OS isolation.
+
 Ethos stands on well-vetted infrastructure and borrows proven interaction
 design. Crediting the load-bearing pieces:
 
@@ -329,7 +358,7 @@ design. Crediting the load-bearing pieces:
 - **[`tempfile`](https://github.com/Stebalien/tempfile)** — isolated sandbox workspaces.
 
 ### Sandboxing & Isolation
-- **Google [`gVisor`](https://gvisor.dev) (`runsc`)** — user-space application-kernel syscall interception on Linux/WSL2, with a policy-only `LocalIsolatedRuntime` fallback on Windows/macOS (see documented residuals).
+- **[Docker](https://docs.docker.com/engine/security/)** — the disposable command backend uses the local Linux engine, a pinned image and an ephemeral filtered workspace. See [confinement and limits](docs/container-execution.md). **[`gVisor`](https://gvisor.dev)** remains an optional separately configured Docker OCI runtime and legacy availability probe; finding `runsc` does not establish active gVisor confinement.
 
 ### Model Catalog
 - **[models.dev](https://models.dev)** — live provider/model catalog (228+ providers, 8,300+ models), 7-day TTL cache; Ethos hardcodes no provider specs.
@@ -351,29 +380,56 @@ operator reset (`POST /v1/sandboxes/:id/estop/reset`).
 
 **Neural tier (shipped, opt-in).** Build with `--features semantic-ml` to add
 pure-Rust transformer inference (`candle` + `tokenizers`); enable with
-`ETHOS_SEMANTIC_NEURAL=1`. Weights download once to
-`~/.ethos/models/<repo>/` on first use; without the flag/env the wall uses
-the deterministic marker-density scorer as a guaranteed fallback.
+`ETHOS_SEMANTIC_NEURAL=1`. Weights load from `~/.ethos/models/<repo>/`
+(downloaded on demand for catalog models; drop-in for local checkpoints).
+Without the flag/env the wall uses the deterministic marker-density scorer as
+a guaranteed fallback.
 
-| Model | Architecture | Status |
-| :--- | :--- | :--- |
-| `mrm8488/bert-tiny-ft-prompt-injection` (default) | BERT-tiny, ungated | ✅ loads & scores today (demo-scale; can false-positive on code-like text) |
-| `meta-llama/Prompt-Guard-86M` | **DeBERTa-v2**, gated (license + `HF_TOKEN`) | ⏳ needs DeBERTa candle support (next step) |
-| `protectai/deberta-v3-base-prompt-injection-v2` | **DeBERTa-v3**, ungated | ⏳ same DeBERTa requirement |
-| Laya System 1 (`nandhakishorm/laya`) | reported ~250MB / 33ms engine | ⏳ evaluation pending architecture spec |
+**Ethos-owned models (fine-tuned on the RTX 3060, three-tier acceptance):**
 
-**Fine-tuning path:** train any BERT-family classifier in Python (HF
-`Trainer`), export `config.json` + `tokenizer.json` + `model.safetensors`,
-point `ETHOS_SEMANTIC_MODEL_DIR` at the directory — no Rust changes needed.
-The loaders were verified end-to-end against real downloaded weights
-(injection → 0.99, benign prose → 0.01).
+| Model | Backbone | Size | Frozen acceptance test |
+| :--- | :--- | :--- | :--- |
+| `ethos-guard-bert-base` | BERT-base (110M) | 418MB | **44/44 attacks (100% recall), 0/19 hard-negative FPs**; overall test 99.4% recall @ 0.6% FPR |
+| `ethos-guard-laya` ("System 1" fast tier) | BERT-small (28M) | 110MB | 42/44 attacks (95.5%), 0/19 FPs; overall 96.3% @ 0.8% FPR |
+| `meta-llama/Prompt-Guard-86M` | DeBERTa-v2 (gated) | — | ⏳ needs DeBERTa candle support |
+| `protectai/deberta-v3-base-prompt-injection-v2` | DeBERTa-v3 | — | ⏳ same DeBERTa requirement |
+
+**Interpretation:** 44/44 is classifier recall on 44 local historical attack
+texts, not Rust test count or end-to-end attack prevention. `ethos-guard-laya`
+is our BERT-small checkpoint nickname, not upstream Laya weights. In the new
+13-attack development challenge both local classifiers flag 10/13; benign
+false alarms are 2/6 for BERT-base and 3/6 for the compact model. Reproduce and
+inspect per-case evidence in `reports/security_eval_all.json`.
+
+The in-repo attack corpus (InjecAgent / HackAPrompt / locally named AgentHijack /
+M365 / synthetic evasions) is a **historical acceptance regression set**. The
+builder pins the raw attack records to the test split, but the training tools
+generate corpus-derived paraphrases and acceptance-informed augmentations;
+this does not establish a blind holdout. Use fresh, family-separated data for
+final evaluation. The training corpus
+mixes public corpora, LM Studio-generated paraphrases/framed attacks, and
+repo docs/code as hard negatives (~13k records; `docs/semantic-guard-finetune-plan.md`).
+
+**Training & verification pipeline** (all in `scripts/`):
+`prepare_semantic_dataset.py` (dedup/split/manifest) →
+`generate_semantic_data_lmstudio.py` + `augment_semantic_dataset.py` (domain
+augmentation) → `train_semantic_guard.py` (3-class head, threshold
+calibration) → `calibrate_semantic_guard.py` (FPR-budgeted operating point) →
+`diagnose_semantic_guard.py` (miss analysis) → `parity_export.py` + the
+ignored Rust test (`test_neural_parity_with_python`) prove **Rust↔Python
+score parity ≤ 0.02** — the check that catches loader drift.
 
 ### Evaluation Datasets & Local Inference
-- **[InjecAgent](https://injecagent.ai)**, **[HackAPrompt](https://hackaprompt.ai)**, **[AgentHijack](https://agenthijack.com)** (UIUC Kang Lab) + procedural synthetic evasion corpus — `data/injections/`.
+- **[InjecAgent](https://github.com/uiuc-kang-lab/InjecAgent)** and **[HackAPrompt](https://huggingface.co/datasets/hackaprompt/hackaprompt-dataset)** are references for locally adapted `data/injections/` cases. The correct **[AgentHijack](https://github.com/tmlr-group/AgentHijack)** is a desktop corruption benchmark; its mapping to the ten local text scenarios remains unverified. See [references](docs/references.md) and the [verified corpus inventory](docs/attack-campaign.md). Do not present the local 44-case collection as complete official benchmark coverage.
 - **[LM Studio](https://lmstudio.ai)** (ports 1234/2277) and **[Ollama](https://ollama.com)** (port 11434) — local inference for live evals, with a deterministic offline driver fallback.
 - **[Spider Cloud](https://spider.cloud)** — optional crawl/fetch backend for web ingestion.
 
 ---
+
+The [public MCP lab](docs/mcp-public-evaluation.md) exercises the official
+shadcn server, adversarial registry content, outside-project dummy reads and
+a restricted Docker launch. Its policy replays are separate from live-agent
+attack results; production MCP integration remains unfinished.
 
 ## 11. License
 
