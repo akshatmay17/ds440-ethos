@@ -16,7 +16,7 @@ use std::sync::Mutex;
 const SECRET: &str = "sk-live-DEMO-9f3a7c21";
 
 fn harness_with_env(env_body: &str) -> ACIHarness {
-    let h = ACIHarness::new_with_temp_dir().unwrap();
+    let h = ACIHarness::new_local_with_temp_dir().unwrap();
     h.runtime.write_file(".env", env_body).unwrap();
     h
 }
@@ -117,7 +117,7 @@ async fn test_control_normal_output_is_not_over_redacted() {
 
 #[test]
 fn test_control_template_files_do_not_teach_secrets() {
-    let h = ACIHarness::new_with_temp_dir().unwrap();
+    let h = ACIHarness::new_local_with_temp_dir().unwrap();
     h.runtime
         .write_file(".env.example", "API_KEY=your-api-key-goes-here\n")
         .unwrap();
@@ -240,11 +240,11 @@ fn test_rt26_inherited_environment_secrets_are_redacted() {
     let value = "env-secret-7Qx2Lm9Zt4";
     std::env::set_var("ETHOS_RT26_DEMO_API_KEY", value);
 
-    let mut h = ACIHarness::new_with_temp_dir().unwrap();
+    let mut h = ACIHarness::new_local_with_temp_dir().unwrap();
     let res = h.exec("env", &[]);
     let body = serde_json::to_string(&res).unwrap();
 
     std::env::remove_var("ETHOS_RT26_DEMO_API_KEY");
-    assert!(body.contains("ETHOS_RT26_DEMO_API_KEY"), "env should have listed the variable");
+    assert!(!body.contains("ETHOS_RT26_DEMO_API_KEY"), "provider credentials must not be inherited by agent commands");
     assert!(!body.contains(value), "environment secret leaked through exec");
 }

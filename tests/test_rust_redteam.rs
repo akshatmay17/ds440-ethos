@@ -43,7 +43,7 @@ fn scratch_dir(tag: &str) -> PathBuf {
 
 /// Plants an untrusted ledger record (post-fetch state) in a fresh harness.
 fn tainted_harness() -> ACIHarness {
-    let mut h = ACIHarness::new_with_temp_dir().unwrap();
+    let mut h = ACIHarness::new_local_with_temp_dir().unwrap();
     let res = h.fetch(
         "http://untrusted.example/note",
         Some("note.txt"),
@@ -190,7 +190,7 @@ fn test_rt06_fetch_exfil_channel_is_walled_when_tainted() {
 fn test_rt07_sensitive_path_case_is_folded() {
     let dir = scratch_dir("rt07");
     std::fs::write(dir.join(".env"), "API_KEY=hunter2\n").unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     let blocked = h.read(".env");
     assert_eq!(blocked.status, "BLOCKED_BY_POLICY"); // control: exact case walled
@@ -212,7 +212,7 @@ fn test_rt07_sensitive_path_case_is_folded() {
 fn test_rt08_full_exfil_chain_is_broken() {
     let dir = scratch_dir("rt08");
     std::fs::write(dir.join(".env"), "API_KEY=hunter2\n").unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     // Step 1: case-twisted read of the secret — must be blocked.
     let read_res = h.read(".ENV");
@@ -232,7 +232,7 @@ fn test_rt08_full_exfil_chain_is_broken() {
 fn test_rt09_ouroboros_exec_redirect_is_guarded_cmd() {
     let dir = scratch_dir("rt09w");
     std::fs::create_dir_all(dir.join("tests")).unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     let blocked = h.write("tests/victim.rs", "assert!(true)", None);
     assert_eq!(blocked.status, "BLOCKED_BY_POLICY"); // control: tool walled
@@ -256,7 +256,7 @@ fn test_rt09_ouroboros_exec_redirect_is_guarded_cmd() {
 fn test_rt09_ouroboros_exec_redirect_is_guarded_bash() {
     let dir = scratch_dir("rt09u");
     std::fs::create_dir_all(dir.join("tests")).unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     let blocked = h.write("tests/victim.rs", "assert!(true)", None);
     assert_eq!(blocked.status, "BLOCKED_BY_POLICY"); // control: tool walled
@@ -285,7 +285,7 @@ fn test_rt09_ouroboros_exec_redirect_is_guarded_bash() {
 fn test_rt10_ouroboros_case_is_folded() {
     let dir = scratch_dir("rt10");
     std::fs::create_dir_all(dir.join("tests")).unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     let blocked = h.write("tests/pwn.txt", "x", None);
     assert_eq!(blocked.status, "BLOCKED_BY_POLICY"); // control: exact case walled
@@ -306,7 +306,7 @@ fn test_rt10_ouroboros_case_is_folded() {
 
 #[test]
 fn test_rt11_rewind_marker_is_not_forgeable_via_write_tool() {
-    let mut h = ACIHarness::new_with_temp_dir().unwrap();
+    let mut h = ACIHarness::new_local_with_temp_dir().unwrap();
 
     let marker = h.runtime.root_dir().unwrap().join(".ethos_sandbox");
     assert!(marker.exists()); // harness created it
@@ -336,7 +336,7 @@ fn test_rt12_marker_forged_via_exec_is_blocked_and_bare_restore_refused() {
     assert!(refused.to_string().contains("refused")); // guard holds without marker
 
     // Exec-redirect forgery of the marker is walled (Ouroboros + exec guard).
-    let mut h = ACIHarness::new_with_temp_dir().unwrap();
+    let mut h = ACIHarness::new_local_with_temp_dir().unwrap();
     let res = h.exec(
         "cmd",
         &[
@@ -371,7 +371,7 @@ fn test_rt13_scanner_digest_never_carries_raw_payload() {
     assert!(!digest.contains("Ignore all previous")); // no raw attacker text
 
     // Staging is permitted by design; the action-time walls carry the enforcement.
-    let mut h = ACIHarness::new_with_temp_dir().unwrap();
+    let mut h = ACIHarness::new_local_with_temp_dir().unwrap();
     let res = h.write("poisoned.md", injection, None);
     assert_eq!(res.status, "SUCCESS");
 }

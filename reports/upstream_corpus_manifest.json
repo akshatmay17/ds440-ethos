@@ -1,0 +1,3044 @@
+{
+  "injecagent_revision": "f19c9f2c79a41046eb13c03c51a24c567a8ffa07",
+  "hackaprompt_revision": "25b87fbedfb86840abaf8cd09af7a029208a971a",
+  "files": [
+    {
+      "url": "https://raw.githubusercontent.com/uiuc-kang-lab/InjecAgent/f19c9f2c79a41046eb13c03c51a24c567a8ffa07/data/test_cases_dh_base.json",
+      "path": "data\\upstream\\injecagent\\test_cases_dh_base.json",
+      "bytes": 672918,
+      "sha256": "0a8186468d21389af432e8c7b399ae42264d1b93a07b65c7a489468508604305",
+      "records": 510
+    },
+    {
+      "url": "https://raw.githubusercontent.com/uiuc-kang-lab/InjecAgent/f19c9f2c79a41046eb13c03c51a24c567a8ffa07/data/test_cases_ds_base.json",
+      "path": "data\\upstream\\injecagent\\test_cases_ds_base.json",
+      "bytes": 765370,
+      "sha256": "4daab35c62a3845e8b9400f4dca58b9c9f37e57cd33b2337552557fbb26282e9",
+      "records": 544
+    },
+    {
+      "url": "https://raw.githubusercontent.com/uiuc-kang-lab/InjecAgent/f19c9f2c79a41046eb13c03c51a24c567a8ffa07/data/test_cases_dh_enhanced.json",
+      "path": "data\\upstream\\injecagent\\test_cases_dh_enhanced.json",
+      "bytes": 721878,
+      "sha256": "885602716b72c18af80695ce6c2e1f242fa03163bc90b0788b0c5e4ab6216d50",
+      "records": 510
+    },
+    {
+      "url": "https://raw.githubusercontent.com/uiuc-kang-lab/InjecAgent/f19c9f2c79a41046eb13c03c51a24c567a8ffa07/data/test_cases_ds_enhanced.json",
+      "path": "data\\upstream\\injecagent\\test_cases_ds_enhanced.json",
+      "bytes": 817594,
+      "sha256": "7bc510868df032511053fc40e8470e68a041fb7148d055112093594bf73ab0ce",
+      "records": 544
+    },
+    {
+      "url": "https://raw.githubusercontent.com/uiuc-kang-lab/InjecAgent/f19c9f2c79a41046eb13c03c51a24c567a8ffa07/LICENCE",
+      "path": "data\\upstream\\injecagent\\LICENSE",
+      "bytes": 1066,
+      "sha256": "b48589499dbb84caa796b00b4ea652b0443e49660282c44d890fd473b8c0674e"
+    },
+    {
+      "url": "https://huggingface.co/datasets/hackaprompt/hackaprompt-dataset/resolve/25b87fbedfb86840abaf8cd09af7a029208a971a/hackaprompt.parquet",
+      "status": "unavailable",
+      "http_status": 401
+    },
+    {
+      "url": "https://huggingface.co/datasets/hackaprompt/hackaprompt-dataset/resolve/25b87fbedfb86840abaf8cd09af7a029208a971a/README.md",
+      "path": "data\\upstream\\hackaprompt\\README.md",
+      "bytes": 5555,
+      "sha256": "627ac0ec7ebfcb5baf93bbc9b80c72a73443846debf06196803aee1138486d2a"
+    }
+  ],
+  "notes": [
+    "Base/enhanced are variants of underlying InjecAgent tasks, not independent tasks.",
+    "AgentHijack is tmlr-group/AgentHijack; desktop corruption tasks are not text injection rows.",
+    "Record counts, unique payload counts and executable attack scenarios are different denominators."
+  ],
+  "agenthijack": {
+    "repository": "https://github.com/tmlr-group/AgentHijack",
+    "revision": "1191fcef2b43985987424b5f73aa36603a8233a3",
+    "archive": {
+      "url": "https://codeload.github.com/tmlr-group/AgentHijack/zip/1191fcef2b43985987424b5f73aa36603a8233a3",
+      "path": "data\\upstream\\agenthijack\\1191fcef2b43985987424b5f73aa36603a8233a3.zip",
+      "bytes": 2127008,
+      "sha256": "ac2c6418627bbadf3f4a3156594b13956ea9236bd8f4c5fc7e15641eefac72e1"
+    },
+    "task_definitions": 369,
+    "tasks": [
+      {
+        "path": "evaluation_examples/examples/chrome/030eeff7-b492-4218-b312-701ec99ee0cc.json",
+        "id": "030eeff7-b492-4218-b312-701ec99ee0cc"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/06fe7178-4491-4589-810f-2e2bc9502122.json",
+        "id": "06fe7178-4491-4589-810f-2e2bc9502122"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/0d8b7de3-e8de-4d86-b9fd-dd2dce58a217.json",
+        "id": "0d8b7de3-e8de-4d86-b9fd-dd2dce58a217"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/12086550-11c0-466b-b367-1d9e75b3910e.json",
+        "id": "12086550-11c0-466b-b367-1d9e75b3910e"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/121ba48f-9e17-48ce-9bc6-a4fb17a7ebba.json",
+        "id": "121ba48f-9e17-48ce-9bc6-a4fb17a7ebba"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/1704f00f-79e6-43a7-961b-cedd3724d5fd.json",
+        "id": "1704f00f-79e6-43a7-961b-cedd3724d5fd"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/2888b4e6-5b47-4b57-8bf5-c73827890774.json",
+        "id": "2888b4e6-5b47-4b57-8bf5-c73827890774"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/2ad9387a-65d8-4e33-ad5b-7580065a27ca.json",
+        "id": "2ad9387a-65d8-4e33-ad5b-7580065a27ca"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/2ae9ba84-3a0d-4d4c-8338-3a1478dc5fe3.json",
+        "id": "2ae9ba84-3a0d-4d4c-8338-3a1478dc5fe3"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/3299584d-8f11-4457-bf4c-ce98f7600250.json",
+        "id": "3299584d-8f11-4457-bf4c-ce98f7600250"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/35253b65-1c19-4304-8aa4-6884b8218fc0.json",
+        "id": "35253b65-1c19-4304-8aa4-6884b8218fc0"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/368d9ba4-203c-40c1-9fa3-da2f1430ce63.json",
+        "id": "368d9ba4-203c-40c1-9fa3-da2f1430ce63"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/3720f614-37fd-4d04-8a6b-76f54f8c222d.json",
+        "id": "3720f614-37fd-4d04-8a6b-76f54f8c222d"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/44ee5668-ecd5-4366-a6ce-c1c9b8d4e938.json",
+        "id": "44ee5668-ecd5-4366-a6ce-c1c9b8d4e938"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/47543840-672a-467d-80df-8f7c3b9788c9.json",
+        "id": "47543840-672a-467d-80df-8f7c3b9788c9"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/480bcfea-d68f-4aaa-a0a9-2589ef319381.json",
+        "id": "480bcfea-d68f-4aaa-a0a9-2589ef319381"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/59155008-fe71-45ec-8a8f-dc35497b6aa8.json",
+        "id": "59155008-fe71-45ec-8a8f-dc35497b6aa8"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/6766f2b8-8a72-417f-a9e5-56fcaa735837.json",
+        "id": "6766f2b8-8a72-417f-a9e5-56fcaa735837"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/6c4c23a1-42a4-43cc-9db1-2f86ff3738cc.json",
+        "id": "6c4c23a1-42a4-43cc-9db1-2f86ff3738cc"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/7a5a7856-f1b6-42a4-ade9-1ca81ca0f263.json",
+        "id": "7a5a7856-f1b6-42a4-ade9-1ca81ca0f263"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/7b6c7e24-c58a-49fc-a5bb-d57b80e5b4c3.json",
+        "id": "7b6c7e24-c58a-49fc-a5bb-d57b80e5b4c3"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/7f52cab9-535c-4835-ac8c-391ee64dc930.json",
+        "id": "7f52cab9-535c-4835-ac8c-391ee64dc930"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/82279c77-8fc6-46f6-9622-3ba96f61b477.json",
+        "id": "82279c77-8fc6-46f6-9622-3ba96f61b477"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/82bc8d6a-36eb-4d2d-8801-ef714fb1e55a.json",
+        "id": "82bc8d6a-36eb-4d2d-8801-ef714fb1e55a"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/93eabf48-6a27-4cb6-b963-7d5fe1e0d3a9.json",
+        "id": "93eabf48-6a27-4cb6-b963-7d5fe1e0d3a9"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/9656a811-9b5b-4ddf-99c7-5117bcef0626.json",
+        "id": "9656a811-9b5b-4ddf-99c7-5117bcef0626"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/99146c54-4f37-4ab8-9327-5f3291665e1e.json",
+        "id": "99146c54-4f37-4ab8-9327-5f3291665e1e"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/9f3f70fc-5afc-4958-a7b7-3bb4fcb01805.json",
+        "id": "9f3f70fc-5afc-4958-a7b7-3bb4fcb01805"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/9f935cce-0a9f-435f-8007-817732bfc0a5.json",
+        "id": "9f935cce-0a9f-435f-8007-817732bfc0a5"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/a728a36e-8bf1-4bb6-9a03-ef039a5233f0.json",
+        "id": "a728a36e-8bf1-4bb6-9a03-ef039a5233f0"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/a96b564e-dbe9-42c3-9ccf-b4498073438a.json",
+        "id": "a96b564e-dbe9-42c3-9ccf-b4498073438a"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/ae78f875-5b98-4907-bbb5-9c737fc68c03.json",
+        "id": "ae78f875-5b98-4907-bbb5-9c737fc68c03"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/af630914-714e-4a24-a7bb-f9af687d3b91.json",
+        "id": "af630914-714e-4a24-a7bb-f9af687d3b91"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/b070486d-e161-459b-aa2b-ef442d973b92.json",
+        "id": "b070486d-e161-459b-aa2b-ef442d973b92"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/b4f95342-463e-4179-8c3f-193cd7241fb2.json",
+        "id": "b4f95342-463e-4179-8c3f-193cd7241fb2"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/b7895e80-f4d1-4648-bee0-4eb45a6f1fa8.json",
+        "id": "b7895e80-f4d1-4648-bee0-4eb45a6f1fa8"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/bb5e4c0d-f964-439c-97b6-bdb9747de3f4.json",
+        "id": "bb5e4c0d-f964-439c-97b6-bdb9747de3f4"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/c1fa57f3-c3db-4596-8f09-020701085416.json",
+        "id": "c1fa57f3-c3db-4596-8f09-020701085416"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/cabb3bae-cccb-41bd-9f5d-0f3a9fecd825.json",
+        "id": "cabb3bae-cccb-41bd-9f5d-0f3a9fecd825"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/da46d875-6b82-4681-9284-653b0c7ae241.json",
+        "id": "da46d875-6b82-4681-9284-653b0c7ae241"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/e1e75309-3ddb-4d09-92ec-de869c928143.json",
+        "id": "e1e75309-3ddb-4d09-92ec-de869c928143"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/f0b971a1-6831-4b9b-a50e-22a6e47f45ba.json",
+        "id": "f0b971a1-6831-4b9b-a50e-22a6e47f45ba"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/f3b19d1e-2d48-44e9-b4e1-defcae1a0197.json",
+        "id": "f3b19d1e-2d48-44e9-b4e1-defcae1a0197"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/f5d96daf-83a8-4c86-9686-bada31fc66ab.json",
+        "id": "f5d96daf-83a8-4c86-9686-bada31fc66ab"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/f79439ad-3ee8-4f99-a518-0eb60e5652b0.json",
+        "id": "f79439ad-3ee8-4f99-a518-0eb60e5652b0"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/fc6d8143-9452-4171-9459-7f515143419a.json",
+        "id": "fc6d8143-9452-4171-9459-7f515143419a"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/045bf3ff-9077-4b86-b483-a1040a949cff.json",
+        "id": "045bf3ff-9077-4b86-b483-a1040a949cff"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/06ca5602-62ca-47f6-ad4f-da151cde54cc.json",
+        "id": "06ca5602-62ca-47f6-ad4f-da151cde54cc"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/2a729ded-3296-423d-aec4-7dd55ed5fbb3.json",
+        "id": "2a729ded-3296-423d-aec4-7dd55ed5fbb3"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/2e6f678f-472d-4c55-99cc-8e7c5c402a71.json",
+        "id": "2e6f678f-472d-4c55-99cc-8e7c5c402a71"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/38f48d40-764e-4e77-a7cf-51dfce880291.json",
+        "id": "38f48d40-764e-4e77-a7cf-51dfce880291"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/554785e9-4523-4e7a-b8e1-8016f565f56a.json",
+        "id": "554785e9-4523-4e7a-b8e1-8016f565f56a"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/58d3eeeb-e9d0-499f-962e-fd0db2a744d8.json",
+        "id": "58d3eeeb-e9d0-499f-962e-fd0db2a744d8"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/5ca86c6f-f317-49d8-b6a7-b527541caae8.json",
+        "id": "5ca86c6f-f317-49d8-b6a7-b527541caae8"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/62f7fd55-0687-4a43-b6e1-3eda16fc6252.json",
+        "id": "62f7fd55-0687-4a43-b6e1-3eda16fc6252"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/72f83cdc-bf76-4531-9a1b-eb893a13f8aa.json",
+        "id": "72f83cdc-bf76-4531-9a1b-eb893a13f8aa"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/734d6579-c07d-47a8-9ae2-13339795476b.json",
+        "id": "734d6579-c07d-47a8-9ae2-13339795476b"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/7767eef2-56a3-4cea-8c9f-48c070c7d65b.json",
+        "id": "7767eef2-56a3-4cea-8c9f-48c070c7d65b"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/77b8ab4d-994f-43ac-8930-8ca087d7c4b4.json",
+        "id": "77b8ab4d-994f-43ac-8930-8ca087d7c4b4"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/7a4deb26-d57d-4ea9-9a73-630f66a7b568.json",
+        "id": "7a4deb26-d57d-4ea9-9a73-630f66a7b568"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/7b7617bd-57cc-468e-9c91-40c4ec2bcb3d.json",
+        "id": "7b7617bd-57cc-468e-9c91-40c4ec2bcb3d"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/8ea73f6f-9689-42ad-8c60-195bbf06a7ba.json",
+        "id": "8ea73f6f-9689-42ad-8c60-195bbf06a7ba"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/a746add2-cab0-4740-ac36-c3769d9bfb46.json",
+        "id": "a746add2-cab0-4740-ac36-c3769d9bfb46"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/b148e375-fe0b-4bec-90e7-38632b0d73c2.json",
+        "id": "b148e375-fe0b-4bec-90e7-38632b0d73c2"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/d16c99dc-2a1e-46f2-b350-d97c86c85c15.json",
+        "id": "d16c99dc-2a1e-46f2-b350-d97c86c85c15"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/d52d6308-ec58-42b7-a2c9-de80e4837b2b.json",
+        "id": "d52d6308-ec58-42b7-a2c9-de80e4837b2b"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/dbbf4b99-2253-4b10-9274-45f246af2466.json",
+        "id": "dbbf4b99-2253-4b10-9274-45f246af2466"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/e19bd559-633b-4b02-940f-d946248f088e.json",
+        "id": "e19bd559-633b-4b02-940f-d946248f088e"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/e2dd0213-26db-4349-abe5-d5667bfd725c.json",
+        "id": "e2dd0213-26db-4349-abe5-d5667bfd725c"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/f4aec372-4fb0-4df5-a52b-79e0e2a5d6ce.json",
+        "id": "f4aec372-4fb0-4df5-a52b-79e0e2a5d6ce"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/f723c744-e62c-4ae6-98d1-750d3cd7d79d.json",
+        "id": "f723c744-e62c-4ae6-98d1-750d3cd7d79d"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/fbb548ca-c2a6-4601-9204-e39a2efc507b.json",
+        "id": "fbb548ca-c2a6-4601-9204-e39a2efc507b"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/01b269ae-2111-4a07-81fd-3fcd711993b0.json",
+        "id": "01b269ae-2111-4a07-81fd-3fcd711993b0"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/0326d92d-d218-48a8-9ca1-981cd6d064c7.json",
+        "id": "0326d92d-d218-48a8-9ca1-981cd6d064c7"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/035f41ba-6653-43ab-aa63-c86d449d62e5.json",
+        "id": "035f41ba-6653-43ab-aa63-c86d449d62e5"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/04d9aeaf-7bed-4024-bedb-e10e6f00eb7f.json",
+        "id": "04d9aeaf-7bed-4024-bedb-e10e6f00eb7f"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/0a2e43bf-b26c-4631-a966-af9dfa12c9e5.json",
+        "id": "0a2e43bf-b26c-4631-a966-af9dfa12c9e5"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/0bf05a7d-b28b-44d2-955a-50b41e24012a.json",
+        "id": "0bf05a7d-b28b-44d2-955a-50b41e24012a"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/0cecd4f3-74de-457b-ba94-29ad6b5dafb6.json",
+        "id": "0cecd4f3-74de-457b-ba94-29ad6b5dafb6"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/12382c62-0cd1-4bf2-bdc8-1d20bf9b2371.json",
+        "id": "12382c62-0cd1-4bf2-bdc8-1d20bf9b2371"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/1273e544-688f-496b-8d89-3e0f40aa0606.json",
+        "id": "1273e544-688f-496b-8d89-3e0f40aa0606"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/1334ca3e-f9e3-4db8-9ca7-b4c653be7d17.json",
+        "id": "1334ca3e-f9e3-4db8-9ca7-b4c653be7d17"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/1954cced-e748-45c4-9c26-9855b97fbc5e.json",
+        "id": "1954cced-e748-45c4-9c26-9855b97fbc5e"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/1d17d234-e39d-4ed7-b46f-4417922a4e7c.json",
+        "id": "1d17d234-e39d-4ed7-b46f-4417922a4e7c"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/1de60575-bb6e-4c3d-9e6a-2fa699f9f197.json",
+        "id": "1de60575-bb6e-4c3d-9e6a-2fa699f9f197"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/1e8df695-bd1b-45b3-b557-e7d599cf7597.json",
+        "id": "1e8df695-bd1b-45b3-b557-e7d599cf7597"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/21ab7b40-77c2-4ae6-8321-e00d3a086c73.json",
+        "id": "21ab7b40-77c2-4ae6-8321-e00d3a086c73"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/21df9241-f8d7-4509-b7f1-37e501a823f7.json",
+        "id": "21df9241-f8d7-4509-b7f1-37e501a823f7"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/26a8440e-c166-4c50-aef4-bfb77314b46b.json",
+        "id": "26a8440e-c166-4c50-aef4-bfb77314b46b"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/2bd59342-0664-4ccb-ba87-79379096cc08.json",
+        "id": "2bd59342-0664-4ccb-ba87-79379096cc08"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/30e3e107-1cfb-46ee-a755-2cd080d7ba6a.json",
+        "id": "30e3e107-1cfb-46ee-a755-2cd080d7ba6a"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/347ef137-7eeb-4c80-a3bb-0951f26a8aff.json",
+        "id": "347ef137-7eeb-4c80-a3bb-0951f26a8aff"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/357ef137-7eeb-4c80-a3bb-0951f26a8aff.json",
+        "id": "357ef137-7eeb-4c80-a3bb-0951f26a8aff"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/37608790-6147-45d0-9f20-1137bb35703d.json",
+        "id": "37608790-6147-45d0-9f20-1137bb35703d"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/3a7c8185-25c1-4941-bd7b-96e823c9f21f.json",
+        "id": "3a7c8185-25c1-4941-bd7b-96e823c9f21f"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/3aaa4e37-dc91-482e-99af-132a612d40f3.json",
+        "id": "3aaa4e37-dc91-482e-99af-132a612d40f3"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/4172ea6e-6b77-4edb-a9cc-c0014bd1603b.json",
+        "id": "4172ea6e-6b77-4edb-a9cc-c0014bd1603b"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/4188d3a4-077d-46b7-9c86-23e1a036f6c1.json",
+        "id": "4188d3a4-077d-46b7-9c86-23e1a036f6c1"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/42e0a640-4f19-4b28-973d-729602b5a4a7.json",
+        "id": "42e0a640-4f19-4b28-973d-729602b5a4a7"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/4de54231-e4b5-49e3-b2ba-61a0bec721c0.json",
+        "id": "4de54231-e4b5-49e3-b2ba-61a0bec721c0"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/4e6fcf72-daf3-439f-a232-c434ce416af6.json",
+        "id": "4e6fcf72-daf3-439f-a232-c434ce416af6"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/4f07fbe9-70de-4927-a4d5-bb28bc12c52c.json",
+        "id": "4f07fbe9-70de-4927-a4d5-bb28bc12c52c"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/51719eea-10bc-4246-a428-ac7c433dd4b3.json",
+        "id": "51719eea-10bc-4246-a428-ac7c433dd4b3"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/51b11269-2ca8-4b2a-9163-f21758420e78.json",
+        "id": "51b11269-2ca8-4b2a-9163-f21758420e78"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/535364ea-05bd-46ea-9937-9f55c68507e8.json",
+        "id": "535364ea-05bd-46ea-9937-9f55c68507e8"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/6054afcb-5bab-4702-90a0-b259b5d3217c.json",
+        "id": "6054afcb-5bab-4702-90a0-b259b5d3217c"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/6e99a1ad-07d2-4b66-a1ce-ece6d99c20a5.json",
+        "id": "6e99a1ad-07d2-4b66-a1ce-ece6d99c20a5"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/7a4e4bc8-922c-4c84-865c-25ba34136be1.json",
+        "id": "7a4e4bc8-922c-4c84-865c-25ba34136be1"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/7e429b8d-a3f0-4ed0-9b58-08957d00b127.json",
+        "id": "7e429b8d-a3f0-4ed0-9b58-08957d00b127"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/7efeb4b1-3d19-4762-b163-63328d66303b.json",
+        "id": "7efeb4b1-3d19-4762-b163-63328d66303b"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/8b1ce5f2-59d2-4dcc-b0b0-666a714b9a14.json",
+        "id": "8b1ce5f2-59d2-4dcc-b0b0-666a714b9a14"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/a01fbce3-2793-461f-ab86-43680ccbae25.json",
+        "id": "a01fbce3-2793-461f-ab86-43680ccbae25"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/a9f325aa-8c05-4e4f-8341-9e4358565f4f.json",
+        "id": "a9f325aa-8c05-4e4f-8341-9e4358565f4f"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/aa3a8974-2e85-438b-b29e-a64df44deb4b.json",
+        "id": "aa3a8974-2e85-438b-b29e-a64df44deb4b"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/abed40dc-063f-4598-8ba5-9fe749c0615d.json",
+        "id": "abed40dc-063f-4598-8ba5-9fe749c0615d"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/d681960f-7bc3-4286-9913-a8812ba3261a.json",
+        "id": "d681960f-7bc3-4286-9913-a8812ba3261a"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/eb03d19a-b88d-4de4-8a64-ca0ac66f426b.json",
+        "id": "eb03d19a-b88d-4de4-8a64-ca0ac66f426b"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/ecb0df7a-4e8d-4a03-b162-053391d3afaf.json",
+        "id": "ecb0df7a-4e8d-4a03-b162-053391d3afaf"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/f9584479-3d0d-4c79-affa-9ad7afdd8850.json",
+        "id": "f9584479-3d0d-4c79-affa-9ad7afdd8850"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/04578141-1d42-4146-b9cf-6fab4ce5fd74.json",
+        "id": "04578141-1d42-4146-b9cf-6fab4ce5fd74"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/05dd4c1d-c489-4c85-8389-a7836c4f0567.json",
+        "id": "05dd4c1d-c489-4c85-8389-a7836c4f0567"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/08aced46-45a2-48d7-993b-ed3fb5b32302.json",
+        "id": "08aced46-45a2-48d7-993b-ed3fb5b32302"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/0a211154-fda0-48d0-9274-eaac4ce5486d.json",
+        "id": "0a211154-fda0-48d0-9274-eaac4ce5486d"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/0f84bef9-9790-432e-92b7-eece357603fb.json",
+        "id": "0f84bef9-9790-432e-92b7-eece357603fb"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/15aece23-a215-4579-91b4-69eec72e18da.json",
+        "id": "15aece23-a215-4579-91b4-69eec72e18da"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/21760ecb-8f62-40d2-8d85-0cee5725cb72.json",
+        "id": "21760ecb-8f62-40d2-8d85-0cee5725cb72"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/2b94c692-6abb-48ae-ab0b-b3e8a19cb340.json",
+        "id": "2b94c692-6abb-48ae-ab0b-b3e8a19cb340"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/2cd43775-7085-45d8-89fa-9e35c0a915cf.json",
+        "id": "2cd43775-7085-45d8-89fa-9e35c0a915cf"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/3161d64e-3120-47b4-aaad-6a764a92493b.json",
+        "id": "3161d64e-3120-47b4-aaad-6a764a92493b"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/358aa0a7-6677-453f-ae35-e440f004c31e.json",
+        "id": "358aa0a7-6677-453f-ae35-e440f004c31e"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/39be0d19-634d-4475-8768-09c130f5425d.json",
+        "id": "39be0d19-634d-4475-8768-09c130f5425d"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/3b27600c-3668-4abd-8f84-7bcdebbccbdb.json",
+        "id": "3b27600c-3668-4abd-8f84-7bcdebbccbdb"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/455d3c66-7dc6-4537-a39a-36d3e9119df7.json",
+        "id": "455d3c66-7dc6-4537-a39a-36d3e9119df7"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/4ed5abd0-8b5d-47bd-839f-cacfa15ca37a.json",
+        "id": "4ed5abd0-8b5d-47bd-839f-cacfa15ca37a"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/550ce7e7-747b-495f-b122-acdc4d0b8e54.json",
+        "id": "550ce7e7-747b-495f-b122-acdc4d0b8e54"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/57667013-ea97-417c-9dce-2713091e6e2a.json",
+        "id": "57667013-ea97-417c-9dce-2713091e6e2a"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/5c1a6c3d-c1b3-47cb-9b01-8d1b7544ffa1.json",
+        "id": "5c1a6c3d-c1b3-47cb-9b01-8d1b7544ffa1"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/5cfb9197-e72b-454b-900e-c06b0c802b40.json",
+        "id": "5cfb9197-e72b-454b-900e-c06b0c802b40"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/5d901039-a89c-4bfb-967b-bf66f4df075e.json",
+        "id": "5d901039-a89c-4bfb-967b-bf66f4df075e"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/70bca0cc-c117-427e-b0be-4df7299ebeb6.json",
+        "id": "70bca0cc-c117-427e-b0be-4df7299ebeb6"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/73c99fb9-f828-43ce-b87a-01dc07faa224.json",
+        "id": "73c99fb9-f828-43ce-b87a-01dc07faa224"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/7ae48c60-f143-4119-b659-15b8f485eb9a.json",
+        "id": "7ae48c60-f143-4119-b659-15b8f485eb9a"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/7dbc52a6-11e0-4c9a-a2cb-1e36cfda80d8.json",
+        "id": "7dbc52a6-11e0-4c9a-a2cb-1e36cfda80d8"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/841b50aa-df53-47bd-a73a-22d3a9f73160.json",
+        "id": "841b50aa-df53-47bd-a73a-22d3a9f73160"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/8979838c-54a5-4454-a2b8-3d135a1a5c8f.json",
+        "id": "8979838c-54a5-4454-a2b8-3d135a1a5c8f"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/986fc832-6af2-417c-8845-9272b3a1528b.json",
+        "id": "986fc832-6af2-417c-8845-9272b3a1528b"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/9cf05d24-6bd9-4dae-8967-f67d88f5d38a.json",
+        "id": "9cf05d24-6bd9-4dae-8967-f67d88f5d38a"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/9ec204e4-f0a3-42f8-8458-b772a6797cab.json",
+        "id": "9ec204e4-f0a3-42f8-8458-b772a6797cab"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/a097acff-6266-4291-9fbd-137af7ecd439.json",
+        "id": "a097acff-6266-4291-9fbd-137af7ecd439"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/a434992a-89df-4577-925c-0c58b747f0f4.json",
+        "id": "a434992a-89df-4577-925c-0c58b747f0f4"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/a53f80cd-4a90-4490-8310-097b011433f6.json",
+        "id": "a53f80cd-4a90-4490-8310-097b011433f6"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/a669ef01-ded5-4099-9ea9-25e99b569840.json",
+        "id": "a669ef01-ded5-4099-9ea9-25e99b569840"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/ac1b39ff-ee4d-4483-abce-c117e98942f0.json",
+        "id": "ac1b39ff-ee4d-4483-abce-c117e98942f0"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/ac9bb6cb-1888-43ab-81e4-a98a547918cd.json",
+        "id": "ac9bb6cb-1888-43ab-81e4-a98a547918cd"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/af23762e-2bfd-4a1d-aada-20fa8de9ce07.json",
+        "id": "af23762e-2bfd-4a1d-aada-20fa8de9ce07"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/af2d657a-e6b3-4c6a-9f67-9e3ed015974c.json",
+        "id": "af2d657a-e6b3-4c6a-9f67-9e3ed015974c"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/b8adbc24-cef2-4b15-99d5-ecbe7ff445eb.json",
+        "id": "b8adbc24-cef2-4b15-99d5-ecbe7ff445eb"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/bf4e9888-f10f-47af-8dba-76413038b73c.json",
+        "id": "bf4e9888-f10f-47af-8dba-76413038b73c"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/c59742c0-4323-4b9d-8a02-723c251deaa0.json",
+        "id": "c59742c0-4323-4b9d-8a02-723c251deaa0"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/c82632a4-56b6-4db4-9dd1-3820ee3388e4.json",
+        "id": "c82632a4-56b6-4db4-9dd1-3820ee3388e4"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/ce88f674-ab7a-43da-9201-468d38539e4a.json",
+        "id": "ce88f674-ab7a-43da-9201-468d38539e4a"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/e4ef0baf-4b52-4590-a47e-d4d464cca2d7.json",
+        "id": "e4ef0baf-4b52-4590-a47e-d4d464cca2d7"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/ed43c15f-00cb-4054-9c95-62c880865d68.json",
+        "id": "ed43c15f-00cb-4054-9c95-62c880865d68"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/edb61b14-a854-4bf5-a075-c8075c11293a.json",
+        "id": "edb61b14-a854-4bf5-a075-c8075c11293a"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/ef9d12bd-bcee-4ba0-a40e-918400f43ddf.json",
+        "id": "ef9d12bd-bcee-4ba0-a40e-918400f43ddf"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/f23acfd2-c485-4b7c-a1e7-d4303ddfe864.json",
+        "id": "f23acfd2-c485-4b7c-a1e7-d4303ddfe864"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/0810415c-bde4-4443-9047-d5f70165a697.json",
+        "id": "0810415c-bde4-4443-9047-d5f70165a697"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/0a0faba3-5580-44df-965d-f562a99b291c.json",
+        "id": "0a0faba3-5580-44df-965d-f562a99b291c"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/0b17a146-2934-46c7-8727-73ff6b6483e8.json",
+        "id": "0b17a146-2934-46c7-8727-73ff6b6483e8"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/0e47de2a-32e0-456c-a366-8c607ef7a9d2.json",
+        "id": "0e47de2a-32e0-456c-a366-8c607ef7a9d2"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/0e763496-b6bb-4508-a427-fad0b6c3e195.json",
+        "id": "0e763496-b6bb-4508-a427-fad0b6c3e195"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/3ef2b351-8a84-4ff2-8724-d86eae9b842e.json",
+        "id": "3ef2b351-8a84-4ff2-8724-d86eae9b842e"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/4bcb1253-a636-4df4-8cb0-a35c04dfef31.json",
+        "id": "4bcb1253-a636-4df4-8cb0-a35c04dfef31"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/66399b0d-8fda-4618-95c4-bfc6191617e9.json",
+        "id": "66399b0d-8fda-4618-95c4-bfc6191617e9"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/6a33f9b9-0a56-4844-9c3f-96ec3ffb3ba2.json",
+        "id": "6a33f9b9-0a56-4844-9c3f-96ec3ffb3ba2"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/6ada715d-3aae-4a32-a6a7-429b2e43fb93.json",
+        "id": "6ada715d-3aae-4a32-a6a7-429b2e43fb93"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/6f81754e-285d-4ce0-b59e-af7edb02d108.json",
+        "id": "6f81754e-285d-4ce0-b59e-af7edb02d108"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/72b810ef-4156-4d09-8f08-a0cf57e7cefe.json",
+        "id": "72b810ef-4156-4d09-8f08-a0cf57e7cefe"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/8472fece-c7dd-4241-8d65-9b3cd1a0b568.json",
+        "id": "8472fece-c7dd-4241-8d65-9b3cd1a0b568"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/88fe4b2d-3040-4c70-9a70-546a47764b48.json",
+        "id": "88fe4b2d-3040-4c70-9a70-546a47764b48"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/936321ce-5236-426a-9a20-e0e3c5dc536f.json",
+        "id": "936321ce-5236-426a-9a20-e0e3c5dc536f"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/adf5e2c3-64c7-4644-b7b6-d2f0167927e7.json",
+        "id": "adf5e2c3-64c7-4644-b7b6-d2f0167927e7"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/b21acd93-60fd-4127-8a43-2f5178f4a830.json",
+        "id": "b21acd93-60fd-4127-8a43-2f5178f4a830"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/bb8ccc78-479f-4a2f-a71e-d565e439436b.json",
+        "id": "bb8ccc78-479f-4a2f-a71e-d565e439436b"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/d53ff5ee-3b1a-431e-b2be-30ed2673079b.json",
+        "id": "d53ff5ee-3b1a-431e-b2be-30ed2673079b"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/e246f6d8-78d7-44ac-b668-fcf47946cb50.json",
+        "id": "e246f6d8-78d7-44ac-b668-fcf47946cb50"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/e528b65e-1107-4b8c-8988-490e4fece599.json",
+        "id": "e528b65e-1107-4b8c-8988-490e4fece599"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/ecc2413d-8a48-416e-a3a2-d30106ca36cb.json",
+        "id": "ecc2413d-8a48-416e-a3a2-d30106ca36cb"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/f178a4a9-d090-4b56-bc4c-4b72a61a035d.json",
+        "id": "f178a4a9-d090-4b56-bc4c-4b72a61a035d"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/00fa164e-2612-4439-992e-157d019a8436.json",
+        "id": "00fa164e-2612-4439-992e-157d019a8436"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/02ce9a50-7af2-47ed-8596-af0c230501f8.json",
+        "id": "02ce9a50-7af2-47ed-8596-af0c230501f8"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/09a37c51-e625-49f4-a514-20a773797a8a.json",
+        "id": "09a37c51-e625-49f4-a514-20a773797a8a"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/0c825995-5b70-4526-b663-113f4c999dd2.json",
+        "id": "0c825995-5b70-4526-b663-113f4c999dd2"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/0e5303d4-8820-42f6-b18d-daf7e633de21.json",
+        "id": "0e5303d4-8820-42f6-b18d-daf7e633de21"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/185f29bd-5da0-40a6-b69c-ba7f4e0324ef.json",
+        "id": "185f29bd-5da0-40a6-b69c-ba7f4e0324ef"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/1f18aa87-af6f-41ef-9853-cdb8f32ebdea.json",
+        "id": "1f18aa87-af6f-41ef-9853-cdb8f32ebdea"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/20236825-b5df-46e7-89bf-62e1d640a897.json",
+        "id": "20236825-b5df-46e7-89bf-62e1d640a897"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/227d2f97-562b-4ccb-ae47-a5ec9e142fbb.json",
+        "id": "227d2f97-562b-4ccb-ae47-a5ec9e142fbb"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/22a4636f-8179-4357-8e87-d1743ece1f81.json",
+        "id": "22a4636f-8179-4357-8e87-d1743ece1f81"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/236833a3-5704-47fc-888c-4f298f09f799.json",
+        "id": "236833a3-5704-47fc-888c-4f298f09f799"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/2373b66a-092d-44cb-bfd7-82e86e7a3b4d.json",
+        "id": "2373b66a-092d-44cb-bfd7-82e86e7a3b4d"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/26150609-0da3-4a7d-8868-0faf9c5f01bb.json",
+        "id": "26150609-0da3-4a7d-8868-0faf9c5f01bb"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/26660ad1-6ebb-4f59-8cba-a8432dfe8d38.json",
+        "id": "26660ad1-6ebb-4f59-8cba-a8432dfe8d38"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/2b9493d7-49b8-493a-a71b-56cd1f4d6908.json",
+        "id": "2b9493d7-49b8-493a-a71b-56cd1f4d6908"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/2c1ebcd7-9c6d-4c9a-afad-900e381ecd5e.json",
+        "id": "2c1ebcd7-9c6d-4c9a-afad-900e381ecd5e"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/2c9fc0de-3ee7-45e1-a5df-c86206ad78b5.json",
+        "id": "2c9fc0de-3ee7-45e1-a5df-c86206ad78b5"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/2fe4b718-3bd7-46ec-bdce-b184f5653624.json",
+        "id": "2fe4b718-3bd7-46ec-bdce-b184f5653624"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/337d318b-aa07-4f4f-b763-89d9a2dd013f.json",
+        "id": "337d318b-aa07-4f4f-b763-89d9a2dd013f"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/36037439-2044-4b50-b9d1-875b5a332143.json",
+        "id": "36037439-2044-4b50-b9d1-875b5a332143"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/3680a5ee-6870-426a-a997-eba929a0d25c.json",
+        "id": "3680a5ee-6870-426a-a997-eba929a0d25c"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/3a93cae4-ad3e-403e-8c12-65303b271818.json",
+        "id": "3a93cae4-ad3e-403e-8c12-65303b271818"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/3c8f201a-009d-4bbe-8b65-a6f8b35bb57f.json",
+        "id": "3c8f201a-009d-4bbe-8b65-a6f8b35bb57f"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/3e3fc409-bff3-4905-bf16-c968eee3f807.json",
+        "id": "3e3fc409-bff3-4905-bf16-c968eee3f807"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/3f05f3b9-29ba-4b6b-95aa-2204697ffc06.json",
+        "id": "3f05f3b9-29ba-4b6b-95aa-2204697ffc06"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/415ef462-bed3-493a-ac36-ca8c6d23bf1b.json",
+        "id": "415ef462-bed3-493a-ac36-ca8c6d23bf1b"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/42d25c08-fb87-4927-8b65-93631280a26f.json",
+        "id": "42d25c08-fb87-4927-8b65-93631280a26f"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/42f4d1c7-4521-4161-b646-0a8934e36081.json",
+        "id": "42f4d1c7-4521-4161-b646-0a8934e36081"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/46407397-a7d5-4c6b-92c6-dbe038b1457b.json",
+        "id": "46407397-a7d5-4c6b-92c6-dbe038b1457b"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/47f7c0ce-a5fb-4100-a5e6-65cd0e7429e5.json",
+        "id": "47f7c0ce-a5fb-4100-a5e6-65cd0e7429e5"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/48c46dc7-fe04-4505-ade7-723cba1aa6f6.json",
+        "id": "48c46dc7-fe04-4505-ade7-723cba1aa6f6"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/48d05431-6cd5-4e76-82eb-12b60d823f7d.json",
+        "id": "48d05431-6cd5-4e76-82eb-12b60d823f7d"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/4c26e3f3-3a14-4d86-b44a-d3cedebbb487.json",
+        "id": "4c26e3f3-3a14-4d86-b44a-d3cedebbb487"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/4e9f0faf-2ecc-4ae8-a804-28c9a75d1ddc.json",
+        "id": "4e9f0faf-2ecc-4ae8-a804-28c9a75d1ddc"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/510f64c8-9bcc-4be1-8d30-638705850618.json",
+        "id": "510f64c8-9bcc-4be1-8d30-638705850618"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/51f5801c-18b3-4f25-b0c3-02f85507a078.json",
+        "id": "51f5801c-18b3-4f25-b0c3-02f85507a078"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/58565672-7bfe-48ab-b828-db349231de6b.json",
+        "id": "58565672-7bfe-48ab-b828-db349231de6b"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/5990457f-2adb-467b-a4af-5c857c92d762.json",
+        "id": "5990457f-2adb-467b-a4af-5c857c92d762"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/5bc63fb9-276a-4439-a7c1-9dc76401737f.json",
+        "id": "5bc63fb9-276a-4439-a7c1-9dc76401737f"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/5df7b33a-9f77-4101-823e-02f863e1c1ae.json",
+        "id": "5df7b33a-9f77-4101-823e-02f863e1c1ae"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/67890eb6-6ce5-4c00-9e3d-fb4972699b06.json",
+        "id": "67890eb6-6ce5-4c00-9e3d-fb4972699b06"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/68a25bd4-59c7-4f4d-975e-da0c8509c848.json",
+        "id": "68a25bd4-59c7-4f4d-975e-da0c8509c848"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/69acbb55-d945-4927-a87b-8480e1a5bb7e.json",
+        "id": "69acbb55-d945-4927-a87b-8480e1a5bb7e"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/6d72aad6-187a-4392-a4c4-ed87269c51cf.json",
+        "id": "6d72aad6-187a-4392-a4c4-ed87269c51cf"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/6f4073b8-d8ea-4ade-8a18-c5d1d5d5aa9a.json",
+        "id": "6f4073b8-d8ea-4ade-8a18-c5d1d5d5aa9a"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/716a6079-22da-47f1-ba73-c9d58f986a38.json",
+        "id": "716a6079-22da-47f1-ba73-c9d58f986a38"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/74d5859f-ed66-4d3e-aa0e-93d7a592ce41.json",
+        "id": "74d5859f-ed66-4d3e-aa0e-93d7a592ce41"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/778efd0a-153f-4842-9214-f05fc176b877.json",
+        "id": "778efd0a-153f-4842-9214-f05fc176b877"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/788b3701-3ec9-4b67-b679-418bfa726c22.json",
+        "id": "788b3701-3ec9-4b67-b679-418bfa726c22"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/78aed49a-a710-4321-a793-b611a7c5b56b.json",
+        "id": "78aed49a-a710-4321-a793-b611a7c5b56b"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/7e287123-70ca-47b9-8521-47db09b69b14.json",
+        "id": "7e287123-70ca-47b9-8521-47db09b69b14"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/7f35355e-02a6-45b5-b140-f0be698bcf85.json",
+        "id": "7f35355e-02a6-45b5-b140-f0be698bcf85"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/7ff48d5b-2df2-49da-b500-a5150ffc7f18.json",
+        "id": "7ff48d5b-2df2-49da-b500-a5150ffc7f18"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/81c425f5-78f3-4771-afd6-3d2973825947.json",
+        "id": "81c425f5-78f3-4771-afd6-3d2973825947"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/82e3c869-49f6-4305-a7ce-f3e64a0618e7.json",
+        "id": "82e3c869-49f6-4305-a7ce-f3e64a0618e7"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/869de13e-bef9-4b91-ba51-f6708c40b096.json",
+        "id": "869de13e-bef9-4b91-ba51-f6708c40b096"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/873cafdd-a581-47f6-8b33-b9696ddb7b05.json",
+        "id": "873cafdd-a581-47f6-8b33-b9696ddb7b05"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/881deb30-9549-4583-a841-8270c65f2a17.json",
+        "id": "881deb30-9549-4583-a841-8270c65f2a17"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/897e3b53-5d4d-444b-85cb-2cdc8a97d903.json",
+        "id": "897e3b53-5d4d-444b-85cb-2cdc8a97d903"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/8df7e444-8e06-4f93-8a1a-c5c974269d82.json",
+        "id": "8df7e444-8e06-4f93-8a1a-c5c974269d82"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/8e116af7-7db7-4e35-a68b-b0939c066c78.json",
+        "id": "8e116af7-7db7-4e35-a68b-b0939c066c78"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/91190194-f406-4cd6-b3f9-c43fac942b22.json",
+        "id": "91190194-f406-4cd6-b3f9-c43fac942b22"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/9219480b-3aed-47fc-8bac-d2cffc5849f7.json",
+        "id": "9219480b-3aed-47fc-8bac-d2cffc5849f7"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/937087b6-f668-4ba6-9110-60682ee33441.json",
+        "id": "937087b6-f668-4ba6-9110-60682ee33441"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/98e8e339-5f91-4ed2-b2b2-12647cb134f4.json",
+        "id": "98e8e339-5f91-4ed2-b2b2-12647cb134f4"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/9f3bb592-209d-43bc-bb47-d77d9df56504.json",
+        "id": "9f3bb592-209d-43bc-bb47-d77d9df56504"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/a0b9dc9c-fc07-4a88-8c5d-5e3ecad91bcb.json",
+        "id": "a0b9dc9c-fc07-4a88-8c5d-5e3ecad91bcb"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/a503b07f-9119-456b-b75d-f5146737d24f.json",
+        "id": "a503b07f-9119-456b-b75d-f5146737d24f"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/a74b607e-6bb5-4ea8-8a7c-5d97c7bbcd2a.json",
+        "id": "a74b607e-6bb5-4ea8-8a7c-5d97c7bbcd2a"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/a82b78bb-7fde-4cb3-94a4-035baf10bcf0.json",
+        "id": "a82b78bb-7fde-4cb3-94a4-035baf10bcf0"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/aad10cd7-9337-4b62-b704-a857848cedf2.json",
+        "id": "aad10cd7-9337-4b62-b704-a857848cedf2"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/acb0f96b-e27c-44d8-b55f-7cb76609dfcd.json",
+        "id": "acb0f96b-e27c-44d8-b55f-7cb76609dfcd"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/aceb0368-56b8-4073-b70e-3dc9aee184e0.json",
+        "id": "aceb0368-56b8-4073-b70e-3dc9aee184e0"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/b337d106-053f-4d37-8da0-7f9c4043a66b.json",
+        "id": "b337d106-053f-4d37-8da0-7f9c4043a66b"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/b5062e3e-641c-4e3a-907b-ac864d2e7652.json",
+        "id": "b5062e3e-641c-4e3a-907b-ac864d2e7652"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/b52b40a5-ad70-4c53-b5b0-5650a8387052.json",
+        "id": "b52b40a5-ad70-4c53-b5b0-5650a8387052"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/bb83cab4-e5c7-42c7-a67b-e46068032b86.json",
+        "id": "bb83cab4-e5c7-42c7-a67b-e46068032b86"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/bc2b57f3-686d-4ec9-87ce-edf850b7e442.json",
+        "id": "bc2b57f3-686d-4ec9-87ce-edf850b7e442"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/c2751594-0cd5-4088-be1b-b5f2f9ec97c4.json",
+        "id": "c2751594-0cd5-4088-be1b-b5f2f9ec97c4"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/c7c1e4c3-9e92-4eba-a4b8-689953975ea4.json",
+        "id": "c7c1e4c3-9e92-4eba-a4b8-689953975ea4"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/c867c42d-a52d-4a24-8ae3-f75d256b5618.json",
+        "id": "c867c42d-a52d-4a24-8ae3-f75d256b5618"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/ce2b64a2-ddc1-4f91-8c7d-a88be7121aac.json",
+        "id": "ce2b64a2-ddc1-4f91-8c7d-a88be7121aac"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/d1acdb87-bb67-4f30-84aa-990e56a09c92.json",
+        "id": "d1acdb87-bb67-4f30-84aa-990e56a09c92"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/d68204bf-11c1-4b13-b48b-d303c73d4bf6.json",
+        "id": "d68204bf-11c1-4b13-b48b-d303c73d4bf6"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/d9b7c649-c975-4f53-88f5-940b29c47247.json",
+        "id": "d9b7c649-c975-4f53-88f5-940b29c47247"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/da52d699-e8d2-4dc5-9191-a2199e0b6a9b.json",
+        "id": "da52d699-e8d2-4dc5-9191-a2199e0b6a9b"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/da922383-bfa4-4cd3-bbad-6bebab3d7742.json",
+        "id": "da922383-bfa4-4cd3-bbad-6bebab3d7742"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/dd60633f-2c72-42ba-8547-6f2c8cb0fdb0.json",
+        "id": "dd60633f-2c72-42ba-8547-6f2c8cb0fdb0"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/deec51c9-3b1e-4b9e-993c-4776f20e8bb2.json",
+        "id": "deec51c9-3b1e-4b9e-993c-4776f20e8bb2"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/df67aebb-fb3a-44fd-b75b-51b6012df509.json",
+        "id": "df67aebb-fb3a-44fd-b75b-51b6012df509"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/e135df7c-7687-4ac0-a5f0-76b74438b53e.json",
+        "id": "e135df7c-7687-4ac0-a5f0-76b74438b53e"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/e1fc0df3-c8b9-4ee7-864c-d0b590d3aa56.json",
+        "id": "e1fc0df3-c8b9-4ee7-864c-d0b590d3aa56"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/e2392362-125e-4f76-a2ee-524b183a3412.json",
+        "id": "e2392362-125e-4f76-a2ee-524b183a3412"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/e8172110-ec08-421b-a6f5-842e6451911f.json",
+        "id": "e8172110-ec08-421b-a6f5-842e6451911f"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/eb303e01-261e-4972-8c07-c9b4e7a4922a.json",
+        "id": "eb303e01-261e-4972-8c07-c9b4e7a4922a"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/ee9a3c83-f437-4879-8918-be5efbb9fac7.json",
+        "id": "ee9a3c83-f437-4879-8918-be5efbb9fac7"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/f5c13cdd-205c-4719-a562-348ae5cd1d91.json",
+        "id": "f5c13cdd-205c-4719-a562-348ae5cd1d91"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/f7dfbef3-7697-431c-883a-db8583a4e4f9.json",
+        "id": "f7dfbef3-7697-431c-883a-db8583a4e4f9"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/f8369178-fafe-40c2-adc4-b9b08a125456.json",
+        "id": "f8369178-fafe-40c2-adc4-b9b08a125456"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/f8cfa149-d1c1-4215-8dac-4a0932bad3c2.json",
+        "id": "f8cfa149-d1c1-4215-8dac-4a0932bad3c2"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/f918266a-b3e0-4914-865d-4faa564f1aef.json",
+        "id": "f918266a-b3e0-4914-865d-4faa564f1aef"
+      },
+      {
+        "path": "evaluation_examples/examples/os/13584542-872b-42d8-b299-866967b5c3ef.json",
+        "id": "13584542-872b-42d8-b299-866967b5c3ef"
+      },
+      {
+        "path": "evaluation_examples/examples/os/23393935-50c7-4a86-aeea-2b78fd089c5c.json",
+        "id": "23393935-50c7-4a86-aeea-2b78fd089c5c"
+      },
+      {
+        "path": "evaluation_examples/examples/os/28cc3b7e-b194-4bc9-8353-d04c0f4d56d2.json",
+        "id": "28cc3b7e-b194-4bc9-8353-d04c0f4d56d2"
+      },
+      {
+        "path": "evaluation_examples/examples/os/37887e8c-da15-4192-923c-08fa390a176d.json",
+        "id": "37887e8c-da15-4192-923c-08fa390a176d"
+      },
+      {
+        "path": "evaluation_examples/examples/os/3ce045a0-877b-42aa-8d2c-b4a863336ab8.json",
+        "id": "3ce045a0-877b-42aa-8d2c-b4a863336ab8"
+      },
+      {
+        "path": "evaluation_examples/examples/os/4127319a-8b79-4410-b58a-7a151e15f3d7.json",
+        "id": "4127319a-8b79-4410-b58a-7a151e15f3d7"
+      },
+      {
+        "path": "evaluation_examples/examples/os/4783cc41-c03c-4e1b-89b4-50658f642bd5.json",
+        "id": "4783cc41-c03c-4e1b-89b4-50658f642bd5"
+      },
+      {
+        "path": "evaluation_examples/examples/os/4d117223-a354-47fb-8b45-62ab1390a95f.json",
+        "id": "4d117223-a354-47fb-8b45-62ab1390a95f"
+      },
+      {
+        "path": "evaluation_examples/examples/os/5812b315-e7bd-4265-b51f-863c02174c28.json",
+        "id": "5812b315-e7bd-4265-b51f-863c02174c28"
+      },
+      {
+        "path": "evaluation_examples/examples/os/5c1075ca-bb34-46a3-a7a0-029bd7463e79.json",
+        "id": "5c1075ca-bb34-46a3-a7a0-029bd7463e79"
+      },
+      {
+        "path": "evaluation_examples/examples/os/5ced85fc-fa1a-4217-95fd-0fb530545ce2.json",
+        "id": "5ced85fc-fa1a-4217-95fd-0fb530545ce2"
+      },
+      {
+        "path": "evaluation_examples/examples/os/5ea617a3-0e86-4ba6-aab2-dac9aa2e8d57.json",
+        "id": "5ea617a3-0e86-4ba6-aab2-dac9aa2e8d57"
+      },
+      {
+        "path": "evaluation_examples/examples/os/6f56bf42-85b8-4fbb-8e06-6c44960184ba.json",
+        "id": "6f56bf42-85b8-4fbb-8e06-6c44960184ba"
+      },
+      {
+        "path": "evaluation_examples/examples/os/94d95f96-9699-4208-98ba-3c3119edf9c2.json",
+        "id": "94d95f96-9699-4208-98ba-3c3119edf9c2"
+      },
+      {
+        "path": "evaluation_examples/examples/os/a462a795-fdc7-4b23-b689-e8b6df786b78.json",
+        "id": "a462a795-fdc7-4b23-b689-e8b6df786b78"
+      },
+      {
+        "path": "evaluation_examples/examples/os/a4d98375-215b-4a4d-aee9-3d4370fccc41.json",
+        "id": "a4d98375-215b-4a4d-aee9-3d4370fccc41"
+      },
+      {
+        "path": "evaluation_examples/examples/os/b3d4a89c-53f2-4d6b-8b6a-541fb5d205fa.json",
+        "id": "b3d4a89c-53f2-4d6b-8b6a-541fb5d205fa"
+      },
+      {
+        "path": "evaluation_examples/examples/os/b6781586-6346-41cd-935a-a6b1487918fc.json",
+        "id": "b6781586-6346-41cd-935a-a6b1487918fc"
+      },
+      {
+        "path": "evaluation_examples/examples/os/bedcedc4-4d72-425e-ad62-21960b11fe0d.json",
+        "id": "bedcedc4-4d72-425e-ad62-21960b11fe0d"
+      },
+      {
+        "path": "evaluation_examples/examples/os/c288e301-e626-4b98-a1ab-159dcb162af5.json",
+        "id": "c288e301-e626-4b98-a1ab-159dcb162af5"
+      },
+      {
+        "path": "evaluation_examples/examples/os/e0df059f-28a6-4169-924f-b9623e7184cc.json",
+        "id": "e0df059f-28a6-4169-924f-b9623e7184cc"
+      },
+      {
+        "path": "evaluation_examples/examples/os/ec4e3f68-9ea4-4c18-a5c9-69f89d1178b3.json",
+        "id": "ec4e3f68-9ea4-4c18-a5c9-69f89d1178b3"
+      },
+      {
+        "path": "evaluation_examples/examples/os/f9be0997-4b7c-45c5-b05c-4612b44a6118.json",
+        "id": "f9be0997-4b7c-45c5-b05c-4612b44a6118"
+      },
+      {
+        "path": "evaluation_examples/examples/os/fe41f596-a71b-4c2f-9b2f-9dcd40b568c3.json",
+        "id": "fe41f596-a71b-4c2f-9b2f-9dcd40b568c3"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/08c73485-7c6d-4681-999d-919f5c32dcfa.json",
+        "id": "08c73485-7c6d-4681-999d-919f5c32dcfa"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/10a730d5-d414-4b40-b479-684bed1ae522.json",
+        "id": "10a730d5-d414-4b40-b479-684bed1ae522"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/15c3b339-88f7-4a86-ab16-e71c58dcb01e.json",
+        "id": "15c3b339-88f7-4a86-ab16-e71c58dcb01e"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/3f28fe4f-5d9d-4994-a456-efd78cfae1a3.json",
+        "id": "3f28fe4f-5d9d-4994-a456-efd78cfae1a3"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/3f49d2cc-f400-4e7d-90cc-9b18e401cc31.json",
+        "id": "3f49d2cc-f400-4e7d-90cc-9b18e401cc31"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/5203d847-2572-4150-912a-03f062254390.json",
+        "id": "5203d847-2572-4150-912a-03f062254390"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/7b1e1ff9-bb85-49be-b01d-d6424be18cd0.json",
+        "id": "7b1e1ff9-bb85-49be-b01d-d6424be18cd0"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/9b7bc335-06b5-4cd3-9119-1a649c478509.json",
+        "id": "9b7bc335-06b5-4cd3-9119-1a649c478509"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/9bc3cc16-074a-45ac-9bdc-b2a362e1daf3.json",
+        "id": "9bc3cc16-074a-45ac-9bdc-b2a362e1daf3"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/a10b69e1-6034-4a2b-93e1-571d45194f75.json",
+        "id": "a10b69e1-6034-4a2b-93e1-571d45194f75"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/a1af9f1c-50d5-4bc3-a51e-4d9b425ff638.json",
+        "id": "a1af9f1c-50d5-4bc3-a51e-4d9b425ff638"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/d38192b0-17dc-4e1d-99c3-786d0117de77.json",
+        "id": "d38192b0-17dc-4e1d-99c3-786d0117de77"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/dd84e895-72fd-4023-a336-97689ded257c.json",
+        "id": "dd84e895-72fd-4023-a336-97689ded257c"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/dfac9ee8-9bc4-4cdc-b465-4a4bfcd2f397.json",
+        "id": "dfac9ee8-9bc4-4cdc-b465-4a4bfcd2f397"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/f201fbc3-44e6-46fc-bcaa-432f9815454c.json",
+        "id": "f201fbc3-44e6-46fc-bcaa-432f9815454c"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/215dfd39-f493-4bc3-a027-8a97d72c61bf.json",
+        "id": "215dfd39-f493-4bc3-a027-8a97d72c61bf"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/386dbd0e-0241-4a0a-b6a2-6704fba26b1c.json",
+        "id": "386dbd0e-0241-4a0a-b6a2-6704fba26b1c"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/59f21cfb-0120-4326-b255-a5b827b38967.json",
+        "id": "59f21cfb-0120-4326-b255-a5b827b38967"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/5ac2891a-eacd-4954-b339-98abba077adb.json",
+        "id": "5ac2891a-eacd-4954-b339-98abba077adb"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/7882ed6e-bece-4bf0-bada-c32dc1ddae72.json",
+        "id": "7882ed6e-bece-4bf0-bada-c32dc1ddae72"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/8ba5ae7a-5ae5-4eab-9fcc-5dd4fe3abf89.json",
+        "id": "8ba5ae7a-5ae5-4eab-9fcc-5dd4fe3abf89"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/8d9fd4e2-6fdb-46b0-b9b9-02f06495c62f.json",
+        "id": "8d9fd4e2-6fdb-46b0-b9b9-02f06495c62f"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/8f080098-ddb1-424c-b438-4e96e5e4786e.json",
+        "id": "8f080098-ddb1-424c-b438-4e96e5e4786e"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/9195653c-f4aa-453d-aa95-787f6ccfaae9.json",
+        "id": "9195653c-f4aa-453d-aa95-787f6ccfaae9"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/a5bbbcd5-b398-4c91-83d4-55e1e31bbb81.json",
+        "id": "a5bbbcd5-b398-4c91-83d4-55e1e31bbb81"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/aa4b5023-aef6-4ed9-bdc9-705f59ab9ad6.json",
+        "id": "aa4b5023-aef6-4ed9-bdc9-705f59ab9ad6"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/bba3381f-b5eb-4439-bd9e-80c22218d5a7.json",
+        "id": "bba3381f-b5eb-4439-bd9e-80c22218d5a7"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/cb130f0d-d36f-4302-9838-b3baf46139b6.json",
+        "id": "cb130f0d-d36f-4302-9838-b3baf46139b6"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/d06f0d4d-2cd5-4ede-8de9-598629438c6e.json",
+        "id": "d06f0d4d-2cd5-4ede-8de9-598629438c6e"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/efcf0d81-0835-4880-b2fd-d866e8bc2294.json",
+        "id": "efcf0d81-0835-4880-b2fd-d866e8bc2294"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/f3977615-2b45-4ac5-8bba-80c17dbe2a37.json",
+        "id": "f3977615-2b45-4ac5-8bba-80c17dbe2a37"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/fba2c100-79e8-42df-ae74-b592418d54f4.json",
+        "id": "fba2c100-79e8-42df-ae74-b592418d54f4"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/0512bb38-d531-4acf-9e7e-0add90816068.json",
+        "id": "0512bb38-d531-4acf-9e7e-0add90816068"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/0ed39f63-6049-43d4-ba4d-5fa2fe04a951.json",
+        "id": "0ed39f63-6049-43d4-ba4d-5fa2fe04a951"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/276cc624-87ea-4f08-ab93-f770e3790175.json",
+        "id": "276cc624-87ea-4f08-ab93-f770e3790175"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/4e60007a-f5be-4bfc-9723-c39affa0a6d3.json",
+        "id": "4e60007a-f5be-4bfc-9723-c39affa0a6d3"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/53ad5833-3455-407b-bbc6-45b4c79ab8fb.json",
+        "id": "53ad5833-3455-407b-bbc6-45b4c79ab8fb"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/57242fad-77ca-454f-b71b-f187181a9f23.json",
+        "id": "57242fad-77ca-454f-b71b-f187181a9f23"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/5e2d93d8-8ad0-4435-b150-1692aacaa994.json",
+        "id": "5e2d93d8-8ad0-4435-b150-1692aacaa994"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/6ed0a554-cbee-4b44-84ea-fd6c042f4fe1.json",
+        "id": "6ed0a554-cbee-4b44-84ea-fd6c042f4fe1"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/70745df8-f2f5-42bd-8074-fbc10334fcc5.json",
+        "id": "70745df8-f2f5-42bd-8074-fbc10334fcc5"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/7aeae0e2-70ee-4705-821d-1bba5d5b2ddd.json",
+        "id": "7aeae0e2-70ee-4705-821d-1bba5d5b2ddd"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/7c4cc09e-7a92-40dd-8338-b2286535c4ed.json",
+        "id": "7c4cc09e-7a92-40dd-8338-b2286535c4ed"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/847a96b6-df94-4927-97e6-8cc9ea66ced7.json",
+        "id": "847a96b6-df94-4927-97e6-8cc9ea66ced7"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/930fdb3b-11a8-46fe-9bac-577332e2640e.json",
+        "id": "930fdb3b-11a8-46fe-9bac-577332e2640e"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/9439a27b-18ae-42d8-9778-5f68f891805e.json",
+        "id": "9439a27b-18ae-42d8-9778-5f68f891805e"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/971cbb5b-3cbf-4ff7-9e24-b5c84fcebfa6.json",
+        "id": "971cbb5b-3cbf-4ff7-9e24-b5c84fcebfa6"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/982d12a5-beab-424f-8d38-d2a48429e511.json",
+        "id": "982d12a5-beab-424f-8d38-d2a48429e511"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/9d425400-e9b2-4424-9a4b-d4c7abac4140.json",
+        "id": "9d425400-e9b2-4424-9a4b-d4c7abac4140"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/c6bf789c-ba3a-4209-971d-b63abf0ab733.json",
+        "id": "c6bf789c-ba3a-4209-971d-b63abf0ab733"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/dcbe20e8-647f-4f1d-8696-f1c5bbb570e3.json",
+        "id": "dcbe20e8-647f-4f1d-8696-f1c5bbb570e3"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/e2b5e914-ffe1-44d2-8e92-58f8c5d92bb2.json",
+        "id": "e2b5e914-ffe1-44d2-8e92-58f8c5d92bb2"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/ea98c5d7-3cf9-4f9b-8ad3-366b58e0fcae.json",
+        "id": "ea98c5d7-3cf9-4f9b-8ad3-366b58e0fcae"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/eabc805a-bfcf-4460-b250-ac92135819f6.json",
+        "id": "eabc805a-bfcf-4460-b250-ac92135819f6"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/ec71221e-ac43-46f9-89b8-ee7d80f7e1c5.json",
+        "id": "ec71221e-ac43-46f9-89b8-ee7d80f7e1c5"
+      }
+    ],
+    "files": [
+      {
+        "path": "README.md",
+        "sha256": "6b78aa990ef6aac81daa3f5af1de77a38fe024690717f6b4fc79bcf90a707ed4"
+      },
+      {
+        "path": "config/default.yaml",
+        "sha256": "e72340fb8b6f2c203eb209a66c7e4af5362b053fa58c3ec081aed0d5bf4371c5"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/030eeff7-b492-4218-b312-701ec99ee0cc.json",
+        "sha256": "bbbe65e75279c47d7e399d31cba058a0f35c1a1d4810bac83bb90c554f149718"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/06fe7178-4491-4589-810f-2e2bc9502122.json",
+        "sha256": "da5ee58ef0a6ba47fed71b5bf9041957a490c8c0d07f6a1416e5bd4a08dc5797"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/0d8b7de3-e8de-4d86-b9fd-dd2dce58a217.json",
+        "sha256": "66b78ad5c3fd273fc0be21eabddd7da604fb1d4ca6752f3ebc10750b3023350e"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/12086550-11c0-466b-b367-1d9e75b3910e.json",
+        "sha256": "b4373cd5bdd1781d1a0a5a5b9d2189c57a6ad14d686aa2df2786abfdf0e00793"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/121ba48f-9e17-48ce-9bc6-a4fb17a7ebba.json",
+        "sha256": "8c174b401c42152080c0358d0efc699f9cfb6d0063e86eba37844caa5a0993ef"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/1704f00f-79e6-43a7-961b-cedd3724d5fd.json",
+        "sha256": "461dfb40d6c23689fddc24277cbced17e9d446868b4160346b5a4c3092d5d421"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/2888b4e6-5b47-4b57-8bf5-c73827890774.json",
+        "sha256": "4d5708f43f8a36c2f03d4d0f2b6db2f399b599280f47893a15711d5adbb3c9ef"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/2ad9387a-65d8-4e33-ad5b-7580065a27ca.json",
+        "sha256": "13708076db67e4b46fdbc82535f57c58a2889db6a5e6d78a3f6cebef0b8028e7"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/2ae9ba84-3a0d-4d4c-8338-3a1478dc5fe3.json",
+        "sha256": "ef33ebca2523affdc208c6d5ac70d8b89b768e4b776f2e4533a552184390abb5"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/3299584d-8f11-4457-bf4c-ce98f7600250.json",
+        "sha256": "7989f21ef088e8b5872fe623d2b0fa522ca0ad81fbd2deefb3eefc06abf4f977"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/35253b65-1c19-4304-8aa4-6884b8218fc0.json",
+        "sha256": "6ce5973b39b0b2daa62c1c31e14247ea25db96f081ea0e32cf8372a9a3d62aa1"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/368d9ba4-203c-40c1-9fa3-da2f1430ce63.json",
+        "sha256": "e37147508b7be753734c811228e8a62dbbf3f9894ea27a03bf6dd8b452743847"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/3720f614-37fd-4d04-8a6b-76f54f8c222d.json",
+        "sha256": "79ea1aa657e42ae40069a6def5ac145d6c09eaff803a007fe05bdf651104a2b6"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/44ee5668-ecd5-4366-a6ce-c1c9b8d4e938.json",
+        "sha256": "09df94cda0baff349756cac5f737c9c065698fd7728bb4cc660c6cd001580199"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/47543840-672a-467d-80df-8f7c3b9788c9.json",
+        "sha256": "591caa3ab592c86bec616d339d670a27e4dac05c6ea04f0160c5eefa21c1ef1b"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/480bcfea-d68f-4aaa-a0a9-2589ef319381.json",
+        "sha256": "db54e974f933185de16a6b2567141b8bb17add2e5852613a70a553bbaa2f1c09"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/59155008-fe71-45ec-8a8f-dc35497b6aa8.json",
+        "sha256": "4421df3bee90be82fbb9d3b785c96262457a13fc5a4ed742c8e022a542715eb5"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/6766f2b8-8a72-417f-a9e5-56fcaa735837.json",
+        "sha256": "2186915b4c6e6e2350bf94083772731a20094eaaaeacb78b9dab0ce0872c6cfe"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/6c4c23a1-42a4-43cc-9db1-2f86ff3738cc.json",
+        "sha256": "d48b32e797f7824a37518d0cc513706d608f619bbb63c704793fd39119d331f8"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/7a5a7856-f1b6-42a4-ade9-1ca81ca0f263.json",
+        "sha256": "7b434ea297e3dafa964c3c5958b903ca1cc055991546531773e42f88e8678c6e"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/7b6c7e24-c58a-49fc-a5bb-d57b80e5b4c3.json",
+        "sha256": "e747a3b9f93fb15ee83345e900fe6747fcadcac6d63c5e4678baf987628c559d"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/7f52cab9-535c-4835-ac8c-391ee64dc930.json",
+        "sha256": "b77e079ff2d111130e70cfd142ff11f952dfb8945f10fd262981cdd2b4083202"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/82279c77-8fc6-46f6-9622-3ba96f61b477.json",
+        "sha256": "64e7bd3186d5b254621ed7caa1931fadb4bec84fcfeb701a6dd979cc603c57ad"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/82bc8d6a-36eb-4d2d-8801-ef714fb1e55a.json",
+        "sha256": "a754a45ad552c6a6879b2ddc0b241209527a41a7b189018eae1f81e25669f463"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/93eabf48-6a27-4cb6-b963-7d5fe1e0d3a9.json",
+        "sha256": "29d6bcc453695398ba2116f381ae9bae2b69801085a49605a1292d33a565a2b4"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/9656a811-9b5b-4ddf-99c7-5117bcef0626.json",
+        "sha256": "70c425f790ca63dea8a4e50357a507eb5d28d7eaada507c55ae219aae6ce95d5"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/99146c54-4f37-4ab8-9327-5f3291665e1e.json",
+        "sha256": "c595a22eb64258715c743676345a4e0a9f74b99b17860c36dd135b62c67d437e"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/9f3f70fc-5afc-4958-a7b7-3bb4fcb01805.json",
+        "sha256": "23920427a3c0c5c822eac7a5af2a6043b636bd28305492152c6106dc0e38e182"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/9f935cce-0a9f-435f-8007-817732bfc0a5.json",
+        "sha256": "814b5265e661a378a2818b1cbcdc4108baca5e470dbdfb0af46e81845b10bc77"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/a728a36e-8bf1-4bb6-9a03-ef039a5233f0.json",
+        "sha256": "87bc77f38691525a793bfb4f298dfb2465747fa2a96f28931236bffd8f8285f5"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/a96b564e-dbe9-42c3-9ccf-b4498073438a.json",
+        "sha256": "91252aa0192ccadbed1ea471a8cfdf7bbfcc427107406a3cfb02d8a7769d75e7"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/ae78f875-5b98-4907-bbb5-9c737fc68c03.json",
+        "sha256": "5ae7e7f0190eb48824f3c300c38c8bfbf4f7fe7ada4ce9e13f439e8cebcadf4d"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/af630914-714e-4a24-a7bb-f9af687d3b91.json",
+        "sha256": "2bace437652f30f5740f1d157f9823f4c7d4f17d105257227d65b7d10255a987"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/b070486d-e161-459b-aa2b-ef442d973b92.json",
+        "sha256": "33619f59a5fd16feef93d36bd47c8ac946d3f1f0c9f2345c9ce653a84ce4a970"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/b4f95342-463e-4179-8c3f-193cd7241fb2.json",
+        "sha256": "957ceb3ec44fb2da061c41eab046806487eedb52ff81e840cec15303cb51489c"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/b7895e80-f4d1-4648-bee0-4eb45a6f1fa8.json",
+        "sha256": "b6d1a0221015fa27f8a52c79fd1c1411d1c242989d5ba545027d8bb577c914cf"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/bb5e4c0d-f964-439c-97b6-bdb9747de3f4.json",
+        "sha256": "049dcf583ed0ad65dcfbf6d2034aaa86a5877880c2eec64ddc324ab98996ffda"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/c1fa57f3-c3db-4596-8f09-020701085416.json",
+        "sha256": "61d3fb6029e29cbed4c592ebb44739c1e50532b9c7ea060a094494f93b50138f"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/cabb3bae-cccb-41bd-9f5d-0f3a9fecd825.json",
+        "sha256": "4a2a34ad68ee4566ba518516e73823e2e9e29c23fd7efa118cbf62ad33074e1a"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/da46d875-6b82-4681-9284-653b0c7ae241.json",
+        "sha256": "edb8dd50f57740691296c897d7c48a51bb524988ce1bc2dd4b0fa44dd527c988"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/e1e75309-3ddb-4d09-92ec-de869c928143.json",
+        "sha256": "2ec158d9215af9d2749acc2a4bf9c8db43e0e5598adefbb37805f58f3cea4d62"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/f0b971a1-6831-4b9b-a50e-22a6e47f45ba.json",
+        "sha256": "ec3943a5bb5387e4cf536d26da39f089583d3f5fc9769e26ec224f1489bd1f20"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/f3b19d1e-2d48-44e9-b4e1-defcae1a0197.json",
+        "sha256": "da9338b82a233e987a9867845f792290da9b679362ba05917de42b6d4dcf3b1f"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/f5d96daf-83a8-4c86-9686-bada31fc66ab.json",
+        "sha256": "a66a547c16fee9b5934f727abdbd5df2d3c46e0da894c9edc363ad5384ff11db"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/f79439ad-3ee8-4f99-a518-0eb60e5652b0.json",
+        "sha256": "aba93c268b41e418cdfb9d3b75c7c593f5db44264c7b295999fa70268c60cda4"
+      },
+      {
+        "path": "evaluation_examples/examples/chrome/fc6d8143-9452-4171-9459-7f515143419a.json",
+        "sha256": "368605dec1629616146aa0114854e7285a8813bd17869da638930047b2035bbf"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/045bf3ff-9077-4b86-b483-a1040a949cff.json",
+        "sha256": "846eb1a442d5fcefb2e75c0dcbdaeacf05e6d72fab9c508ae869e776f2bcff51"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/06ca5602-62ca-47f6-ad4f-da151cde54cc.json",
+        "sha256": "fe39cfd3a837ac089bb618a89741400485bb772f8364fa2c2f210883046cac02"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/2a729ded-3296-423d-aec4-7dd55ed5fbb3.json",
+        "sha256": "af2efa0e61177e0ccf3f24ec664147b72c3885d8c13d532bc1169f63c982f3ff"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/2e6f678f-472d-4c55-99cc-8e7c5c402a71.json",
+        "sha256": "1aad355cce6d30b634c5fbd80aa1a9bdca1dfac936537d7424cfada0eb2eeaae"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/38f48d40-764e-4e77-a7cf-51dfce880291.json",
+        "sha256": "facde3d18404bff812c0b2ae527cf9362970bd471d1f4e62076545e2c5820424"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/554785e9-4523-4e7a-b8e1-8016f565f56a.json",
+        "sha256": "28d9c31cf95b1e78de57de1d3d6cbd4bc2d011562b8ba9e2f1932149d902c8d8"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/58d3eeeb-e9d0-499f-962e-fd0db2a744d8.json",
+        "sha256": "b132a645fcf395c3566017b7e808d02ac55d44e0b1f000920d832eb22ac1ed7e"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/5ca86c6f-f317-49d8-b6a7-b527541caae8.json",
+        "sha256": "26453dbd54f8a09cfd5fed6bc48b582677d1af95e36d846ccccc3a20e93e77e9"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/62f7fd55-0687-4a43-b6e1-3eda16fc6252.json",
+        "sha256": "7884df3b6dc6d6949f604d4d7cc9a62e0ef72f0f43e0bfac3985e522fd7c191e"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/72f83cdc-bf76-4531-9a1b-eb893a13f8aa.json",
+        "sha256": "e2a2ea99daea1ef57145bfdae9ca90f938a26cba606d2536e19a487e0e33d11b"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/734d6579-c07d-47a8-9ae2-13339795476b.json",
+        "sha256": "18c20768ade3a84b91684b6c9211fcacc6c4cd922b58b7a8b62d239166ab02ad"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/7767eef2-56a3-4cea-8c9f-48c070c7d65b.json",
+        "sha256": "133eec248c76ed612a7f2d7e6cffc7235c6f543a91cf3664e29ed6db26230293"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/77b8ab4d-994f-43ac-8930-8ca087d7c4b4.json",
+        "sha256": "b7a249f4e5b742c264ffb1e8cb14c1ff80568e664bf0e41d8de0c49ad13506ff"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/7a4deb26-d57d-4ea9-9a73-630f66a7b568.json",
+        "sha256": "4b4857d7deb0203d34ff00d9de624d974d3b6ae4892f41eaeb15c911cf05d218"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/7b7617bd-57cc-468e-9c91-40c4ec2bcb3d.json",
+        "sha256": "f3a4bd3635dac6b5d6afcaadaa15a0c92eb4721d32d5b850f718a92e3de566c2"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/8ea73f6f-9689-42ad-8c60-195bbf06a7ba.json",
+        "sha256": "67a6f234fe528baa6bc85ec09ed4e028e4cf4b752104097f1bd9dcf697598d26"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/a746add2-cab0-4740-ac36-c3769d9bfb46.json",
+        "sha256": "9adb7eb7c648323143ba7b31372b27754a17cb6416d2e42b558162d776c1c9b9"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/b148e375-fe0b-4bec-90e7-38632b0d73c2.json",
+        "sha256": "4d3ec49da476d334a8035727512a0a59d6e22a16baf31ed6c8136969ad941bb3"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/d16c99dc-2a1e-46f2-b350-d97c86c85c15.json",
+        "sha256": "a49f3993fd69177605e21182a6052334422571ab55a70fe149f124e9084e3769"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/d52d6308-ec58-42b7-a2c9-de80e4837b2b.json",
+        "sha256": "5ba20ef7a131549784b3c885f4ad6a21baf9b1ce677c051e151928c0dcc2fc7e"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/dbbf4b99-2253-4b10-9274-45f246af2466.json",
+        "sha256": "d7daae3d4748e9d1b7c9d8635191e0bbf19e830e232fc69354f2ad136f8a111e"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/e19bd559-633b-4b02-940f-d946248f088e.json",
+        "sha256": "854a8dd2d26e7a1a2d9e95e300753e20f49c93e9a1cad4a6f0d60dd42b7eecbe"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/e2dd0213-26db-4349-abe5-d5667bfd725c.json",
+        "sha256": "27858ba7e8b297264f7be840cd717c380f67f31a5971799706852cfc76a677a1"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/f4aec372-4fb0-4df5-a52b-79e0e2a5d6ce.json",
+        "sha256": "325ef2db387b1e90d27f33d448c8dd96a9e16beee806c76d11754ff18f7405ee"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/f723c744-e62c-4ae6-98d1-750d3cd7d79d.json",
+        "sha256": "c3a02a506f3d5eb848ff167e8bd9ce3a541af73f954a1483175f0480d50e4bba"
+      },
+      {
+        "path": "evaluation_examples/examples/gimp/fbb548ca-c2a6-4601-9204-e39a2efc507b.json",
+        "sha256": "7055ae5b587c2dbdf165486d47cd94a65c43ebddbb66d7ab82b6e6519e62288d"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/01b269ae-2111-4a07-81fd-3fcd711993b0.json",
+        "sha256": "d2fcb5cff650910f88141746d9de747c3c66fad7b3726c60a6c16b0695c1e594"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/0326d92d-d218-48a8-9ca1-981cd6d064c7.json",
+        "sha256": "7d7b8d8e5142f152c7bcf6d06ef806cd01d82f2287964dff7a6574d3c8c3d400"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/035f41ba-6653-43ab-aa63-c86d449d62e5.json",
+        "sha256": "9ec4a595e314d125585a40d8fb42b693578b2a5a7f6775cbea03d0240d7fbb03"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/04d9aeaf-7bed-4024-bedb-e10e6f00eb7f.json",
+        "sha256": "e3be8ffe83f988e05cfbe2b790e5875c453dc325c839b0b0b62618b66cf1e9d9"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/0a2e43bf-b26c-4631-a966-af9dfa12c9e5.json",
+        "sha256": "2381626e94be758908cab1f63f61e913e04517092ec27ce29e7008ef42367583"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/0bf05a7d-b28b-44d2-955a-50b41e24012a.json",
+        "sha256": "f8cca442b9c0b6711f7f57da6d575020e0784e6cb8a23fcd4e17d2bbcee11bab"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/0cecd4f3-74de-457b-ba94-29ad6b5dafb6.json",
+        "sha256": "f453f58695d62c281ebe39e5535604242d22f53ca12917e176d0595cf7987798"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/12382c62-0cd1-4bf2-bdc8-1d20bf9b2371.json",
+        "sha256": "dd95df3f077ed989d7eebd94404238ac051fca119b3a53eb219e748d3ac7abf7"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/1273e544-688f-496b-8d89-3e0f40aa0606.json",
+        "sha256": "f2a9d99e06f3f60b41c87b03ddfe3333f41dabb8f9399ede79da5bab546e0877"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/1334ca3e-f9e3-4db8-9ca7-b4c653be7d17.json",
+        "sha256": "68313c19e60463273dc1f669790367e3e3990ba83ef2748f09dcf136d6882fdf"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/1954cced-e748-45c4-9c26-9855b97fbc5e.json",
+        "sha256": "5c3866be06f0224be2f7d2517c63dd975f0b2d762035f9e37fdf70ad0c9d68b9"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/1d17d234-e39d-4ed7-b46f-4417922a4e7c.json",
+        "sha256": "073fbe221436537e6d7ad03fe4e2e5ae07c1588ab07cf9862bba812ab86add19"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/1de60575-bb6e-4c3d-9e6a-2fa699f9f197.json",
+        "sha256": "c7825fb43dc155093338297dcf51c8a2dee0575f50f078f870afef60b8429e38"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/1e8df695-bd1b-45b3-b557-e7d599cf7597.json",
+        "sha256": "f174223b54158274b9f191688fcf07322daad2f8db4fe4f63ad4a1de2c826cad"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/21ab7b40-77c2-4ae6-8321-e00d3a086c73.json",
+        "sha256": "f748928c7439c5a4959362ae248335759cbfd6073a7fe4ea8169add1815b7f8a"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/21df9241-f8d7-4509-b7f1-37e501a823f7.json",
+        "sha256": "50fd0d21aa6e9a2225d30884ed6d24d6f5142582d704dac929576bb4ee69d04a"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/26a8440e-c166-4c50-aef4-bfb77314b46b.json",
+        "sha256": "c5932ccede22a1578e20ff33a90745163f667b41ab806c36809593804ac5833c"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/2bd59342-0664-4ccb-ba87-79379096cc08.json",
+        "sha256": "94b24f0d1b387485890f254ffcb9f4c6491e1226354ceb7b9dfa1b43588e808c"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/30e3e107-1cfb-46ee-a755-2cd080d7ba6a.json",
+        "sha256": "7180274f38f4aab4de748ec5006b59bafa8003394a6092aa4562959c56564b99"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/347ef137-7eeb-4c80-a3bb-0951f26a8aff.json",
+        "sha256": "a56bce402fae809243ce9e41e868ff6417d6c313a5c31442a8cf0ba7e0fb22ab"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/357ef137-7eeb-4c80-a3bb-0951f26a8aff.json",
+        "sha256": "eaeacdb68594c0c4203ce3b6132685b6dc438e19a5f6c3b2e92e3b81bc19c198"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/37608790-6147-45d0-9f20-1137bb35703d.json",
+        "sha256": "616016a45d3f08ce3ff99c6080d2ce446398dec921b360d5c86a8e43b906bb76"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/3a7c8185-25c1-4941-bd7b-96e823c9f21f.json",
+        "sha256": "4e847882f23a8baa11d3557860ae551120b35a8800cbe9e36365e55ead9e28e8"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/3aaa4e37-dc91-482e-99af-132a612d40f3.json",
+        "sha256": "4dfd10c763299d4fd4ef942e21c03c10cbd91c6b06c8521926e43052979a1cfa"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/4172ea6e-6b77-4edb-a9cc-c0014bd1603b.json",
+        "sha256": "cae4973b5d0dcc756a4713c88ad3d939191162bccff09bb898819a4ce99f7603"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/4188d3a4-077d-46b7-9c86-23e1a036f6c1.json",
+        "sha256": "225e820be492390b339e8d22b2f35c21fe1f6dbfbcf9aa37da0f017ba2113d23"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/42e0a640-4f19-4b28-973d-729602b5a4a7.json",
+        "sha256": "7b43585e8728f46f78579c5c53b7a76d1fd24e236fae78bf45a53ae31eabc6cc"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/4de54231-e4b5-49e3-b2ba-61a0bec721c0.json",
+        "sha256": "2f1daa3fba918119712ce620e6ccc84d6025f963c26c6438f3b2a609a19a8d53"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/4e6fcf72-daf3-439f-a232-c434ce416af6.json",
+        "sha256": "3bcb724ed527e90ef5480afb4f132d95abfcce25947fb5c74638c46311eb68a3"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/4f07fbe9-70de-4927-a4d5-bb28bc12c52c.json",
+        "sha256": "55926efc0477d0e464082e9acae56e2fe8bf687f427f3d2fb884aef2fe9f1f91"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/51719eea-10bc-4246-a428-ac7c433dd4b3.json",
+        "sha256": "53b8ae10912dc37305c6d34d661f428682d0c662ecd1fbd5082086c5497106a5"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/51b11269-2ca8-4b2a-9163-f21758420e78.json",
+        "sha256": "14155867e13993f7d1681d8e4390d44512f213766137d0febc4cb17d151f7a78"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/535364ea-05bd-46ea-9937-9f55c68507e8.json",
+        "sha256": "72f1d948dc7621abff3b8eab3e54470a81ae1e73b92e2e2bfc2da94b485bcec0"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/6054afcb-5bab-4702-90a0-b259b5d3217c.json",
+        "sha256": "4b97d6d8b1f4155d13d91413e6ec3761d71200dba1943ff7b058b8b225b69ba8"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/6e99a1ad-07d2-4b66-a1ce-ece6d99c20a5.json",
+        "sha256": "cd111c77f9143e0f6734223029b4e0cd9f16ba3d037f822fee7d795726eac574"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/7a4e4bc8-922c-4c84-865c-25ba34136be1.json",
+        "sha256": "32ddd56d3aa184864be5a96390ba487551933ed21dc08d3503075e02fdc51ca3"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/7e429b8d-a3f0-4ed0-9b58-08957d00b127.json",
+        "sha256": "6bbd0f962dffdf6854a30e1b7e6bd076890f9caf9113b804435d3525cfb360cc"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/7efeb4b1-3d19-4762-b163-63328d66303b.json",
+        "sha256": "0e00244f7e93552832537ba416a0b12a335edf107c31f0b8fc82ffa7c5939257"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/8b1ce5f2-59d2-4dcc-b0b0-666a714b9a14.json",
+        "sha256": "4b7dc413f7f2fe14f294b7041dc4982a4a7264abd60be8ed89a50ea6a4923443"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/a01fbce3-2793-461f-ab86-43680ccbae25.json",
+        "sha256": "5fe52f18369ca5966d63f074f0f5b71dbeb3d8075e9b831bb630ca15a68ccdff"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/a9f325aa-8c05-4e4f-8341-9e4358565f4f.json",
+        "sha256": "2184cc6ac93284d74e329f8d6aed1ba775860b42e8bf4ceff454c0351408727c"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/aa3a8974-2e85-438b-b29e-a64df44deb4b.json",
+        "sha256": "af2c05d64120c0786491cccedf3cfb9735678f403cd252215f252cc884e9b082"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/abed40dc-063f-4598-8ba5-9fe749c0615d.json",
+        "sha256": "6c5f96a5c3ab346537192ac35d4a8658c6a7240869753f4f995e988fe01a5277"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/d681960f-7bc3-4286-9913-a8812ba3261a.json",
+        "sha256": "6b159ebf148605bc6daac9ccd4712667d4b003abee3daa65af8cf9a497c13818"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/eb03d19a-b88d-4de4-8a64-ca0ac66f426b.json",
+        "sha256": "6ab55bf702b86d23f4aae25b7c632b41354b7e5a2ca9872f5c43ca74582e6864"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/ecb0df7a-4e8d-4a03-b162-053391d3afaf.json",
+        "sha256": "0961de42709b04989d5673b512d560c4ed3e36ee537a6e507e7f79445ee2b491"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_calc/f9584479-3d0d-4c79-affa-9ad7afdd8850.json",
+        "sha256": "2f60ec2d8bc5d1516dc2c091f9f1eae31c43f1c6ee1f6a4fdeb426654dfee38d"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/04578141-1d42-4146-b9cf-6fab4ce5fd74.json",
+        "sha256": "a90155412b652c4d2889fdd2c5d10cacc4c10b89bf5bce842c4956e26cf6bc68"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/05dd4c1d-c489-4c85-8389-a7836c4f0567.json",
+        "sha256": "c70dd07733988537bf002d83b838b751a3138e6d4c7c1a5d4fcf34cf3d2e2582"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/08aced46-45a2-48d7-993b-ed3fb5b32302.json",
+        "sha256": "a4dab38a40b01f899d33eb3fa6c4baa25408e717ea972b8bb0fba0cb2f30bf77"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/0a211154-fda0-48d0-9274-eaac4ce5486d.json",
+        "sha256": "9a79d495b947164586d415c0331f59141f849a91816143f433d0cff2a46f0a16"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/0f84bef9-9790-432e-92b7-eece357603fb.json",
+        "sha256": "ad6e281aa957aee69dd283341ed5dc7cb5eb8db84bcecd782525b09b0ce0bb3c"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/15aece23-a215-4579-91b4-69eec72e18da.json",
+        "sha256": "38105453b8f69eaf1fc3f62ebed6b5690c77b921e49800035a2e3cf3a0819dac"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/21760ecb-8f62-40d2-8d85-0cee5725cb72.json",
+        "sha256": "1a473bded6d3a0c2dfdb4de4c6cd0303a1b82917f85cf6075d8c1cf84870ef91"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/2b94c692-6abb-48ae-ab0b-b3e8a19cb340.json",
+        "sha256": "77d20ca7c67b3546c815c5dc1b654a546573fe9142fd7fc1ace5d92825e7d992"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/2cd43775-7085-45d8-89fa-9e35c0a915cf.json",
+        "sha256": "2fdecc2bbf6d13c1206c317e358f259705628ecd42b98e556ae3d3816d3bb926"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/3161d64e-3120-47b4-aaad-6a764a92493b.json",
+        "sha256": "e20fc5f547980ab288a3d9825fa3a547361539d1bf35251e8860454180365a1e"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/358aa0a7-6677-453f-ae35-e440f004c31e.json",
+        "sha256": "8c60877d40851f909fad2a676f1fc3fb69b0717937446cb359cf581564ca5612"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/39be0d19-634d-4475-8768-09c130f5425d.json",
+        "sha256": "9a9ce4e4de22aca2f2018b35c74bef81bd8180d69bd7d2e040ae078fd7b9d435"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/3b27600c-3668-4abd-8f84-7bcdebbccbdb.json",
+        "sha256": "8d3eb2c5b8bd92465e9dddf4d286ba30ace1b72efdf2cc8ce0a7ee5d30ccc152"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/455d3c66-7dc6-4537-a39a-36d3e9119df7.json",
+        "sha256": "f04bf5588f19c86d86dadc182d209804750a11ef67b6b375074014cb0442666d"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/4ed5abd0-8b5d-47bd-839f-cacfa15ca37a.json",
+        "sha256": "c8a3b5eef2dcaac8942f75e05ba3c159275d440ef1df4bc9178024a280099edf"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/550ce7e7-747b-495f-b122-acdc4d0b8e54.json",
+        "sha256": "f48b5d1177496772cf2e510afe3718e43af7bcbeab504640125f9cfe015368da"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/57667013-ea97-417c-9dce-2713091e6e2a.json",
+        "sha256": "935d60ce1b7160a8ff8f1027ed5cf4d07e7579dc835a6aa3524813ce546306df"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/5c1a6c3d-c1b3-47cb-9b01-8d1b7544ffa1.json",
+        "sha256": "5862621ddebb7b40a1f8f133204cb179d221f2a0a2ebfe5c008d82b112117991"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/5cfb9197-e72b-454b-900e-c06b0c802b40.json",
+        "sha256": "fcd2313e90c1fde51c02cf7ed351722f15d09117a611935eafeab6b9dea293b6"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/5d901039-a89c-4bfb-967b-bf66f4df075e.json",
+        "sha256": "e74f19e2edf5d45c8d24740c807be137b9773271c5e8792346f7c10c740aac02"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/70bca0cc-c117-427e-b0be-4df7299ebeb6.json",
+        "sha256": "68c20e8e73a37b9f2a4903a2d4a0dc9c29b2f2f49c7d7c8f64cfe86bd5961593"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/73c99fb9-f828-43ce-b87a-01dc07faa224.json",
+        "sha256": "bd158908aa1ac213ba63c86b9deb69502d937436189340399100ff8611465173"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/7ae48c60-f143-4119-b659-15b8f485eb9a.json",
+        "sha256": "6ff63a17f1ac9726dadc481ff8390173798faf38fc84271bfae8d3da1d330075"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/7dbc52a6-11e0-4c9a-a2cb-1e36cfda80d8.json",
+        "sha256": "bb8a73c5bbbe089d0bbf1e23dd001b90a1d42f1f3ff492656e06e43a2d1b7667"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/841b50aa-df53-47bd-a73a-22d3a9f73160.json",
+        "sha256": "531f748503cf2ac685547510e6317b7ba3c419a63fcbe121542ab7e3545bb873"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/8979838c-54a5-4454-a2b8-3d135a1a5c8f.json",
+        "sha256": "12f060dcfa905c82f71f45c9a3a8283fc855725c841d77f11f47d12b4ca11de2"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/986fc832-6af2-417c-8845-9272b3a1528b.json",
+        "sha256": "9168e1b73619b263999e716cf1c535ad1f6702144426de6895ab106d8edddc9a"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/9cf05d24-6bd9-4dae-8967-f67d88f5d38a.json",
+        "sha256": "0d4f04e2e65c11c6c58b834fb6f710ee13dd626980294a0359e1b03278977014"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/9ec204e4-f0a3-42f8-8458-b772a6797cab.json",
+        "sha256": "6804991d9e62b1cd6d8d1b1a1508c76ff7de06988fe9811ba0d1d0b3d8d99700"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/a097acff-6266-4291-9fbd-137af7ecd439.json",
+        "sha256": "d1c57757ef0d8ba13f6d25a03ab4fec1374b6f9b12c934d27908e961de413240"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/a434992a-89df-4577-925c-0c58b747f0f4.json",
+        "sha256": "ccea1c83a222e2641c9cb9dbd460913a3758ab4b498c64ed3c48513ff4401edb"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/a53f80cd-4a90-4490-8310-097b011433f6.json",
+        "sha256": "dc9d8e38700f2899c734b2f6b139804c72d714b3e8f2b7004d32a38fb9c1722b"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/a669ef01-ded5-4099-9ea9-25e99b569840.json",
+        "sha256": "b0e055dba31b3c574fe377479d450902e18130942d5a905b9e975b5d3b1ecd86"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/ac1b39ff-ee4d-4483-abce-c117e98942f0.json",
+        "sha256": "b37ec8fe2fd2c0178939c2a5dc3257827cbf355d592458c1128fea9c19ce12de"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/ac9bb6cb-1888-43ab-81e4-a98a547918cd.json",
+        "sha256": "78bb31147527e4240bccfcd2a26608cb10f71e7336fc37088d757d1459802f64"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/af23762e-2bfd-4a1d-aada-20fa8de9ce07.json",
+        "sha256": "30a6b32e1e26568e4bb695c74538f1e4e574a96970a6e440777590d7a3064a68"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/af2d657a-e6b3-4c6a-9f67-9e3ed015974c.json",
+        "sha256": "9d4af2b17f492d384e4bb9cb668b870ee3b6e0bdf222cf0e037795acfe53f1c6"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/b8adbc24-cef2-4b15-99d5-ecbe7ff445eb.json",
+        "sha256": "e2ba33a599321cc24d42c02961e561efd7be6c625cce37b531796b117efca702"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/bf4e9888-f10f-47af-8dba-76413038b73c.json",
+        "sha256": "299374429e9aec17f50f3b9e711a56ec645291aa4089b987570a8644e9f8c2ce"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/c59742c0-4323-4b9d-8a02-723c251deaa0.json",
+        "sha256": "7081981d6249dc741e73d91a0f0a75373beb6e4d01e850627fd878224cfedfd5"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/c82632a4-56b6-4db4-9dd1-3820ee3388e4.json",
+        "sha256": "443a91b2a55fe105e0ffcd3d7008533b4aa4c9404b5645f98cfc324be38d95c8"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/ce88f674-ab7a-43da-9201-468d38539e4a.json",
+        "sha256": "3877b1dbd2c757d9cf817a4c5f30a23f9b4c528a43982ff6f1d0878eee45e610"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/e4ef0baf-4b52-4590-a47e-d4d464cca2d7.json",
+        "sha256": "b1feb06dfe39166b328154084d6254dd0a6537b542a246a462eb12697e59d66d"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/ed43c15f-00cb-4054-9c95-62c880865d68.json",
+        "sha256": "ce015d518dce45655c00e69385c37c5a1a325accac6b39fabfade9efb7fda70c"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/edb61b14-a854-4bf5-a075-c8075c11293a.json",
+        "sha256": "25aacb7175d9e317fa03fbb232dc6aadb73b012b38b26a89f79a90a8804f8516"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/ef9d12bd-bcee-4ba0-a40e-918400f43ddf.json",
+        "sha256": "6faed730eccb8cd686b4e1fc0361cfb0a255d958103660984a842ce4adcec953"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_impress/f23acfd2-c485-4b7c-a1e7-d4303ddfe864.json",
+        "sha256": "f97c9a83e52315511950b82deac8100ff1f0054adbf03980c4b573bb0637f2e5"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/0810415c-bde4-4443-9047-d5f70165a697.json",
+        "sha256": "f7832d4f7f52b5f151389add68c384c1002182348794ef4aa8dcab8b59e6616f"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/0a0faba3-5580-44df-965d-f562a99b291c.json",
+        "sha256": "11eac51235a86b83f4edc6ba367fcee6de5df16562c8405031ce47fd8cdaf892"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/0b17a146-2934-46c7-8727-73ff6b6483e8.json",
+        "sha256": "fe62aad199413d2f883305c518bc4b2c637ef6500256a0959460abda9bcc89d1"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/0e47de2a-32e0-456c-a366-8c607ef7a9d2.json",
+        "sha256": "a6684c6d34ea71587d2000cc2f0c49074edff15420ec0dbb60f3d510900cecca"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/0e763496-b6bb-4508-a427-fad0b6c3e195.json",
+        "sha256": "603ccbbe7a35c55bea472f6e72ef20b1f515b5666e85ec1917918f5ef563b8f9"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/3ef2b351-8a84-4ff2-8724-d86eae9b842e.json",
+        "sha256": "e302652cb5277e2b6c826aa8a79af76d1430991ea83e21025dd8f4730f41ba54"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/4bcb1253-a636-4df4-8cb0-a35c04dfef31.json",
+        "sha256": "c46e629373f9187a6642938df4c9d0d3145e82dc78cd5acc618ced3fa9c6b88f"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/66399b0d-8fda-4618-95c4-bfc6191617e9.json",
+        "sha256": "08b2eec6bb1d6446d9050d0102546d2376a597ffd72c36d5208b523406e15541"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/6a33f9b9-0a56-4844-9c3f-96ec3ffb3ba2.json",
+        "sha256": "36d0cb101d6debc6122ea6ad38b2102c1e078d2c7cf7e7cba261a2758afb8bae"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/6ada715d-3aae-4a32-a6a7-429b2e43fb93.json",
+        "sha256": "75b28fe6b1878ae3a00a2a5f1bf9c0024a9af9a98855cd528e0587340e87c847"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/6f81754e-285d-4ce0-b59e-af7edb02d108.json",
+        "sha256": "6e564429d5be1d3637c43f5afe5bd54afc3d3e66385f85ec1131882c60c8a441"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/72b810ef-4156-4d09-8f08-a0cf57e7cefe.json",
+        "sha256": "7d952a0059c0cac9ab25977e99b80ac2bc11561b90e710c7e440eb966d1f4ff6"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/8472fece-c7dd-4241-8d65-9b3cd1a0b568.json",
+        "sha256": "5ded80f42672f25ce53eefeee0e060ac5e355490f05099eb30b302409e39f107"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/88fe4b2d-3040-4c70-9a70-546a47764b48.json",
+        "sha256": "d442e9013295d3b431623ee34c9dbb2e89eda1be2034dde936d1e3c8c90939cb"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/936321ce-5236-426a-9a20-e0e3c5dc536f.json",
+        "sha256": "a71df87c65237de42c796cf7af2dedcb930886208d3f81c17401388eb87d2789"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/adf5e2c3-64c7-4644-b7b6-d2f0167927e7.json",
+        "sha256": "1008ca60438d1c5cc97ab254f28fb8f3829ab97ba039a1812bd70735818f9212"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/b21acd93-60fd-4127-8a43-2f5178f4a830.json",
+        "sha256": "3e80ebde2fb929d876af34a0193dec9e198f1cff9eaff068ad1136bc78fe14e9"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/bb8ccc78-479f-4a2f-a71e-d565e439436b.json",
+        "sha256": "af0d4970785246b6ac00b2784ad9e00f3e46bf91a1b47ad83167806111cb62b0"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/d53ff5ee-3b1a-431e-b2be-30ed2673079b.json",
+        "sha256": "04448ec3a5eea8301cd2926b94131a142ea5b2881e9d5faa20e7bd63e7df1c4b"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/e246f6d8-78d7-44ac-b668-fcf47946cb50.json",
+        "sha256": "d2705b6b7ccfb2683389e25d1d4871b263d7d380236996e5d2cdb44a78ddf8a9"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/e528b65e-1107-4b8c-8988-490e4fece599.json",
+        "sha256": "936d6d4ace45e348b77d8f647cf03d7352c221f2aeff8a1f4797ed2a1d13948a"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/ecc2413d-8a48-416e-a3a2-d30106ca36cb.json",
+        "sha256": "d772a6616464a73971bb860a76dea438e1b6f71c0542f378e3faf24786b53762"
+      },
+      {
+        "path": "evaluation_examples/examples/libreoffice_writer/f178a4a9-d090-4b56-bc4c-4b72a61a035d.json",
+        "sha256": "3f2ce71f25f01db700c8a571f689517d9aafb7fb1fdbf136e53cdf30a45c9c35"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/00fa164e-2612-4439-992e-157d019a8436.json",
+        "sha256": "c0c8f309c3c366a82eaa737737279417bfad072fcab40d11578c2b129ccd69cd"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/02ce9a50-7af2-47ed-8596-af0c230501f8.json",
+        "sha256": "0453661d6f0318e636decf776bd8e8d7dc6cd2575aff19feedef21db4ab3d062"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/09a37c51-e625-49f4-a514-20a773797a8a.json",
+        "sha256": "df0153b326cac2de7097b2fa741826dab7a469b4dd4bbfa892ab08369779443b"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/0c825995-5b70-4526-b663-113f4c999dd2.json",
+        "sha256": "d18b62383f176b27079c96abb903e8b6b4a1c58563c02912876af3d0ff34f6e7"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/0e5303d4-8820-42f6-b18d-daf7e633de21.json",
+        "sha256": "c810415835a31710fcf5cbcd31bcf26d4966f907d5f8650d49372286f50a9320"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/185f29bd-5da0-40a6-b69c-ba7f4e0324ef.json",
+        "sha256": "c2be9b20508b97c2d8e91d6016ee58730587be0ada677649b663d1652232c6b9"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/1f18aa87-af6f-41ef-9853-cdb8f32ebdea.json",
+        "sha256": "36846c42e7f799b278798a33e998026ddd8470dbb2a68f3da69486f6f2b39365"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/20236825-b5df-46e7-89bf-62e1d640a897.json",
+        "sha256": "b157a27ec1cbe8b87627a71a7e5dcd19d8f39f06302e759701f918ba451c926e"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/227d2f97-562b-4ccb-ae47-a5ec9e142fbb.json",
+        "sha256": "0b52407423312e20729dd9750d8e06f378cf0eba14a57b2ecfa9e26aedabd07f"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/22a4636f-8179-4357-8e87-d1743ece1f81.json",
+        "sha256": "f9014652ce1467bec3ff9525529831bc675b4aaf5ea836caaa847e22c187ab35"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/236833a3-5704-47fc-888c-4f298f09f799.json",
+        "sha256": "b4f7a6d20336c073bd1dd77d173d47afd7ff000d1f0118481a89f048519a4dc0"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/2373b66a-092d-44cb-bfd7-82e86e7a3b4d.json",
+        "sha256": "c7a041eb25942bd971debdcaec878ba4e7b3616983accd6c35cec7ef0c0be942"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/26150609-0da3-4a7d-8868-0faf9c5f01bb.json",
+        "sha256": "ef7a300af42140b0b7237fb614c8a165f449b9d69b866ed089e517b0b936948e"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/26660ad1-6ebb-4f59-8cba-a8432dfe8d38.json",
+        "sha256": "329c23da53b723150de0c38486a7dbd27a17a818033606d6f55e66950fcdf2a7"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/2b9493d7-49b8-493a-a71b-56cd1f4d6908.json",
+        "sha256": "5026e134bc95a08041a1db6b10f4624b7cc290940630edd03bd3f083c8a74c38"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/2c1ebcd7-9c6d-4c9a-afad-900e381ecd5e.json",
+        "sha256": "50c6098a2f7548971f742dba9040c1caa0dc77838d3f4342bcc1bc375797684f"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/2c9fc0de-3ee7-45e1-a5df-c86206ad78b5.json",
+        "sha256": "6d03675e3d6ed720cfaf3fa60d54403b1c9ef028047766b286e69074c0dc1ef9"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/2fe4b718-3bd7-46ec-bdce-b184f5653624.json",
+        "sha256": "5c695d55fcb455170668255df703d31fcc96698ffc83c3425420cf5ce0ba950c"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/337d318b-aa07-4f4f-b763-89d9a2dd013f.json",
+        "sha256": "c62cc899ebc9d38b10359404ce63e061784f3582b41a9f41332e2221b204e931"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/36037439-2044-4b50-b9d1-875b5a332143.json",
+        "sha256": "3fffc533e050bafd7911487bfca1ef8b1e9ef8c8609f5b9d4359ea53e5fcfbb2"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/3680a5ee-6870-426a-a997-eba929a0d25c.json",
+        "sha256": "145d7cba50721a2c8fa6eb9fe08628517f87a8f24249fb1126725436140f4cb9"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/3a93cae4-ad3e-403e-8c12-65303b271818.json",
+        "sha256": "bc86c0ebd1cdfae32af779b1b8cdabea956c66c007de0fe827e2da6540bbb8ba"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/3c8f201a-009d-4bbe-8b65-a6f8b35bb57f.json",
+        "sha256": "018baf2aaf4e31e1dc3294cee4a781bba6ec6367bb40dc31427a5aa8a0277d82"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/3e3fc409-bff3-4905-bf16-c968eee3f807.json",
+        "sha256": "f68697f76e81a4fbd0642166b14cf185777d77e5d11ff9c39018fbfff92ee837"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/3f05f3b9-29ba-4b6b-95aa-2204697ffc06.json",
+        "sha256": "28caf8f4bfd32de393f2d225d7f4ab0b5f7165cacb0bd6e7414e9302733f1c4a"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/415ef462-bed3-493a-ac36-ca8c6d23bf1b.json",
+        "sha256": "49e8fa5ed168e95e3297edad5b57646ca3b6757bd5e6065c299bcc78eab47422"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/42d25c08-fb87-4927-8b65-93631280a26f.json",
+        "sha256": "fb89b07b9755b7b7d35dfc20b607797477aa30fcd537bb471b5c1ee3ad4cd4c3"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/42f4d1c7-4521-4161-b646-0a8934e36081.json",
+        "sha256": "25af6164eebf704e1365f94d30f9dbc66161a6f2f531463cc99b27cee639b233"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/46407397-a7d5-4c6b-92c6-dbe038b1457b.json",
+        "sha256": "cd11937d614fa82b48221ecda0f5cd718f9072ef2de38dac5e77661338bf2c11"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/47f7c0ce-a5fb-4100-a5e6-65cd0e7429e5.json",
+        "sha256": "29733cbb6ce3cf99e52a30dfd839e46d4e3b7c4e3d4ecf4fa00cb2be8729434d"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/48c46dc7-fe04-4505-ade7-723cba1aa6f6.json",
+        "sha256": "d17999513140e9d3e8451d8b9fc45073d081e8ff5c90f2d2a8376843eeabb27e"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/48d05431-6cd5-4e76-82eb-12b60d823f7d.json",
+        "sha256": "d0b2184bca9e653d1740aa34898eea47a65add91076fc8f6701fcb3a642fbb44"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/4c26e3f3-3a14-4d86-b44a-d3cedebbb487.json",
+        "sha256": "0ba348631481e7605cab4b0817adc002746b8bb479dbb979d65bdf0e93f3c6f2"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/4e9f0faf-2ecc-4ae8-a804-28c9a75d1ddc.json",
+        "sha256": "5090257a9091dff9792a1bad0c990655fa6bf144c0d80f0dea668c99b5590445"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/510f64c8-9bcc-4be1-8d30-638705850618.json",
+        "sha256": "c6fe2ab2fcdf918119757ed57950b15a13ef23e0527e8d1292c544c6af841d34"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/51f5801c-18b3-4f25-b0c3-02f85507a078.json",
+        "sha256": "fac609b2960a33e3c45f3b078311a55e7b3b180612846d2dd06f7cc9c510fca5"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/58565672-7bfe-48ab-b828-db349231de6b.json",
+        "sha256": "7270114683c499a7cf16f8013beefd80c3ffb1ecc83e03c60eb16c8e2d9351ec"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/5990457f-2adb-467b-a4af-5c857c92d762.json",
+        "sha256": "630b673c123f8c61230ec0319ca1e3cd36c06f616ae8e146815bda9374165112"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/5bc63fb9-276a-4439-a7c1-9dc76401737f.json",
+        "sha256": "1d12c2e4ddc32e81ba23808be7bb37f80995f7df5c54badd528c50b1f5fa0c06"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/5df7b33a-9f77-4101-823e-02f863e1c1ae.json",
+        "sha256": "6ba9e497a1896b957ad20deb7cd255c4280e9207298784b7ecdff91b70b5349e"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/67890eb6-6ce5-4c00-9e3d-fb4972699b06.json",
+        "sha256": "e5700cf3b8d9a8df2a6676491ff3845d5b6ab8f927080ec52696acb27de38c10"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/68a25bd4-59c7-4f4d-975e-da0c8509c848.json",
+        "sha256": "f5c5f706c7eb3598285186ecda097ab18099ecca9f886a1dead621f069d278ec"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/69acbb55-d945-4927-a87b-8480e1a5bb7e.json",
+        "sha256": "3f157a0833c011fc0fa59963dbbc6670b7cb5560e4e49b6df3ba89042803c468"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/6d72aad6-187a-4392-a4c4-ed87269c51cf.json",
+        "sha256": "1a17db6ff9337a90f6d10983a09c760623a65cfa48a3d607528734f451650746"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/6f4073b8-d8ea-4ade-8a18-c5d1d5d5aa9a.json",
+        "sha256": "689fb0664b0d8e29e13120c7103ac411b12149c8ac604bfeec48abdd1683db10"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/716a6079-22da-47f1-ba73-c9d58f986a38.json",
+        "sha256": "5d616ae98b04219ea2e3c8877737359123f57eda281e16fb57ca624de880bcea"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/74d5859f-ed66-4d3e-aa0e-93d7a592ce41.json",
+        "sha256": "16634627af2547475adcc85b08452062ca818b75f788e0bc5cea5e2ed3c30bb6"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/778efd0a-153f-4842-9214-f05fc176b877.json",
+        "sha256": "4ef348844fc5eb38a5b2b76235230843a336b0d6ddaa4401ff960c9edbff9788"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/788b3701-3ec9-4b67-b679-418bfa726c22.json",
+        "sha256": "a099657bc5816b954af93484eb27f17d3e44850c9efc6aa0ed8b7b80be02e126"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/78aed49a-a710-4321-a793-b611a7c5b56b.json",
+        "sha256": "d1d3fd7b9a9f8c3b2ca40af0be16cb68e7aa0eceb1d3b38fdf16b18222c2097b"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/7e287123-70ca-47b9-8521-47db09b69b14.json",
+        "sha256": "e0b28effd9c557761ddfa12b0722741b432ec867c4e2e87588570637f0f94b6e"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/7f35355e-02a6-45b5-b140-f0be698bcf85.json",
+        "sha256": "6e5efa626256365c3700bbcdad34e040fc9d27d0e8c2c0466956bdae7b0f072c"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/7ff48d5b-2df2-49da-b500-a5150ffc7f18.json",
+        "sha256": "5b7404308f74708dcb0198bb14fa2465b53635e168efe40383c7a79b39fb1d79"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/81c425f5-78f3-4771-afd6-3d2973825947.json",
+        "sha256": "c4552b06fdf1293ed7c52dfc0127ac9d0ea6d457326c81fa8805c0de852c5774"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/82e3c869-49f6-4305-a7ce-f3e64a0618e7.json",
+        "sha256": "ee4e1353167c2d5a8f53cc1dd61bcaa594ed8bd7d127a29c2f0fad935a599c1c"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/869de13e-bef9-4b91-ba51-f6708c40b096.json",
+        "sha256": "17255583d4576ae111401ef9b1a3b05910ca9bebb16a48d6482b4ec301cca9dc"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/873cafdd-a581-47f6-8b33-b9696ddb7b05.json",
+        "sha256": "5ebaeb41efdb930f808404d740390ac8ad997ba0d212963fe40360ef82c5fae5"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/881deb30-9549-4583-a841-8270c65f2a17.json",
+        "sha256": "17b833134c36a3b6fd28778513dd51639348d62dc00ec4a1f2319725ad618edf"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/897e3b53-5d4d-444b-85cb-2cdc8a97d903.json",
+        "sha256": "6c0e4bec0556f76fb2c547b668236a47c6178b5260421ab5f73abf97a1e23d52"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/8df7e444-8e06-4f93-8a1a-c5c974269d82.json",
+        "sha256": "82a5c38a11e20752efc140147797f57c4070b2a9d1a281dbf66e98ab3ee8e1df"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/8e116af7-7db7-4e35-a68b-b0939c066c78.json",
+        "sha256": "41ea0dd2160266790b425655d6a2343b27365d359de7ae1f1d26df8eae15db79"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/91190194-f406-4cd6-b3f9-c43fac942b22.json",
+        "sha256": "e068d462c566c1b78287cdb57cb4092a009ce5ac6e57f28fde7c7112bfc7c4d4"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/9219480b-3aed-47fc-8bac-d2cffc5849f7.json",
+        "sha256": "cc6701178f313b0bd278aac85423c1b6f3f9722846416739c699f1dc46a49996"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/937087b6-f668-4ba6-9110-60682ee33441.json",
+        "sha256": "fed7eaa370e253f6666dab8d8d0265143243c7b420a207c7feaa076fcb97ed3e"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/98e8e339-5f91-4ed2-b2b2-12647cb134f4.json",
+        "sha256": "a0c367c6c269f19728034d8291545be74a17a0242d04763f0796715eec2b2469"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/9f3bb592-209d-43bc-bb47-d77d9df56504.json",
+        "sha256": "26538911984624f7432a7fe177d61f94fd096f7cff17ef2a7164f5a8f8726d89"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/a0b9dc9c-fc07-4a88-8c5d-5e3ecad91bcb.json",
+        "sha256": "629f9b96dfae52aaa06f0fded6e8394e5fa8cc5237ff32636d7487ed01df4148"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/a503b07f-9119-456b-b75d-f5146737d24f.json",
+        "sha256": "4b07f42a38ecd033ab650b30671c3cc47066a53f3526e9d026b7187a39bced96"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/a74b607e-6bb5-4ea8-8a7c-5d97c7bbcd2a.json",
+        "sha256": "1478c882c5b92e84bcec1512ab8c5858ed42b4ba589a371f8138eaf4a0553bb7"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/a82b78bb-7fde-4cb3-94a4-035baf10bcf0.json",
+        "sha256": "9caeb7fafeffe4e863359aa065d123544b4a6889eba5aec8e85274fd9a9d5fe7"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/aad10cd7-9337-4b62-b704-a857848cedf2.json",
+        "sha256": "7800dbbaeadf1683e58b58d8e23fdc6b0428de141b27102273c9a05f32142992"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/acb0f96b-e27c-44d8-b55f-7cb76609dfcd.json",
+        "sha256": "4a1c0ad0e04c9dd4619bf42107f17d3931eabc5b5a5f21c6d966b22a13ad9ab4"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/aceb0368-56b8-4073-b70e-3dc9aee184e0.json",
+        "sha256": "7320ff1954cd1514b71e2ba4a0ee086fedc0d7f3466bc29a933ea29da441009c"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/b337d106-053f-4d37-8da0-7f9c4043a66b.json",
+        "sha256": "872adb00336ceac1c04fd604e935f6f2864fda7c3a0b453a82027d32b5364e30"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/b5062e3e-641c-4e3a-907b-ac864d2e7652.json",
+        "sha256": "57256f7c64f3dbeee07fca9f1869bcc30c38af2b719cebf7fd3e7ffd2008fe36"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/b52b40a5-ad70-4c53-b5b0-5650a8387052.json",
+        "sha256": "6f0f50c163719cc8db027b6e38fb0ceb048c44d4511fda5f7beabb9442ff4cf9"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/bb83cab4-e5c7-42c7-a67b-e46068032b86.json",
+        "sha256": "4e51b91abd36d6924d75f0967a9d5e43168cf1e18fbe9ce4e39fc167b69273d9"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/bc2b57f3-686d-4ec9-87ce-edf850b7e442.json",
+        "sha256": "00d94970117e53d773ee9dd55aeef17b7ce4a462d760e3715e6edc7d91a4ea56"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/c2751594-0cd5-4088-be1b-b5f2f9ec97c4.json",
+        "sha256": "2492405c335393f4975df19a33b695c1d20aa86a44786e81b7c466456c4e32d6"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/c7c1e4c3-9e92-4eba-a4b8-689953975ea4.json",
+        "sha256": "60a0c45884a5164f96003b430764ce96ba6a3856bbdf65e0ac0170be5131bc61"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/c867c42d-a52d-4a24-8ae3-f75d256b5618.json",
+        "sha256": "4a609ea11ddb849b4da367cff77c9660ba97d17184413b704ac9632a7bae26f4"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/ce2b64a2-ddc1-4f91-8c7d-a88be7121aac.json",
+        "sha256": "1d0d656b7d9936096a12ed0e4e316f5fb551ca7d99e09fb94f8068c26ac83221"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/d1acdb87-bb67-4f30-84aa-990e56a09c92.json",
+        "sha256": "19985e954a1f648b5c4040c4730cddcd0202b2dcb3da76a5918500e515a11378"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/d68204bf-11c1-4b13-b48b-d303c73d4bf6.json",
+        "sha256": "047a8936666e7265af73c694f0a5a76d0224bc934215f3f046202b325ef6bd75"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/d9b7c649-c975-4f53-88f5-940b29c47247.json",
+        "sha256": "d6d20dd64a94f58fe8c15f0f831a08a92602083cc41b5b119b2f5b3df05d12a2"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/da52d699-e8d2-4dc5-9191-a2199e0b6a9b.json",
+        "sha256": "9c6c734915ca752c84b8dfe1446741270ba6654a0f9c67f5569b54d0736751ce"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/da922383-bfa4-4cd3-bbad-6bebab3d7742.json",
+        "sha256": "71dd6aa285fd348e661446a81fc750793400aebe5761c06ce22f5f8d813b519e"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/dd60633f-2c72-42ba-8547-6f2c8cb0fdb0.json",
+        "sha256": "882739645d1a102781ef23b74de1cc60a77e44628000be90e19dedef9c1126ca"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/deec51c9-3b1e-4b9e-993c-4776f20e8bb2.json",
+        "sha256": "e84b499dab2b834844341a07c4251809391ee8aa13baf1f90ae92d4a3deede70"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/df67aebb-fb3a-44fd-b75b-51b6012df509.json",
+        "sha256": "c9d8ec538020ab1de38a8c1ec67cb7be7d1bc198df79eecb1f49b81fd5898832"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/e135df7c-7687-4ac0-a5f0-76b74438b53e.json",
+        "sha256": "a7796f240e2ae015fb6f72367c15c8d31284e689548fce87fc11bd411f0cc6bc"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/e1fc0df3-c8b9-4ee7-864c-d0b590d3aa56.json",
+        "sha256": "b84a94e460679bde21c5e95ae95d33885d30219a98a96265d405473ef32d0e5f"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/e2392362-125e-4f76-a2ee-524b183a3412.json",
+        "sha256": "7a536efacbea3d7e98664e5a2a38a788d55cfd4cc64295a152585a9a213f0dee"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/e8172110-ec08-421b-a6f5-842e6451911f.json",
+        "sha256": "598a39a8b8c8d72aaaeff896636bde4623c141b2245abe4c811ae1b075b0c593"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/eb303e01-261e-4972-8c07-c9b4e7a4922a.json",
+        "sha256": "6e4922c77392634b957d720f66818feecd6be7640ebf8828bc7a6b4a09855550"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/ee9a3c83-f437-4879-8918-be5efbb9fac7.json",
+        "sha256": "62baf2df3b5e34172f7c0990120ee4284b7e4975726d410e17f07363ad80c684"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/f5c13cdd-205c-4719-a562-348ae5cd1d91.json",
+        "sha256": "6b1ca630a5e862fd92bcc76b1c6960fa6038e163774a11dc5ee1b84c1ea9719e"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/f7dfbef3-7697-431c-883a-db8583a4e4f9.json",
+        "sha256": "29a747873bb03bea4c85e4befed2613bf75615b59cce39ea17d30a20d507f8b9"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/f8369178-fafe-40c2-adc4-b9b08a125456.json",
+        "sha256": "e2b831b28d4a07bb62ec4aba95be6ee5f4f3d27ff45437a31a8902ac87cb56ea"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/f8cfa149-d1c1-4215-8dac-4a0932bad3c2.json",
+        "sha256": "24e67787467442f44d3d8301a7b621f22e3b609e5334fb2ce69f050f7da0a5d6"
+      },
+      {
+        "path": "evaluation_examples/examples/multi_apps/f918266a-b3e0-4914-865d-4faa564f1aef.json",
+        "sha256": "7887ce340b9de3742727b610b19ab0d011e9c72f57f9481be4357cedbabc29e8"
+      },
+      {
+        "path": "evaluation_examples/examples/os/13584542-872b-42d8-b299-866967b5c3ef.json",
+        "sha256": "de772625babbec0c7b86053e87fa4e8d5974f5a02f50523af8a2080643cfcb27"
+      },
+      {
+        "path": "evaluation_examples/examples/os/23393935-50c7-4a86-aeea-2b78fd089c5c.json",
+        "sha256": "45619645dd3d1ee02ab0e1ac82a9f2f9a9b7298204d92253a5e38268704da36d"
+      },
+      {
+        "path": "evaluation_examples/examples/os/28cc3b7e-b194-4bc9-8353-d04c0f4d56d2.json",
+        "sha256": "3a4bd0207b8a944d043f57ad5731bc5eb82259aff346b58b02ee67c6df4167be"
+      },
+      {
+        "path": "evaluation_examples/examples/os/37887e8c-da15-4192-923c-08fa390a176d.json",
+        "sha256": "cb8151a96ee6d28354c489a50251a930a805973adf348bd7cb69f991631433f8"
+      },
+      {
+        "path": "evaluation_examples/examples/os/3ce045a0-877b-42aa-8d2c-b4a863336ab8.json",
+        "sha256": "5f3fd1f5327c50c6322813a9dd17f8e53c70448f42447779ae455847a846fd07"
+      },
+      {
+        "path": "evaluation_examples/examples/os/4127319a-8b79-4410-b58a-7a151e15f3d7.json",
+        "sha256": "44f2158bc2636223e4be2ab0dc36aced320f998d109f55b78aab62883d9d1429"
+      },
+      {
+        "path": "evaluation_examples/examples/os/4783cc41-c03c-4e1b-89b4-50658f642bd5.json",
+        "sha256": "6d0bfb6ba967e7b88fa4dfee90e8c3eeded4370181de6f2efafa63c75469a9bd"
+      },
+      {
+        "path": "evaluation_examples/examples/os/4d117223-a354-47fb-8b45-62ab1390a95f.json",
+        "sha256": "fc7931a4c5c12bd62ba6c102f25973902d230c1425d5d0e146f7f3cb185d8dbc"
+      },
+      {
+        "path": "evaluation_examples/examples/os/5812b315-e7bd-4265-b51f-863c02174c28.json",
+        "sha256": "4cacbc9465bc22fb83adbbfa48662d3294adc768f7945152b39a8d264c232847"
+      },
+      {
+        "path": "evaluation_examples/examples/os/5c1075ca-bb34-46a3-a7a0-029bd7463e79.json",
+        "sha256": "4b5cdca799cb2cc877d1ef1d9f8253f1a3583b2c23e7943426dab38f2359a914"
+      },
+      {
+        "path": "evaluation_examples/examples/os/5ced85fc-fa1a-4217-95fd-0fb530545ce2.json",
+        "sha256": "7b2cfbf0ed2a3de010fe52b6918b5914cbace872e3f97a06a7ef7db1f9a7e39c"
+      },
+      {
+        "path": "evaluation_examples/examples/os/5ea617a3-0e86-4ba6-aab2-dac9aa2e8d57.json",
+        "sha256": "9fc690ea116e7886840f23fd7a941fe631012aad8081ef571d5b06420b4ef613"
+      },
+      {
+        "path": "evaluation_examples/examples/os/6f56bf42-85b8-4fbb-8e06-6c44960184ba.json",
+        "sha256": "171d38b59b2d66b981574e2d207237cd3a04d2d9e5ac3cf5864cacbed69b656a"
+      },
+      {
+        "path": "evaluation_examples/examples/os/94d95f96-9699-4208-98ba-3c3119edf9c2.json",
+        "sha256": "28ac5c67607dfd7b837ceaf08ed09231354515d66202a23af502086bf4e2136f"
+      },
+      {
+        "path": "evaluation_examples/examples/os/a462a795-fdc7-4b23-b689-e8b6df786b78.json",
+        "sha256": "84fec411c4ea2f5768b4f59fba20c6d80da7bc4076bac146592d74d8190ad488"
+      },
+      {
+        "path": "evaluation_examples/examples/os/a4d98375-215b-4a4d-aee9-3d4370fccc41.json",
+        "sha256": "11e2f0a39076c6fa133cffe8f6bc57c17abb589e7341f31488a1ef12737a80db"
+      },
+      {
+        "path": "evaluation_examples/examples/os/b3d4a89c-53f2-4d6b-8b6a-541fb5d205fa.json",
+        "sha256": "d2d6ee08375961a29d90f2294495c0bca46588ca7ae52d815f561a741add498d"
+      },
+      {
+        "path": "evaluation_examples/examples/os/b6781586-6346-41cd-935a-a6b1487918fc.json",
+        "sha256": "76d3839c3dc6da138c2c21fff9aabfdf1a71678299be7d323ebb54458ae4c2e9"
+      },
+      {
+        "path": "evaluation_examples/examples/os/bedcedc4-4d72-425e-ad62-21960b11fe0d.json",
+        "sha256": "52c47a43187b18cfd7075088dcac331d6280f4457494ae92a8b302f3d934c355"
+      },
+      {
+        "path": "evaluation_examples/examples/os/c288e301-e626-4b98-a1ab-159dcb162af5.json",
+        "sha256": "4e2aa3e87e2b5fa1a464a08d0e4897b9d272e4e8637afe7b7b8d0a284f9f3e43"
+      },
+      {
+        "path": "evaluation_examples/examples/os/e0df059f-28a6-4169-924f-b9623e7184cc.json",
+        "sha256": "6b03851ed4cc4951f9add70cc769885aa55c8917d8030d4cba02cbc6fc297b27"
+      },
+      {
+        "path": "evaluation_examples/examples/os/ec4e3f68-9ea4-4c18-a5c9-69f89d1178b3.json",
+        "sha256": "985d0ba62855e9ea1087ea846ba36a3daac7993b7665d70a5d31ee3a3071c108"
+      },
+      {
+        "path": "evaluation_examples/examples/os/f9be0997-4b7c-45c5-b05c-4612b44a6118.json",
+        "sha256": "0cbc4b24c2d4bc977935bb6da0372cdacd7be9930d6cc7bf9e55daa46cc3cb83"
+      },
+      {
+        "path": "evaluation_examples/examples/os/fe41f596-a71b-4c2f-9b2f-9dcd40b568c3.json",
+        "sha256": "a75d26fa3ad6af90574d0ef668df50e8fd042e5c96d451ee0c8f5553a3ba2984"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/08c73485-7c6d-4681-999d-919f5c32dcfa.json",
+        "sha256": "3cd92c47342c78bb0b367966fbda15acbcf13648edec4f6d2d889d5227f6293b"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/10a730d5-d414-4b40-b479-684bed1ae522.json",
+        "sha256": "ee4e679fd77970ff3969fbc3f609ab4b32d75196a5405fe319b4e9f73b25547b"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/15c3b339-88f7-4a86-ab16-e71c58dcb01e.json",
+        "sha256": "363a98f0a62b8ffcedd47b98a010947753c9337d1a4a857bd6d78171209526a7"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/3f28fe4f-5d9d-4994-a456-efd78cfae1a3.json",
+        "sha256": "84478bec62485797f8e7e6c62314d0ee4fa4c8046607886ff4b830865eb73d29"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/3f49d2cc-f400-4e7d-90cc-9b18e401cc31.json",
+        "sha256": "3d9eb91c381b879322dce0cac2a387ffb11cb9ba340501b1dcc785b5bca27551"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/5203d847-2572-4150-912a-03f062254390.json",
+        "sha256": "c19e1a76cf13d03277a71951014722105e3a5182e9734c78e396ab700717765c"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/7b1e1ff9-bb85-49be-b01d-d6424be18cd0.json",
+        "sha256": "5d10cec91ff98c146880784bb9d9b4b6103c46c0149d0f9363d8b0125bcc207f"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/9b7bc335-06b5-4cd3-9119-1a649c478509.json",
+        "sha256": "7a5f77c25103b1f06d2333f74fb5552b9cfc86e5429d9077fc7b0f73fa1925cd"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/9bc3cc16-074a-45ac-9bdc-b2a362e1daf3.json",
+        "sha256": "a9a180153c023ca775bc6aa77814f234efd378c99db9805d17a2e1b1d3968c65"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/a10b69e1-6034-4a2b-93e1-571d45194f75.json",
+        "sha256": "2d9cb9a266bc755638fed551641cc6dbcda99078356ad36e78a06a09d8f47944"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/a1af9f1c-50d5-4bc3-a51e-4d9b425ff638.json",
+        "sha256": "4bb65996317e182076894d79df2f7e2df3c660263f6992db136a285291b3d690"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/d38192b0-17dc-4e1d-99c3-786d0117de77.json",
+        "sha256": "0747257552f9fa13663f7bf4e9a3bd7d93cfe38eec293795414470b5da665e96"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/dd84e895-72fd-4023-a336-97689ded257c.json",
+        "sha256": "f130661f652c97d47fdcff08c2fce6585706a019c9676ad63cb145139988694d"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/dfac9ee8-9bc4-4cdc-b465-4a4bfcd2f397.json",
+        "sha256": "0a71b654cc576a8c3bf452d5f40a74a381ebe46600a1a8aa72aafd788fce9ff8"
+      },
+      {
+        "path": "evaluation_examples/examples/thunderbird/f201fbc3-44e6-46fc-bcaa-432f9815454c.json",
+        "sha256": "f4c6b3b45414a63aef84c1fa4efd9167b0d3d22f05ee914d045e62f4ad8cf589"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/215dfd39-f493-4bc3-a027-8a97d72c61bf.json",
+        "sha256": "8d6e238ca7c33d13452f5545d0730a53ba2dae51567e4b49f2d18d34ffc1463d"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/386dbd0e-0241-4a0a-b6a2-6704fba26b1c.json",
+        "sha256": "33d12bd1c62dbdae68947d1480526f275a0dc0ac0ce46d392a65c31a8b519ebb"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/59f21cfb-0120-4326-b255-a5b827b38967.json",
+        "sha256": "441a9a19df88461d714d7a923038da93eb1ee944041f3620e44c0b7c6bed7110"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/5ac2891a-eacd-4954-b339-98abba077adb.json",
+        "sha256": "1b37342638ddd22de9592751d77e5ada52608717ebc7174bc9a93f5b5d6a77e6"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/7882ed6e-bece-4bf0-bada-c32dc1ddae72.json",
+        "sha256": "8387712daf37f90a4a592c3f83229c210ce432a27ee04bda224928d3cd723bba"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/8ba5ae7a-5ae5-4eab-9fcc-5dd4fe3abf89.json",
+        "sha256": "bb2914a89fc24c374df2c6c68d7e82b497b85857ace2dc0021d067d7fc724b12"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/8d9fd4e2-6fdb-46b0-b9b9-02f06495c62f.json",
+        "sha256": "54dbfdb07d4d241b6258633dff62406dcba8607181aa68fe322d0f174cc9d96c"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/8f080098-ddb1-424c-b438-4e96e5e4786e.json",
+        "sha256": "3b089152fbd86ca1d72842e9dc9b35a7866d111c3e164a03178259c6115ef3a2"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/9195653c-f4aa-453d-aa95-787f6ccfaae9.json",
+        "sha256": "727b662918f930bec0b5bae90d460db21bc60d69826958ba31af07c92c4d23e6"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/a5bbbcd5-b398-4c91-83d4-55e1e31bbb81.json",
+        "sha256": "3c0e1524c6f049e8d8ed4b7ad156dbbc6bad33e1bfd2b4a5e68c356f69e4f046"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/aa4b5023-aef6-4ed9-bdc9-705f59ab9ad6.json",
+        "sha256": "aca7c059ecc12f36ca6114a3d7ed71dcb1b169222cc31be0c7f33fe9e7ecdbe1"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/bba3381f-b5eb-4439-bd9e-80c22218d5a7.json",
+        "sha256": "bdb7b8ec0176361480d75bfd9e3c20cabbae01e4a07c67c755e55afb96d08332"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/cb130f0d-d36f-4302-9838-b3baf46139b6.json",
+        "sha256": "79ff14b54018674d96efce1900cc519213591bc2a29790acb456ae3d1f7be373"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/d06f0d4d-2cd5-4ede-8de9-598629438c6e.json",
+        "sha256": "728cfec533af310d5d2381895060104b24b198de327e3459af6f19ca783ddb6d"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/efcf0d81-0835-4880-b2fd-d866e8bc2294.json",
+        "sha256": "2b1dd0814a35ac624056573e7a2167f69865759c6aa5a2e7208cbe1af4d3c94c"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/f3977615-2b45-4ac5-8bba-80c17dbe2a37.json",
+        "sha256": "5d41b6235e78b033facfc78d92ad18446a63020c680a7e940a5566b3339a3ef9"
+      },
+      {
+        "path": "evaluation_examples/examples/vlc/fba2c100-79e8-42df-ae74-b592418d54f4.json",
+        "sha256": "49c54d88c4e968168745ebd038fa3fac3931fa3e0ecd9ef138f3ed687866c77d"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/0512bb38-d531-4acf-9e7e-0add90816068.json",
+        "sha256": "fbc60d3e3994cfa28ffc4811cf43e92c4c733794c530cabe667fce65b2941e35"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/0ed39f63-6049-43d4-ba4d-5fa2fe04a951.json",
+        "sha256": "5ff44dbccc54ccc58ad89773c16007af91ea7f7d9998a0ba006da4d59d1fae1a"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/276cc624-87ea-4f08-ab93-f770e3790175.json",
+        "sha256": "3c4c5f85b1a3171a66a7685ab0ef35dd360f6ed1b26ca17df7c4c24cd3be68be"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/4e60007a-f5be-4bfc-9723-c39affa0a6d3.json",
+        "sha256": "dcbac45dcfd3520352cc2d6520b0438945b5b6fe82edc78e1d757883da704462"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/53ad5833-3455-407b-bbc6-45b4c79ab8fb.json",
+        "sha256": "ccf5000ba1f84e7744dc62ba9aaff5d4b60d7fd15e696e4d8d7ae29a01cf039f"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/57242fad-77ca-454f-b71b-f187181a9f23.json",
+        "sha256": "7bcdcec67a9b0f6476f8c17fb240ccddf4841505c71706489452fbe4201843db"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/5e2d93d8-8ad0-4435-b150-1692aacaa994.json",
+        "sha256": "332c0bf14a3abeaa70df505044d79526bfdcc5688cd70d2647098a9e11d5471c"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/6ed0a554-cbee-4b44-84ea-fd6c042f4fe1.json",
+        "sha256": "6a6548cf34f9f46e33d7881a11c3d386734998700d5dcc14b099c35eca96326b"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/70745df8-f2f5-42bd-8074-fbc10334fcc5.json",
+        "sha256": "7d5a772bf3483503a1322dcb15c129b50a7d3c892a7bb9693441de870ff196eb"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/7aeae0e2-70ee-4705-821d-1bba5d5b2ddd.json",
+        "sha256": "94a53755ed2ebf075d51d74cb256ac73cab1c11d9f92ab13689af1e932c62987"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/7c4cc09e-7a92-40dd-8338-b2286535c4ed.json",
+        "sha256": "300e5527cca00f3a324387ee3e41146052909a3ba45f63da8b861121a51d630c"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/847a96b6-df94-4927-97e6-8cc9ea66ced7.json",
+        "sha256": "bdb4986a24f6fd09d1be01c822f4142e6daab9a22029f98a83fce21fd134a26b"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/930fdb3b-11a8-46fe-9bac-577332e2640e.json",
+        "sha256": "31f6c772829d1a5459b6a9781225f3ed965a6e585c3fce7c1f6c19d5ebfc4af6"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/9439a27b-18ae-42d8-9778-5f68f891805e.json",
+        "sha256": "0d8374a9e7ccbc63407bb7ac18f160810f5512bcbe28dd623a09ffd93d2f16d2"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/971cbb5b-3cbf-4ff7-9e24-b5c84fcebfa6.json",
+        "sha256": "064d52509f5c690db9795ebfecb79a568e450091c55d17b40ad21af69544af0e"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/982d12a5-beab-424f-8d38-d2a48429e511.json",
+        "sha256": "1d5d52504423217114b4849c94ac498684dd6e5a542bd5f14bebfdb71c719966"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/9d425400-e9b2-4424-9a4b-d4c7abac4140.json",
+        "sha256": "8d7dc9be8f9e562e592ecdfffc07dec08f42bfd5aa36f495781a27fca9564d0f"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/c6bf789c-ba3a-4209-971d-b63abf0ab733.json",
+        "sha256": "9d3e328ad878cd076a9f8c8069a455656d2df7a69486c36eaa71d4738dabace5"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/dcbe20e8-647f-4f1d-8696-f1c5bbb570e3.json",
+        "sha256": "42e56df724f63f8d795f45f7ac53ca916bc0fea0d1369266ffd25a4e60c2dfdd"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/e2b5e914-ffe1-44d2-8e92-58f8c5d92bb2.json",
+        "sha256": "37822c157b968c4f6adbd2abca9e2c2cf920a13a109e9bfd40b990d79354e147"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/ea98c5d7-3cf9-4f9b-8ad3-366b58e0fcae.json",
+        "sha256": "3d00570763f0c296b06904e4f1feade5992f22ecff1b07a38336ac698a1fe18c"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/eabc805a-bfcf-4460-b250-ac92135819f6.json",
+        "sha256": "7a2f25e2bd01867c74bb38cf0b91ba3e86f0506c75ea6b481306c3d151d03ea7"
+      },
+      {
+        "path": "evaluation_examples/examples/vs_code/ec71221e-ac43-46f9-89b8-ee7d80f7e1c5.json",
+        "sha256": "bc0cdd4bf002c91c8de193bc33c1e7fe04efc1f2104856e19881c8de296b73a3"
+      }
+    ],
+    "corruptions": [
+      "pop_ups",
+      "resolution",
+      "marks",
+      "subtitle",
+      "multi_apps",
+      "accidental_touch",
+      "app_minimization",
+      "network_error",
+      "verification"
+    ],
+    "execution_status": "not_run_requires_OSWorld_VM_and_GUI_agent",
+    "local_named_cases_mapping": "unverified; local ten text cases are not these desktop tasks"
+  }
+}

@@ -69,7 +69,7 @@ fn scratch_dir(tag: &str) -> PathBuf {
 fn test_rt14_view_lines_walls_sensitive_paths() {
     let dir = scratch_dir("rt14");
     std::fs::write(dir.join(".env"), "API_KEY=hunter2\nLINE_TWO=zzz\n").unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     let res = h.view_lines(".env", 1, 10);
     assert_eq!(res.status, "BLOCKED_BY_POLICY");
@@ -93,7 +93,7 @@ fn test_rt15_grep_skips_sensitive_files() {
     let dir = scratch_dir("rt15");
     std::fs::write(dir.join(".env"), "API_KEY=hunter2\n").unwrap();
     std::fs::write(dir.join("app.txt"), "API_KEY documented here\n").unwrap();
-    let mut h = ACIHarness::new_with_dir(&dir).unwrap();
+    let mut h = ACIHarness::new_local_with_dir(&dir).unwrap();
 
     let res = h.grep("API_KEY");
     assert_eq!(res.status, "SUCCESS");
@@ -113,7 +113,7 @@ fn test_rt15_grep_skips_sensitive_files() {
 #[test]
 #[cfg(target_os = "windows")]
 fn test_rt16_exec_sensitive_reference_guard_cmd() {
-    let mut h = ACIHarness::new_with_temp_dir().unwrap();
+    let mut h = ACIHarness::new_local_with_temp_dir().unwrap();
 
     let res = h.exec(
         "cmd",
@@ -128,17 +128,20 @@ fn test_rt16_exec_sensitive_reference_guard_cmd() {
     let twist = h.exec("cmd", &["/c".to_string(), "type .ENV".to_string()]);
     assert_eq!(twist.status, "BLOCKED_BY_POLICY");
 
-    // Control: benign shell exec still runs (even with taint in play).
-    let mut tainted = ACIHarness::new_with_temp_dir().unwrap();
+    // Opaque shells are now denied after external input; checking the words
+    // in a shell string cannot prove that it has no privileged side effects.
+    let mut tainted = ACIHarness::new_local_with_temp_dir().unwrap();
     let _ = tainted.fetch("http://untrusted.example/x", Some("note.txt"), Some("payload"));
     let benign = tainted.exec("cmd", &["/c".to_string(), "echo hello".to_string()]);
-    assert_ne!(benign.status, "BLOCKED_BY_POLICY");
+    assert_eq!(benign.status, "BLOCKED_BY_POLICY");
+    let mut clean = ACIHarness::new_local_with_temp_dir().unwrap();
+    assert_ne!(clean.exec("cmd", &["/c".into(), "echo hello".into()]).status, "BLOCKED_BY_POLICY");
 }
 
 #[test]
 #[cfg(not(target_os = "windows"))]
 fn test_rt16_exec_sensitive_reference_guard_bash() {
-    let mut h = ACIHarness::new_with_temp_dir().unwrap();
+    let mut h = ACIHarness::new_local_with_temp_dir().unwrap();
 
     let res = h.exec(
         "bash",

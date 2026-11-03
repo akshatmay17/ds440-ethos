@@ -1,0 +1,774 @@
+{
+  "created_at": "2026-10-15T11:27:18.620882+00:00",
+  "git_rev": "9d4bd363c88387115222c4868662194aaafec292",
+  "working_tree_dirty": true,
+  "mode": "deterministic_component_regressions",
+  "suites": [
+    {
+      "component": "filesystem_alias_boundary",
+      "suite": "test_rust_file_aliases",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_file_aliases",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "hardlink_alias_cannot_modify_secret_contents",
+          "outcome": "ok"
+        },
+        {
+          "name": "hardlink_alias_cannot_read_or_overwrite_a_secret_file",
+          "outcome": "ok"
+        },
+        {
+          "name": "daemon_file_routes_reject_hardlink_reads_and_writes",
+          "outcome": "ok"
+        },
+        {
+          "name": "alternate_tools_cannot_use_hardlink_aliases",
+          "outcome": "ok"
+        },
+        {
+          "name": "windows_stream_and_device_names_are_rejected_before_opening",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.39s\n     Running tests\\test_rust_file_aliases.rs (target\\debug\\deps\\test_rust_file_aliases-4917574823b61e69.exe)\n\nrunning 5 tests\ntest hardlink_alias_cannot_modify_secret_contents ... ok\ntest hardlink_alias_cannot_read_or_overwrite_a_secret_file ... ok\ntest daemon_file_routes_reject_hardlink_reads_and_writes ... ok\ntest alternate_tools_cannot_use_hardlink_aliases ... ok\ntest windows_stream_and_device_names_are_rejected_before_opening ... ok\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s\n\n"
+    },
+    {
+      "component": "agent_loop_final_output",
+      "suite": "test_rust_agent_loop",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_agent_loop",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "test_parse_xml_tool_call",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_parse_markdown_json_tool_call",
+          "outcome": "ok"
+        },
+        {
+          "name": "final_response_and_assistant_history_scrub_known_credentials",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_agent_loop_step_budget_enforcement",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_agent_loop_scripted_execution",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_agent_loop_taint_policy_block_interception",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.41s\n     Running tests\\test_rust_agent_loop.rs (target\\debug\\deps\\test_rust_agent_loop-9a7a2b9a2dafd9d7.exe)\n\nrunning 6 tests\ntest test_parse_xml_tool_call ... ok\ntest test_parse_markdown_json_tool_call ... ok\ntest final_response_and_assistant_history_scrub_known_credentials ... ok\ntest test_agent_loop_step_budget_enforcement ... ok\ntest test_agent_loop_scripted_execution ... ok\ntest test_agent_loop_taint_policy_block_interception ... ok\n\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s\n\n"
+    },
+    {
+      "component": "instruction_memory_lockit",
+      "suite": "test_rust_modern_attacks",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_modern_attacks",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "instruction_edit_block_poisoning",
+          "outcome": "ok"
+        },
+        {
+          "name": "instruction_poisoning_is_blocked_even_when_provenance_is_omitted",
+          "outcome": "ok"
+        },
+        {
+          "name": "direct_api_secret_egress_does_not_require_the_agent_loop",
+          "outcome": "ok"
+        },
+        {
+          "name": "alternate_read_tools_cannot_bypass_origin_tracking",
+          "outcome": "ok"
+        },
+        {
+          "name": "benign_documentation_and_code_edits_still_work",
+          "outcome": "ok"
+        },
+        {
+          "name": "invalid_persisted_provenance_does_not_silently_reset_trust",
+          "outcome": "ok"
+        },
+        {
+          "name": "lockit_vault_exec_references_never_spawn",
+          "outcome": "ok"
+        },
+        {
+          "name": "keyword_free_preexisting_instructions_are_not_implicitly_trusted",
+          "outcome": "ok"
+        },
+        {
+          "name": "instruction_and_memory_write_poisoning",
+          "outcome": "ok"
+        },
+        {
+          "name": "lockit_vault_reads_and_writes_are_denied",
+          "outcome": "ok"
+        },
+        {
+          "name": "interpreter_instruction_write_never_spawns",
+          "outcome": "ok"
+        },
+        {
+          "name": "repeated_instruction_poisoning_trips_circuit_breaker",
+          "outcome": "ok"
+        },
+        {
+          "name": "instruction_shell_redirect_poisoning_never_spawns",
+          "outcome": "ok"
+        },
+        {
+          "name": "memory_copy_preserves_taint_through_rewrite_and_rewind",
+          "outcome": "ok"
+        },
+        {
+          "name": "retrieved_document_cannot_authorize_egress",
+          "outcome": "ok"
+        },
+        {
+          "name": "instruction_fetch_write_poisoning",
+          "outcome": "ok"
+        },
+        {
+          "name": "provenance_survives_session_reload",
+          "outcome": "ok"
+        },
+        {
+          "name": "subprocess_environment_excludes_provider_credentials",
+          "outcome": "ok"
+        },
+        {
+          "name": "unregistered_files_are_untrusted_on_read",
+          "outcome": "ok"
+        },
+        {
+          "name": "secret_canary_is_scrubbed_from_poisoned_tool_output",
+          "outcome": "ok"
+        },
+        {
+          "name": "opaque_interpreters_are_blocked_after_external_input",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.37s\n     Running tests\\test_rust_modern_attacks.rs (target\\debug\\deps\\test_rust_modern_attacks-125f24d5df82ae25.exe)\n\nrunning 21 tests\ntest instruction_edit_block_poisoning ... ok\ntest instruction_poisoning_is_blocked_even_when_provenance_is_omitted ... ok\ntest direct_api_secret_egress_does_not_require_the_agent_loop ... ok\ntest alternate_read_tools_cannot_bypass_origin_tracking ... ok\ntest benign_documentation_and_code_edits_still_work ... ok\ntest invalid_persisted_provenance_does_not_silently_reset_trust ... ok\ntest lockit_vault_exec_references_never_spawn ... ok\ntest keyword_free_preexisting_instructions_are_not_implicitly_trusted ... ok\ntest instruction_and_memory_write_poisoning ... ok\ntest lockit_vault_reads_and_writes_are_denied ... ok\ntest interpreter_instruction_write_never_spawns ... ok\ntest repeated_instruction_poisoning_trips_circuit_breaker ... ok\ntest instruction_shell_redirect_poisoning_never_spawns ... ok\ntest memory_copy_preserves_taint_through_rewrite_and_rewind ... ok\ntest retrieved_document_cannot_authorize_egress ... ok\ntest instruction_fetch_write_poisoning ... ok\ntest provenance_survives_session_reload ... ok\ntest subprocess_environment_excludes_provider_credentials ... ok\ntest unregistered_files_are_untrusted_on_read ... ok\ntest secret_canary_is_scrubbed_from_poisoned_tool_output ... ok\ntest opaque_interpreters_are_blocked_after_external_input ... ok\n\ntest result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s\n\n"
+    },
+    {
+      "component": "exec_paths_unicode",
+      "suite": "test_rust_redteam3",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_redteam3",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "test_c11_secret_names_hidden_from_search_and_observe",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_c1_nonwrapper_type_env_is_blocked",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_c4_curl_with_env_reference_is_walled",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_c2_absolute_host_path_exec_is_blocked",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_c6_env_expansion_args_are_walled",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_c9_host_credential_files_are_sensitive",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_c8_homoglyph_injection_is_detected",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_c5_traversal_args_are_walled",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_ctrl2_wrapper_exec_env_still_blocked",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_c10_estop_trips_after_three_critical_blocks_and_resets",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_ctrl3_provider_redaction_still_holds",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_c7_junction_does_not_enumerate_host_tree",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_ctrl1_env_read_walls_still_hold",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_c3_fetch_cannot_overwrite_env_file",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.45s\n     Running tests\\test_rust_redteam3.rs (target\\debug\\deps\\test_rust_redteam3-ffda53e9b9d93f3f.exe)\n\nrunning 14 tests\ntest test_c11_secret_names_hidden_from_search_and_observe ... ok\ntest test_c1_nonwrapper_type_env_is_blocked ... ok\ntest test_c4_curl_with_env_reference_is_walled ... ok\ntest test_c2_absolute_host_path_exec_is_blocked ... ok\ntest test_c6_env_expansion_args_are_walled ... ok\ntest test_c9_host_credential_files_are_sensitive ... ok\ntest test_c8_homoglyph_injection_is_detected ... ok\ntest test_c5_traversal_args_are_walled ... ok\ntest test_ctrl2_wrapper_exec_env_still_blocked ... ok\ntest test_c10_estop_trips_after_three_critical_blocks_and_resets ... ok\ntest test_ctrl3_provider_redaction_still_holds ... ok\ntest test_c7_junction_does_not_enumerate_host_tree ... ok\ntest test_ctrl1_env_read_walls_still_hold ... ok\ntest test_c3_fetch_cannot_overwrite_env_file ... ok\n\ntest result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s\n\n"
+    },
+    {
+      "component": "daemon_policy_secrets",
+      "suite": "test_rust_redteam2",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_redteam2",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "test_rt17_allowlist_matches_parsed_host",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt17_engine_blocks_tainted_egress_to_spoofed_host",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt15_grep_skips_sensitive_files",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_c8_scanner_digest_component_recheck",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt14_view_lines_walls_sensitive_paths",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt19_provider_keys_are_masked",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt21_ethos_credential_stores_are_sensitive",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt20_terminate_removes_sandbox_tempdir",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt16_exec_sensitive_reference_guard_cmd",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt18_static_handler_rejects_absolute_drive_paths",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt18_static_ui_serves_csp_header",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt18_static_handler_rejects_traversal",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.43s\n     Running tests\\test_rust_redteam2.rs (target\\debug\\deps\\test_rust_redteam2-d2954cdb1dfd84d9.exe)\n\nrunning 12 tests\ntest test_rt17_allowlist_matches_parsed_host ... ok\ntest test_rt17_engine_blocks_tainted_egress_to_spoofed_host ... ok\ntest test_rt15_grep_skips_sensitive_files ... ok\ntest test_c8_scanner_digest_component_recheck ... ok\ntest test_rt14_view_lines_walls_sensitive_paths ... ok\ntest test_rt19_provider_keys_are_masked ... ok\ntest test_rt21_ethos_credential_stores_are_sensitive ... ok\ntest test_rt20_terminate_removes_sandbox_tempdir ... ok\ntest test_rt16_exec_sensitive_reference_guard_cmd ... ok\ntest test_rt18_static_handler_rejects_absolute_drive_paths ... ok\ntest test_rt18_static_ui_serves_csp_header ... ok\ntest test_rt18_static_handler_rejects_traversal ... ok\n\ntest result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s\n\n"
+    },
+    {
+      "component": "taint_egress_rewind",
+      "suite": "test_rust_redteam",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_redteam",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "test_rt03_executable_suffix_is_classified",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt02_case_variation_is_caught",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt08_full_exfil_chain_is_broken",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt04_powershell_encoded_command_is_worst_case",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt01_cmd_slash_c_is_inspected",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt06_fetch_exfil_channel_is_walled_when_tainted",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt11_rewind_marker_is_not_forgeable_via_write_tool",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt10_ouroboros_case_is_folded",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt05_unsourced_rewrite_cannot_downgrade_taint",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt07_sensitive_path_case_is_folded",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt09_ouroboros_exec_redirect_is_guarded_cmd",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt12_marker_forged_via_exec_is_blocked_and_bare_restore_refused",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt13_scanner_digest_never_carries_raw_payload",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt_control_bash_dash_c_curl_is_blocked_after_fetch",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt_control_direct_curl_is_blocked_after_fetch",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.43s\n     Running tests\\test_rust_redteam.rs (target\\debug\\deps\\test_rust_redteam-8c2cbd595f0d6798.exe)\n\nrunning 15 tests\ntest test_rt03_executable_suffix_is_classified ... ok\ntest test_rt02_case_variation_is_caught ... ok\ntest test_rt08_full_exfil_chain_is_broken ... ok\ntest test_rt04_powershell_encoded_command_is_worst_case ... ok\ntest test_rt01_cmd_slash_c_is_inspected ... ok\ntest test_rt06_fetch_exfil_channel_is_walled_when_tainted ... ok\ntest test_rt11_rewind_marker_is_not_forgeable_via_write_tool ... ok\ntest test_rt10_ouroboros_case_is_folded ... ok\ntest test_rt05_unsourced_rewrite_cannot_downgrade_taint ... ok\ntest test_rt07_sensitive_path_case_is_folded ... ok\ntest test_rt09_ouroboros_exec_redirect_is_guarded_cmd ... ok\ntest test_rt12_marker_forged_via_exec_is_blocked_and_bare_restore_refused ... ok\ntest test_rt13_scanner_digest_never_carries_raw_payload ... ok\ntest test_rt_control_bash_dash_c_curl_is_blocked_after_fetch ... ok\ntest test_rt_control_direct_curl_is_blocked_after_fetch ... ok\n\ntest result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s\n\n"
+    },
+    {
+      "component": "redaction",
+      "suite": "test_rust_redaction",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_redaction",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "test_redactor_scrubs_known_values",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_redactor_ignores_ordinary_config_values",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_redactor_scrubs_nested_json",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_control_template_files_do_not_teach_secrets",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_redactor_scrubs_builtin_credential_formats",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_control_normal_output_is_not_over_redacted",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt24_secret_in_outbound_arguments_is_blocked",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_rt23_secret_copied_to_plain_file_is_redacted_on_read",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.41s\n     Running tests\\test_rust_redaction.rs (target\\debug\\deps\\test_rust_redaction-c84ab888601078a6.exe)\n\nrunning 8 tests\ntest test_redactor_scrubs_known_values ... ok\ntest test_redactor_ignores_ordinary_config_values ... ok\ntest test_redactor_scrubs_nested_json ... ok\ntest test_control_template_files_do_not_teach_secrets ... ok\ntest test_redactor_scrubs_builtin_credential_formats ... ok\ntest test_control_normal_output_is_not_over_redacted ... ok\ntest test_rt24_secret_in_outbound_arguments_is_blocked ... ok\ntest test_rt23_secret_copied_to_plain_file_is_redacted_on_read ... ok\n\ntest result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s\n\n"
+    },
+    {
+      "component": "agent_secret_visibility",
+      "suite": "test_rust_secret_visibility",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_secret_visibility",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "test_rt22_agent_never_sees_secret_values",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.35s\n     Running tests\\test_rust_secret_visibility.rs (target\\debug\\deps\\test_rust_secret_visibility-df1505c21c8aef37.exe)\n\nrunning 1 test\ntest test_rt22_agent_never_sees_secret_values ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.44s\n\n"
+    },
+    {
+      "component": "provenance",
+      "suite": "test_rust_advanced_taint",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_advanced_taint",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "test_declassification_rule_clears_taint_with_token",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_network_allowlist_permits_approved_domain",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_policy_profile_audit_only_records_without_blocking",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_sensitive_path_rule_blocks_credential_access",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_policy_profile_strict_blocks_all_untrusted_writes",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_harness_blocks_sensitive_path_read_and_write",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_observation_stream_surfaces_provenance_to_model",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_sh_c_wrapper_classified_as_file_delete",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_bash_c_wrapper_classified_as_network_egress",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_harness_exec_network_egress_allowlist_enforcement",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.41s\n     Running tests\\test_rust_advanced_taint.rs (target\\debug\\deps\\test_rust_advanced_taint-bf832b97b3d7893d.exe)\n\nrunning 10 tests\ntest test_declassification_rule_clears_taint_with_token ... ok\ntest test_network_allowlist_permits_approved_domain ... ok\ntest test_policy_profile_audit_only_records_without_blocking ... ok\ntest test_sensitive_path_rule_blocks_credential_access ... ok\ntest test_policy_profile_strict_blocks_all_untrusted_writes ... ok\ntest test_harness_blocks_sensitive_path_read_and_write ... ok\ntest test_observation_stream_surfaces_provenance_to_model ... ok\ntest test_sh_c_wrapper_classified_as_file_delete ... ok\ntest test_bash_c_wrapper_classified_as_network_egress ... ok\ntest test_harness_exec_network_egress_allowlist_enforcement ... ok\n\ntest result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s\n\n"
+    },
+    {
+      "component": "state_tree",
+      "suite": "test_rust_state_tree",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_state_tree",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "test_state_tree_initialization",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_state_tree_branching_and_switch",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_state_tree_commit_and_history",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.37s\n     Running tests\\test_rust_state_tree.rs (target\\debug\\deps\\test_rust_state_tree-c1ce47a8ed55b37f.exe)\n\nrunning 3 tests\ntest test_state_tree_initialization ... ok\ntest test_state_tree_branching_and_switch ... ok\ntest test_state_tree_commit_and_history ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"
+    },
+    {
+      "component": "snapshot_tools",
+      "suite": "test_rust_aci_tools",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_aci_tools",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "missing_file_is_an_io_error_not_a_policy_interception",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_fetch_marks_untrusted",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_path_traversal_escape",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_write_and_read",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_snapshot_and_rewind",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_exec_policy_block_on_tainted_file",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_harness_init_workspace_indexes_and_generates_agents_md",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.37s\n     Running tests\\test_rust_aci_tools.rs (target\\debug\\deps\\test_rust_aci_tools-958804eb77a8360b.exe)\n\nrunning 7 tests\ntest missing_file_is_an_io_error_not_a_policy_interception ... ok\ntest test_fetch_marks_untrusted ... ok\ntest test_path_traversal_escape ... ok\ntest test_write_and_read ... ok\ntest test_snapshot_and_rewind ... ok\ntest test_exec_policy_block_on_tainted_file ... ok\ntest test_harness_init_workspace_indexes_and_generates_agents_md ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n"
+    },
+    {
+      "component": "daemon",
+      "suite": "test_rust_api_server",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_api_server",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "test_health_endpoint",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_create_and_delete_sandbox",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_api_tool_write_and_read",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_models_dev_api_endpoints",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.35s\n     Running tests\\test_rust_api_server.rs (target\\debug\\deps\\test_rust_api_server-bea03b142b9cb7bf.exe)\n\nrunning 4 tests\ntest test_health_endpoint ... ok\ntest test_create_and_delete_sandbox ... ok\ntest test_api_tool_write_and_read ... ok\ntest test_models_dev_api_endpoints ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.30s\n\n"
+    },
+    {
+      "component": "session_schema",
+      "suite": "test_rust_postgres_store",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_postgres_store",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "test_postgres_schema_compiles_and_parses",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_audit_event_jsonb_format",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_snapshot_metadata_serialization_for_postgres",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.41s\n     Running tests\\test_rust_postgres_store.rs (target\\debug\\deps\\test_rust_postgres_store-16033b0dc58db017.exe)\n\nrunning 3 tests\ntest test_postgres_schema_compiles_and_parses ... ok\ntest test_audit_event_jsonb_format ... ok\ntest test_snapshot_metadata_serialization_for_postgres ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"
+    },
+    {
+      "component": "semantic_smoke",
+      "suite": "test_rust_semantic_guard",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_semantic_guard",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "test_semantic_guard_benign_code_task",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_semantic_guard_detects_dan_jailbreak",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_semantic_guard_detects_indirect_exfil",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_semantic_guard_laya_system1_evaluation",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.36s\n     Running tests\\test_rust_semantic_guard.rs (target\\debug\\deps\\test_rust_semantic_guard-844e60e41e4b384e.exe)\n\nrunning 4 tests\ntest test_semantic_guard_benign_code_task ... ok\ntest test_semantic_guard_detects_dan_jailbreak ... ok\ntest test_semantic_guard_detects_indirect_exfil ... ok\ntest test_semantic_guard_laya_system1_evaluation ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"
+    },
+    {
+      "component": "synthetic_regression",
+      "suite": "test_rust_synthetic_engine",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_synthetic_engine",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "test_synthetic_suite_generation_and_uniqueness",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_synthetic_suite_interception_rate",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.34s\n     Running tests\\test_rust_synthetic_engine.rs (target\\debug\\deps\\test_rust_synthetic_engine-78717678ed4ee7c6.exe)\n\nrunning 2 tests\ntest test_synthetic_suite_generation_and_uniqueness ... ok\ntest test_synthetic_suite_interception_rate ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.72s\n\n"
+    },
+    {
+      "component": "walls",
+      "suite": "test_rust_walls",
+      "command": [
+        "cargo",
+        "test",
+        "--test",
+        "test_rust_walls",
+        "--",
+        "--color",
+        "never"
+      ],
+      "exit_code": 0,
+      "tests": [
+        {
+          "name": "test_estop_trips_on_critical_violation",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_halluscan_detects_hallucinated_file_paths",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_ouroboros_blocks_self_modifying_policy",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_promptinject_detects_exfiltration",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_promptinject_detects_role_confusion",
+          "outcome": "ok"
+        },
+        {
+          "name": "test_promptinject_detects_instruction_override",
+          "outcome": "ok"
+        }
+      ],
+      "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.37s\n     Running tests\\test_rust_walls.rs (target\\debug\\deps\\test_rust_walls-8200008f68230db5.exe)\n\nrunning 6 tests\ntest test_estop_trips_on_critical_violation ... ok\ntest test_halluscan_detects_hallucinated_file_paths ... ok\ntest test_ouroboros_blocks_self_modifying_policy ... ok\ntest test_promptinject_detects_exfiltration ... ok\ntest test_promptinject_detects_role_confusion ... ok\ntest test_promptinject_detects_instruction_override ... ok\n\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s\n\n"
+    }
+  ],
+  "limitations": [
+    "Not live-agent attack success or exhaustive component coverage",
+    "Postgres suite checks schema only; no live database isolation test",
+    "semantic smoke tests do not prove neural checkpoint behavior",
+    "gVisor, installers, real MCP servers and multimodal input are not exercised"
+  ],
+  "counts": {
+    "ok": 121
+  },
+  "passed": true
+}

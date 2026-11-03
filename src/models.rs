@@ -95,6 +95,8 @@ pub struct SnapshotMetadata {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Observation {
+    #[serde(default)]
+    pub execution_backend: String,
     pub step_id: usize,
     #[serde(default)]
     pub modified_files: Vec<String>,

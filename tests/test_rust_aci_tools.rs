@@ -3,7 +3,7 @@ use ethos::models::TrustLevel;
 
 #[test]
 fn test_write_and_read() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     let write_res = harness.write("notes.txt", "Rust engine working", None);
     assert_eq!(write_res.status, "SUCCESS");
@@ -22,7 +22,7 @@ fn test_write_and_read() {
 
 #[test]
 fn test_fetch_marks_untrusted() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     let fetch_res = harness.fetch(
         "https://attacker-domain.xyz/payload.txt",
@@ -40,7 +40,7 @@ fn test_fetch_marks_untrusted() {
 
 #[test]
 fn test_exec_policy_block_on_tainted_file() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     harness.fetch(
         "https://bad.org/secrets.txt",
@@ -64,7 +64,7 @@ fn test_exec_policy_block_on_tainted_file() {
 
 #[test]
 fn test_snapshot_and_rewind() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     harness.write("clean.txt", "initial state", None);
     let snap = harness.snapshot("baseline").unwrap();
@@ -89,24 +89,25 @@ fn test_snapshot_and_rewind() {
 
 #[test]
 fn test_path_traversal_escape() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     // Trying to read a file outside the sandbox (e.g., using ../)
     let read_res = harness.read("../Cargo.toml");
-    assert_eq!(read_res.status, "ERROR");
+    assert_eq!(read_res.status, "BLOCKED_BY_POLICY");
+    assert_eq!(read_res.policy_decision.unwrap().rule_id.as_deref(), Some("FILESYSTEM-BOUNDARY"));
     let err = read_res.error.as_ref().unwrap();
     assert!(err.contains("Path escape detected") || err.contains("Invalid path"));
 
     // Trying to write outside the sandbox
     let write_res = harness.write("../hacked.txt", "pwned", None);
-    assert!(write_res.status == "BLOCKED_BY_POLICY" || write_res.status == "ERROR");
+    assert_eq!(write_res.status, "BLOCKED_BY_POLICY");
     let err_w = write_res.error.as_ref().unwrap();
     assert!(err_w.contains("Path escape detected") || err_w.contains("Invalid path"));
 }
 
 #[test]
 fn test_harness_init_workspace_indexes_and_generates_agents_md() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     // Create a pre-existing clean file and a poisoned file
     let _ = harness.write("src/main.rs", "fn main() { println!(\"hello\"); }", None);
@@ -126,4 +127,13 @@ fn test_harness_init_workspace_indexes_and_generates_agents_md() {
     );
     assert!(!summary.warnings.is_empty()); // Flagged attack.txt
     assert!(harness.taint_engine.is_tainted("inbox/attack.txt"));
+}
+
+#[test]
+fn missing_file_is_an_io_error_not_a_policy_interception() {
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
+    let result = harness.read("missing.txt");
+    assert_eq!(result.status, "ERROR");
+    assert!(!result.policy_decision.is_some_and(|p| !p.allowed));
+    assert_eq!(harness.emergency_stop_status().2, 0);
 }

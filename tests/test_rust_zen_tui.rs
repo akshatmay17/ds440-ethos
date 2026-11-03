@@ -59,7 +59,7 @@ fn test_zen_app_command_palette_ctrl_p() {
 
 #[test]
 fn test_zen_app_prompt_submission_and_metrics() {
-    let harness = ethos::aci::ACIHarness::new_with_temp_dir().ok();
+    let harness = ethos::aci::ACIHarness::new_local_with_temp_dir().ok();
     let mut app = ZenApp::new(harness, ethos::config::user_config::UserConfig::default());
     let initial_tokens = app.tokens;
 
@@ -76,7 +76,7 @@ fn test_zen_app_prompt_submission_and_metrics() {
 
 #[test]
 fn test_zen_app_attack_staging_and_taint_interception() {
-    let harness = ethos::aci::ACIHarness::new_with_temp_dir().ok();
+    let harness = ethos::aci::ACIHarness::new_local_with_temp_dir().ok();
     let mut app = ZenApp::new(harness, ethos::config::user_config::UserConfig::default());
     app.stage_attack_scenario("m365_sox_invoice_reconcile");
 

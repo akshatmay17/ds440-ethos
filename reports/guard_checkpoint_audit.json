@@ -1,0 +1,126 @@
+{
+  "checkpoints": [
+    {
+      "directory": "C:\\Users\\harsh\\Desktop\\fall 26\\ds 440\\ds440-ethos\\data\\semantic_guard\\models\\ethos-guard-bert-base",
+      "nickname": "ethos-guard-bert-base",
+      "architectures": [
+        "BertForSequenceClassification"
+      ],
+      "model_type": "bert",
+      "base_recorded_in_training_card": "google-bert/bert-base-uncased",
+      "hidden_layers": 12,
+      "hidden_size": 768,
+      "trained_at": "2026-10-07T01:52:29.262684+00:00",
+      "vision_supported_by_this_config": false,
+      "config_sha256": "9a6ebf841e9be014631a6cbd4bd5d7abf7a14760e5a86ab7200bf9607b2cb42f",
+      "saved_tensor_parameters": 109484547
+    },
+    {
+      "directory": "C:\\Users\\harsh\\Desktop\\fall 26\\ds 440\\ds440-ethos\\data\\semantic_guard\\models\\ethos-guard-laya",
+      "nickname": "ethos-guard-laya",
+      "architectures": [
+        "BertForSequenceClassification"
+      ],
+      "model_type": "bert",
+      "base_recorded_in_training_card": "google/bert_uncased_L-4_H-512_A-8",
+      "hidden_layers": 4,
+      "hidden_size": 512,
+      "trained_at": "2026-10-07T01:59:41.114081+00:00",
+      "vision_supported_by_this_config": false,
+      "config_sha256": "5687be37790ccc9e86ce9d594c9ecf76cbf0f672dcb6f26674b8a7b24ef71f84",
+      "saved_tensor_parameters": 28765187
+    },
+    {
+      "directory": "C:\\Users\\harsh\\Desktop\\fall 26\\ds 440\\ds440-ethos\\data\\semantic_guard\\models\\ethos-guard-tiny",
+      "nickname": "ethos-guard-tiny",
+      "architectures": [
+        "BertForSequenceClassification"
+      ],
+      "model_type": "bert",
+      "base_recorded_in_training_card": "prajjwal1/bert-tiny",
+      "hidden_layers": 2,
+      "hidden_size": 128,
+      "trained_at": "2026-10-07T01:20:26.771496+00:00",
+      "vision_supported_by_this_config": false,
+      "config_sha256": "1d43c9cbab6dec5e3eec2c171e3baf0874ed9e4e9e29409c07b2b8496ad5ca65",
+      "saved_tensor_parameters": 4386307
+    },
+    {
+      "directory": "C:\\Users\\harsh\\.ethos\\models\\bert-base-uncased-emotion",
+      "nickname": "bert-base-uncased-emotion",
+      "architectures": [
+        "BertForSequenceClassification"
+      ],
+      "model_type": "bert",
+      "base_recorded_in_training_card": null,
+      "hidden_layers": 12,
+      "hidden_size": 768,
+      "trained_at": null,
+      "vision_supported_by_this_config": false,
+      "config_sha256": "f9c8b6d22623bdaba5710bd0f9aee41baa3886ecc058a6da84884dc17aa9da22",
+      "saved_tensor_parameters": 109487366
+    },
+    {
+      "directory": "C:\\Users\\harsh\\.ethos\\models\\bert-prompt-injection-detector",
+      "nickname": "bert-prompt-injection-detector",
+      "architectures": [
+        "BertForSequenceClassification"
+      ],
+      "model_type": "bert",
+      "base_recorded_in_training_card": null,
+      "hidden_layers": 12,
+      "hidden_size": 768,
+      "trained_at": null,
+      "vision_supported_by_this_config": false,
+      "config_sha256": "45722060d32de1af85083e2f356b5d613f522c65d6063b0fd3c8299dbcfaf332",
+      "saved_tensor_parameters": 177854978
+    },
+    {
+      "directory": "C:\\Users\\harsh\\.ethos\\models\\bert-tiny-ft-prompt-injection",
+      "nickname": "bert-tiny-ft-prompt-injection",
+      "architectures": [
+        "BertForSequenceClassification"
+      ],
+      "model_type": "bert",
+      "base_recorded_in_training_card": null,
+      "hidden_layers": 2,
+      "hidden_size": 128,
+      "trained_at": null,
+      "vision_supported_by_this_config": false,
+      "config_sha256": "215dae8851c0827b89a940dc6ec2bb19648a53c68bd0bda718c5499070d52a3c",
+      "saved_tensor_parameters": 4386178
+    },
+    {
+      "directory": "C:\\Users\\harsh\\.ethos\\models\\ethos-guard-bert-base",
+      "nickname": "ethos-guard-bert-base",
+      "architectures": [
+        "BertForSequenceClassification"
+      ],
+      "model_type": "bert",
+      "base_recorded_in_training_card": "google-bert/bert-base-uncased",
+      "hidden_layers": 12,
+      "hidden_size": 768,
+      "trained_at": "2026-10-07T01:52:29.262684+00:00",
+      "vision_supported_by_this_config": false,
+      "config_sha256": "9a6ebf841e9be014631a6cbd4bd5d7abf7a14760e5a86ab7200bf9607b2cb42f",
+      "saved_tensor_parameters": 109484547
+    },
+    {
+      "directory": "C:\\Users\\harsh\\.ethos\\models\\ethos-guard-laya",
+      "nickname": "ethos-guard-laya",
+      "architectures": [
+        "BertForSequenceClassification"
+      ],
+      "model_type": "bert",
+      "base_recorded_in_training_card": "google/bert_uncased_L-4_H-512_A-8",
+      "hidden_layers": 4,
+      "hidden_size": 512,
+      "trained_at": "2026-10-07T01:59:41.114081+00:00",
+      "vision_supported_by_this_config": false,
+      "config_sha256": "5687be37790ccc9e86ce9d594c9ecf76cbf0f672dcb6f26674b8a7b24ef71f84",
+      "saved_tensor_parameters": 28765187
+    }
+  ],
+  "conclusion": "The local trained checkpoint named ethos-guard-laya declares BertForSequenceClassification and a BERT-small base. It is a second trained model, but not an upstream Laya checkpoint.",
+  "note": "Downloaded GGUFs or model names alone do not establish fine-tuning lineage."
+}

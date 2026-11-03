@@ -125,7 +125,7 @@ fn test_declassification_rule_clears_taint_with_token() {
 
 #[test]
 fn test_observation_stream_surfaces_provenance_to_model() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
     harness.fetch(
         "https://untrusted-api.org/data.json",
         Some("input.json"),
@@ -140,7 +140,7 @@ fn test_observation_stream_surfaces_provenance_to_model() {
 
 #[test]
 fn test_harness_blocks_sensitive_path_read_and_write() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     let write_res = harness.write(".env", "DATABASE_URL=postgres://...", None);
     assert_eq!(write_res.status, "BLOCKED_BY_POLICY");
@@ -154,7 +154,7 @@ fn test_harness_blocks_sensitive_path_read_and_write() {
 
 #[test]
 fn test_harness_exec_network_egress_allowlist_enforcement() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
     harness
         .taint_engine
         .config
@@ -188,7 +188,7 @@ fn test_harness_exec_network_egress_allowlist_enforcement() {
 
 #[test]
 fn test_bash_c_wrapper_classified_as_network_egress() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
     harness.fetch(
         "https://malicious.io/secrets.txt",
         Some("secrets.txt"),
@@ -210,7 +210,7 @@ fn test_bash_c_wrapper_classified_as_network_egress() {
 
 #[test]
 fn test_sh_c_wrapper_classified_as_file_delete() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     // sh -c "rm ..." should be classified as file_delete
     let res = harness.exec("sh", &["-c".to_string(), "rm -rf /important".to_string()]);

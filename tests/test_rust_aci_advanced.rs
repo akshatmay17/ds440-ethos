@@ -2,7 +2,7 @@ use ethos::aci::ACIHarness;
 
 #[test]
 fn test_edit_block_success() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     harness.write("calculator.py", "def add(a, b):\n    return a - b\n", None);
 
@@ -18,7 +18,7 @@ fn test_edit_block_success() {
 
 #[test]
 fn test_edit_block_not_found_returns_error() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     harness.write("app.py", "print('hello')", None);
 
@@ -30,7 +30,7 @@ fn test_edit_block_not_found_returns_error() {
 
 #[test]
 fn test_output_windowing_folds_large_output() {
-    let harness = ACIHarness::new_with_temp_dir().unwrap();
+    let harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     // Generate large text (500 lines)
     let large_text: String = (1..=500).map(|i| format!("Line {}\n", i)).collect();

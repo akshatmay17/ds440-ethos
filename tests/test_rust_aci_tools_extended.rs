@@ -2,7 +2,7 @@ use ethos::aci::ACIHarness;
 
 #[test]
 fn test_view_lines_formats_with_line_numbers() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     let sample_code = "line one\nline two\nline three\nline four\nline five\n";
     harness.write("sample.py", sample_code, None);
@@ -21,7 +21,7 @@ fn test_view_lines_formats_with_line_numbers() {
 
 #[test]
 fn test_view_lines_out_of_range_handling() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
     harness.write("short.txt", "alpha\nbeta\n", None);
 
     let res = harness.view_lines("short.txt", 1, 100);
@@ -33,7 +33,7 @@ fn test_view_lines_out_of_range_handling() {
 
 #[test]
 fn test_search_files_matches_pattern() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
     harness.write("src/main.rs", "fn main() {}", None);
     harness.write("src/utils.rs", "fn util() {}", None);
     harness.write("docs/readme.md", "# Docs", None);
@@ -50,7 +50,7 @@ fn test_search_files_matches_pattern() {
 
 #[test]
 fn test_grep_finds_matching_lines() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
     harness.write(
         "auth.py",
         "def login():\n    token = 'SECRET_TOKEN_123'\n    return token\n",

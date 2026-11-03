@@ -1,0 +1,10 @@
+{
+  "backend": "docker",
+  "image": "alpine@sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8",
+  "timeout_seconds": 30,
+  "memory_mb": 512,
+  "cpus": 1.0,
+  "pids": 64,
+  "output_bytes": 65536,
+  "oci_runtime": null
+}

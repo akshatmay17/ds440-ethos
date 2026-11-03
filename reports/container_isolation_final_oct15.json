@@ -1,0 +1,122 @@
+{
+  "created_at": "2026-10-15T04:29:35.007531+00:00",
+  "mode": "live_docker_boundary_regressions",
+  "image": "alpine@sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8",
+  "passed": true,
+  "git_rev": "9d4bd363c88387115222c4868662194aaafec292",
+  "source_sha256": {
+    "src/runtime/container.rs": "cf263775f6910c6d8bb4fa202b3113a20be46f98f58f5c9204fa3fd5880bd165",
+    "src/aci/harness.rs": "98f51f477fc2d58b04a799869f67a4c2a92ffad62b1fb86757abf3a17f8794da",
+    "src/bin/ethos.rs": "50297830a0c40f491b2ae807690af8dcf705a823d2660c997343140689e7f888",
+    "tests/test_rust_container.rs": "3c765538e754a978e55a263c8df2bfe8a93e4f1423a9fae110bfcbfc8f5ab75a"
+  },
+  "limitations": [
+    "Container/daemon/kernel exploits are not tested.",
+    "Tests exercise disposable commands, not MCP, GUI agents or full attack benchmark semantics.",
+    "Container filesystem changes are discarded; these are not host workspace mutation tests."
+  ],
+  "docker_server": {
+    "Platform": {
+      "Name": "Docker Desktop 4.95.0 (242831)"
+    },
+    "Version": "29.8.2",
+    "ApiVersion": "1.56",
+    "MinAPIVersion": "1.40",
+    "Os": "linux",
+    "Arch": "amd64",
+    "Components": [
+      {
+        "Name": "Engine",
+        "Version": "29.8.2",
+        "Details": {
+          "ApiVersion": "1.56",
+          "Arch": "amd64",
+          "BuildTime": "Wed Sep 30 19:32:25 2026",
+          "Experimental": "false",
+          "GitCommit": "8af9fe3",
+          "GoVersion": "go1.26.8",
+          "KernelVersion": "6.18.54.1-microsoft-standard-WSL2",
+          "MinAPIVersion": "1.40",
+          "Module": "github.com/moby/moby/v2",
+          "ModuleVersion": "v2.0.0+unknown",
+          "Os": "linux"
+        }
+      },
+      {
+        "Name": "containerd",
+        "Version": "v2.3.6",
+        "Details": {
+          "GitCommit": "ee2735368117d2eb259779949d5e75cdafec9761"
+        }
+      },
+      {
+        "Name": "runc",
+        "Version": "1.5.1",
+        "Details": {
+          "GitCommit": "v1.5.1-0-g8f2685a4"
+        }
+      },
+      {
+        "Name": "docker-init",
+        "Version": "0.19.0",
+        "Details": {
+          "GitCommit": "de40ad0"
+        }
+      }
+    ],
+    "GitCommit": "8af9fe3",
+    "GoVersion": "go1.26.8",
+    "KernelVersion": "6.18.54.1-microsoft-standard-WSL2",
+    "BuildTime": "2026-09-30T19:32:25.000000000+00:00"
+  },
+  "local_image_id": "sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8",
+  "command": [
+    "cargo",
+    "test",
+    "--test",
+    "test_rust_container",
+    "--",
+    "--include-ignored",
+    "--test-threads=1"
+  ],
+  "exit_code": 0,
+  "tests": [
+    {
+      "name": "container_arguments_cannot_be_overridden_by_agent_arguments",
+      "outcome": "ok"
+    },
+    {
+      "name": "container_configuration_rejects_mutable_images_and_invalid_limits",
+      "outcome": "ok"
+    },
+    {
+      "name": "default_execution_is_disabled_and_files_still_work",
+      "outcome": "ok"
+    },
+    {
+      "name": "live_configured_harness_runs_after_external_reads_and_retains_output_taint",
+      "outcome": "ok"
+    },
+    {
+      "name": "live_container_isolates_files_secrets_network_and_effects",
+      "outcome": "ok"
+    },
+    {
+      "name": "live_container_timeout_and_output_limits_are_enforced",
+      "outcome": "ok"
+    },
+    {
+      "name": "live_missing_image_cannot_fall_back_to_host",
+      "outcome": "ok"
+    },
+    {
+      "name": "operator_configuration_cannot_live_inside_the_agent_workspace",
+      "outcome": "ok"
+    },
+    {
+      "name": "project_dotenv_cannot_enable_host_execution",
+      "outcome": "ok"
+    }
+  ],
+  "output": "   Compiling ethos v0.2.0 (C:\\Users\\harsh\\Desktop\\fall 26\\ds 440\\ds440-ethos)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.23s\n     Running tests\\test_rust_container.rs (target\\debug\\deps\\test_rust_container-96a2f337bf7be512.exe)\n\nrunning 9 tests\ntest container_arguments_cannot_be_overridden_by_agent_arguments ... ok\ntest container_configuration_rejects_mutable_images_and_invalid_limits ... ok\ntest default_execution_is_disabled_and_files_still_work ... ok\ntest live_configured_harness_runs_after_external_reads_and_retains_output_taint ... ok\ntest live_container_isolates_files_secrets_network_and_effects ... ok\ntest live_container_timeout_and_output_limits_are_enforced ... ok\ntest live_missing_image_cannot_fall_back_to_host ... ok\ntest operator_configuration_cannot_live_inside_the_agent_workspace ... ok\ntest project_dotenv_cannot_enable_host_execution ... ok\n\ntest result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.49s\n\n"
+}

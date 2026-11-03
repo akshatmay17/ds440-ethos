@@ -1,7 +1,7 @@
 # Ethos Runtime Environment Configuration
 version: "1.0"
 runtime:
-  default_backend: "isolated_process"  # options: isolated_process, docker, gvisor
+  default_backend: "disabled"  # Informational; trusted ETHOS_EXEC_CONFIG / ETHOS_EXEC_BACKEND selects command execution.
   timeout_seconds: 300
   memory_limit_mb: 2048
   cpu_quota: 2.0

@@ -25,7 +25,7 @@ impl LlmDriver for OneCall {
 }
 
 async fn try_call(label: &str, name: &'static str, args: serde_json::Value) -> bool {
-    let mut h = ACIHarness::new_with_temp_dir().unwrap();
+    let mut h = ACIHarness::new_local_with_temp_dir().unwrap();
     // A project secret already on disk, as in any real repo.
     h.runtime.write_file(".env", &format!("API_KEY={}\n", SECRET)).unwrap();
     let driver = OneCall { name, args, done: Mutex::new(false) };

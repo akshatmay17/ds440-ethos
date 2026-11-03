@@ -1,6 +1,6 @@
 //! Google gVisor (runsc) user-space kernel sandbox runtime.
-//! Provides application-kernel hardware-grade syscall interception on Linux/WSL2
-//! with transparent fallback to LocalIsolatedRuntime on Windows and macOS.
+//! Legacy runsc adapter. Missing/failed launch never falls back to host execution.
+//! Configured application execution uses the disposable Docker adapter instead.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -55,6 +55,8 @@ impl GVisorRuntime {
 }
 
 impl SandboxRuntime for GVisorRuntime {
+    fn validate_file_access(&self, path: &str) -> anyhow::Result<()> { self.inner.validate_file_access(path) }
+    fn execution_backend(&self)->&'static str { "legacy_runsc_unverified" }
     fn read_file(&self, rel_path: &str) -> anyhow::Result<String> {
         self.inner.read_file(rel_path)
     }
@@ -115,8 +117,7 @@ impl SandboxRuntime for GVisorRuntime {
             }
         }
 
-        // Default isolated execution
-        self.inner.execute_command(program, args)
+        (126, String::new(), "CONFINEMENT_UNAVAILABLE: runsc launch failed or runsc is unavailable; host fallback denied".into())
     }
 
     fn create_snapshot(&self, snapshot_id: &str) -> anyhow::Result<HashMap<String, String>> {

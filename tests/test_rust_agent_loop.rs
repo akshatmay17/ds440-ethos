@@ -7,6 +7,21 @@ struct ScriptedDriver {
     actions: std::sync::Mutex<Vec<AgentStepAction>>,
 }
 
+#[tokio::test]
+async fn final_response_and_assistant_history_scrub_known_credentials() {
+    let mut harness=ACIHarness::new_local_with_temp_dir().unwrap();
+    let secret="fixture-final-response-secret-93241";
+    harness.runtime.write_file(".env",&format!("API_KEY={secret}")).unwrap();
+    let driver=ScriptedDriver::new(vec![AgentStepAction::Finish {
+        summary:format!("Completed the task. Credential: {secret}"),
+    }]);
+    let outcome=AgentLoop::new(2).run(&mut harness,&driver,"Summarize the task").await.unwrap();
+    assert!(!outcome.final_summary.contains(secret));
+    assert!(outcome.final_summary.contains("[REDACTED]"));
+    assert!(outcome.history.iter().all(|message| !message.content.contains(secret)));
+    assert!(outcome.final_summary.contains("Completed the task"));
+}
+
 impl ScriptedDriver {
     fn new(actions: Vec<AgentStepAction>) -> Self {
         Self {
@@ -59,7 +74,7 @@ fn test_parse_markdown_json_tool_call() {
 
 #[tokio::test]
 async fn test_agent_loop_scripted_execution() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     // Seed file
     harness.write("solution.py", "def compute():\n    return 41\n", None);
@@ -99,7 +114,7 @@ async fn test_agent_loop_scripted_execution() {
 
 #[tokio::test]
 async fn test_agent_loop_step_budget_enforcement() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     // An infinite loop of reading files
     let driver = ScriptedDriver::new(vec![
@@ -129,7 +144,7 @@ async fn test_agent_loop_step_budget_enforcement() {
 
 #[tokio::test]
 async fn test_agent_loop_taint_policy_block_interception() {
-    let mut harness = ACIHarness::new_with_temp_dir().unwrap();
+    let mut harness = ACIHarness::new_local_with_temp_dir().unwrap();
 
     // Fetch untrusted content
     let driver = ScriptedDriver::new(vec![
