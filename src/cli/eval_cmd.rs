@@ -6,13 +6,13 @@
 use std::path::PathBuf;
 
 use crate::aci::agent_loop::{
-    parse_tool_call, AgentMessage, AgentRole, AgentStepAction, LlmDriver,
+    AgentMessage, AgentStepAction, LlmDriver,
 };
 use crate::aci::eval::{
     self, Condition, EvalOptions, EvalReport, RunRecord, Scenario, Summary, Variant,
 };
 use crate::aci::RuntimeKind;
-use crate::cli::CliHttpDriver;
+use crate::aci::drivers::{AnthropicDriver, OpenAiCompatDriver};
 
 /// How the driver was resolved, for the report.
 struct DriverInfo {
@@ -22,151 +22,6 @@ struct DriverInfo {
     provider: String,
     endpoint: Option<String>,
     active_model: String,
-}
-
-// ---------------------------------------------------------------------------
-// Anthropic Messages API driver (raw HTTP, no SDK)
-// ---------------------------------------------------------------------------
-
-struct AnthropicDriver {
-    client: reqwest::Client,
-    api_key: String,
-    model: String,
-}
-
-fn tools_anthropic() -> Vec<serde_json::Value> {
-    crate::aci::schemas::get_all_tool_definitions()
-        .into_iter()
-        .filter_map(|t| {
-            let f = t.get("function")?;
-            Some(serde_json::json!({
-                "name": f.get("name")?,
-                "description": f.get("description").cloned().unwrap_or_default(),
-                "input_schema": f.get("parameters").cloned()
-                    .unwrap_or(serde_json::json!({"type": "object", "properties": {}})),
-            }))
-        })
-        .collect()
-}
-
-impl LlmDriver for AnthropicDriver {
-    fn step(&self, history: &[AgentMessage]) -> anyhow::Result<AgentStepAction> {
-        let rt = tokio::runtime::Handle::current();
-        let mut system = String::new();
-        let mut messages: Vec<serde_json::Value> = Vec::new();
-        let mut call_counter = 0;
-        let mut last_id = String::new();
-
-        for m in history {
-            match m.role {
-                AgentRole::System => {
-                    if !system.is_empty() {
-                        system.push_str("\n\n");
-                    }
-                    system.push_str(&m.content);
-                }
-                AgentRole::User => messages.push(serde_json::json!({
-                    "role": "user",
-                    "content": [{"type": "text", "text": m.content}]
-                })),
-                AgentRole::Assistant => {
-                    if let Some(parsed) = parse_tool_call(&m.content) {
-                        call_counter += 1;
-                        last_id = format!("toolu_{}", call_counter);
-                        messages.push(serde_json::json!({
-                            "role": "assistant",
-                            "content": [{
-                                "type": "tool_use",
-                                "id": last_id,
-                                "name": parsed.name,
-                                "input": parsed.arguments,
-                            }]
-                        }));
-                    } else {
-                        messages.push(serde_json::json!({
-                            "role": "assistant",
-                            "content": [{"type": "text", "text": m.content}]
-                        }));
-                    }
-                }
-                AgentRole::Tool => {
-                    let id = if last_id.is_empty() {
-                        "toolu_1".to_string()
-                    } else {
-                        last_id.clone()
-                    };
-                    messages.push(serde_json::json!({
-                        "role": "user",
-                        "content": [{
-                            "type": "tool_result",
-                            "tool_use_id": id,
-                            "content": m.content,
-                        }]
-                    }));
-                }
-            }
-        }
-
-        // Note: `temperature` is intentionally omitted — current Claude models
-        // (Opus 5.x / Sonnet 5.x) reject non-default sampling parameters.
-        let payload = serde_json::json!({
-            "model": self.model,
-            "max_tokens": 1024,
-            "system": system,
-            "messages": messages,
-            "tools": tools_anthropic(),
-        });
-
-        let client = self.client.clone();
-        let key = self.api_key.clone();
-        let res: anyhow::Result<serde_json::Value> = tokio::task::block_in_place(|| {
-            rt.block_on(async move {
-                let resp = client
-                    .post("https://api.anthropic.com/v1/messages")
-                    .header("x-api-key", key)
-                    .header("anthropic-version", "2026-10-21")
-                    .json(&payload)
-                    .timeout(std::time::Duration::from_secs(300))
-                    .send()
-                    .await?;
-                let status = resp.status();
-                let val = resp.json::<serde_json::Value>().await?;
-                if !status.is_success() {
-                    anyhow::bail!("anthropic API {}: {}", status, val);
-                }
-                Ok(val)
-            })
-        });
-
-        let val = res?;
-        if let Some(blocks) = val["content"].as_array() {
-            for b in blocks {
-                if b["type"] == "tool_use" {
-                    return Ok(AgentStepAction::CallTool {
-                        name: b["name"].as_str().unwrap_or("unknown").to_string(),
-                        arguments: b["input"].clone(),
-                    });
-                }
-            }
-            let text: String = blocks
-                .iter()
-                .filter_map(|b| {
-                    if b["type"] == "text" {
-                        b["text"].as_str()
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>()
-                .join("\n");
-            if !text.trim().is_empty() {
-                return Ok(AgentStepAction::Finish { summary: text });
-            }
-        }
-        Ok(AgentStepAction::Finish {
-            summary: format!("Anthropic response: {}", val),
-        })
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -282,12 +137,7 @@ async fn resolve_driver(
                 if let Some(active) = probe_openai(&client, base, None).await {
                     let chosen = pick_model(model, &active);
                     return Ok(DriverInfo {
-                        driver: Box::new(CliHttpDriver {
-                            client: reqwest::Client::new(),
-                            api_url: base.clone(),
-                            model: chosen.clone(),
-                            api_key: None,
-                        }),
+                        driver: Box::new(OpenAiCompatDriver::new(base, &chosen, None)),
                         kind: "live",
                         provider: provider.to_string(),
                         endpoint: Some(base.clone()),
@@ -311,12 +161,7 @@ async fn resolve_driver(
                     .unwrap_or(false)
             {
                 return Ok(DriverInfo {
-                    driver: Box::new(CliHttpDriver {
-                        client: reqwest::Client::new(),
-                        api_url: base.clone(),
-                        model: model.to_string(),
-                        api_key: None,
-                    }),
+                    driver: Box::new(OpenAiCompatDriver::new(&base, model, None)),
                     kind: "live",
                     provider: provider.to_string(),
                     endpoint: Some(base),
@@ -334,12 +179,7 @@ async fn resolve_driver(
             let key = std::env::var(env)
                 .map_err(|_| anyhow::anyhow!("{} is not set; required for --provider {}", env, provider))?;
             Ok(DriverInfo {
-                driver: Box::new(CliHttpDriver {
-                    client: reqwest::Client::new(),
-                    api_url: base.to_string(),
-                    model: model.to_string(),
-                    api_key: Some(key),
-                }),
+                driver: Box::new(OpenAiCompatDriver::new(base, model, Some(key))),
                 kind: "live",
                 provider: provider.to_string(),
                 endpoint: Some(base.to_string()),
@@ -351,11 +191,7 @@ async fn resolve_driver(
                 .map_err(|_| anyhow::anyhow!("ANTHROPIC_API_KEY is not set; required for --provider anthropic"))?;
             let m = if model == "deepseek-r1" { "claude-opus-5-5" } else { model };
             Ok(DriverInfo {
-                driver: Box::new(AnthropicDriver {
-                    client: reqwest::Client::new(),
-                    api_key: key,
-                    model: m.to_string(),
-                }),
+                driver: Box::new(AnthropicDriver::new(&key, m)),
                 kind: "live",
                 provider: provider.to_string(),
                 endpoint: Some("https://api.anthropic.com/v1/messages".to_string()),

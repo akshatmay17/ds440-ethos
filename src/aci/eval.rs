@@ -764,6 +764,7 @@ pub async fn run_one(
         advisories: true,
         redaction: true,
         interceptor: Some(&interceptor),
+        ..Default::default()
     };
 
     let prompt = scenario.prompt(opts.variant).to_string();

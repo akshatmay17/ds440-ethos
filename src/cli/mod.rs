@@ -1,5 +1,5 @@
 use crate::aci::agent_loop::{
-    parse_tool_call, AgentLoop, AgentMessage, AgentRole, AgentStepAction, LlmDriver,
+    AgentLoop,
 };
 use crate::aci::ACIHarness;
 use crate::api::routes::{create_router, AppState};
@@ -344,171 +344,6 @@ async fn run_doctor() -> anyhow::Result<()> {
     Ok(())
 }
 
-pub struct CliHttpDriver {
-    pub client: reqwest::Client,
-    pub api_url: String,
-    pub model: String,
-    pub api_key: Option<String>,
-}
-
-impl LlmDriver for CliHttpDriver {
-    fn step(&self, history: &[AgentMessage]) -> anyhow::Result<AgentStepAction> {
-        let rt = tokio::runtime::Handle::current();
-        let mut prompt_messages: Vec<serde_json::Value> = Vec::new();
-        let mut last_call_id = String::new();
-        let mut call_counter = 0;
-
-        for m in history {
-            match m.role {
-                AgentRole::System => {
-                    prompt_messages.push(serde_json::json!({
-                        "role": "system",
-                        "content": m.content
-                    }));
-                }
-                AgentRole::User => {
-                    prompt_messages.push(serde_json::json!({
-                        "role": "user",
-                        "content": m.content
-                    }));
-                }
-                AgentRole::Assistant => {
-                    if let Some(parsed) = parse_tool_call(&m.content) {
-                        call_counter += 1;
-                        let cid = format!("call_{}", call_counter);
-                        last_call_id = cid.clone();
-                        prompt_messages.push(serde_json::json!({
-                            "role": "assistant",
-                            "content": null,
-                            "tool_calls": [
-                                {
-                                    "id": cid,
-                                    "type": "function",
-                                    "function": {
-                                        "name": parsed.name,
-                                        "arguments": parsed.arguments.to_string()
-                                    }
-                                }
-                            ]
-                        }));
-                    } else {
-                        prompt_messages.push(serde_json::json!({
-                            "role": "assistant",
-                            "content": m.content
-                        }));
-                    }
-                }
-                AgentRole::Tool => {
-                    let cid = if !last_call_id.is_empty() {
-                        last_call_id.clone()
-                    } else {
-                        "call_1".to_string()
-                    };
-                    prompt_messages.push(serde_json::json!({
-                        "role": "tool",
-                        "tool_call_id": cid,
-                        "name": m.tool_name.as_deref().unwrap_or("tool"),
-                        "content": m.content
-                    }));
-                }
-            }
-        }
-
-        let tools = crate::aci::schemas::get_all_tool_definitions();
-        let payload = serde_json::json!({
-            "model": self.model,
-            "messages": prompt_messages,
-            "tools": tools,
-            "tool_choice": "auto",
-            "temperature": 0.0,
-            "max_tokens": 1024
-        });
-
-        let client = self.client.clone();
-        let url = format!("{}/chat/completions", self.api_url);
-        let key = self.api_key.clone();
-
-        let res = tokio::task::block_in_place(|| {
-            rt.block_on(async move {
-                let mut req = client
-                    .post(&url)
-                    .json(&payload)
-                    .timeout(std::time::Duration::from_secs(300));
-                if let Some(k) = key {
-                    req = req.bearer_auth(k);
-                }
-                req.send().await?.json::<serde_json::Value>().await
-            })
-        });
-
-        match res {
-            Ok(val) => {
-                // First try native tool_calls (OpenAI function calling format)
-                if let Some(tool_calls) = val["choices"][0]["message"]["tool_calls"].as_array() {
-                    if let Some(tc) = tool_calls.first() {
-                        let name = tc["function"]["name"]
-                            .as_str()
-                            .unwrap_or("unknown")
-                            .to_string();
-                        let args_str = tc["function"]["arguments"].as_str().unwrap_or("{}");
-                        let arguments: serde_json::Value =
-                            serde_json::from_str(args_str).unwrap_or(serde_json::json!({}));
-                        return Ok(AgentStepAction::CallTool { name, arguments });
-                    }
-                }
-
-                // Check content first, then reasoning_content for tool calls
-                let content_opt = val["choices"][0]["message"]["content"].as_str();
-                let reasoning_opt = val["choices"][0]["message"]["reasoning_content"].as_str();
-
-                let tool_call_opt = content_opt
-                    .and_then(parse_tool_call)
-                    .or_else(|| reasoning_opt.and_then(parse_tool_call));
-
-                if let Some(tool_call) = tool_call_opt {
-                    return Ok(AgentStepAction::CallTool {
-                        name: tool_call.name,
-                        arguments: tool_call.arguments,
-                    });
-                }
-
-                // Fall back to final summary from content or reasoning
-                if let Some(content) = content_opt {
-                    if !content.trim().is_empty() {
-                        return Ok(AgentStepAction::Finish {
-                            summary: content.to_string(),
-                        });
-                    }
-                }
-
-                if let Some(reasoning) = reasoning_opt {
-                    if !reasoning.trim().is_empty() {
-                        return Ok(AgentStepAction::Finish {
-                            summary: reasoning.to_string(),
-                        });
-                    }
-                }
-
-                Ok(AgentStepAction::Finish {
-                    summary: format!("LLM response: {}", val),
-                })
-            }
-            Err(e) => {
-                println!(
-                    "    [Notice] LLM endpoint at {} offline ({}). Running harness self-diagnostic task.",
-                    self.api_url, e
-                );
-                Ok(AgentStepAction::Finish {
-                    summary: format!(
-                        "Harness execution verified. Task '{}' recorded in sandbox.",
-                        history.first().map(|m| m.content.as_str()).unwrap_or("")
-                    ),
-                })
-            }
-        }
-    }
-}
-
 async fn run_harness_task(
     task: &str,
     max_steps: usize,
@@ -529,15 +364,17 @@ async fn run_harness_task(
         None => ACIHarness::new_with_temp_dir()?,
     };
 
-    let driver = CliHttpDriver {
-        client: reqwest::Client::new(),
-        api_url: api_url.to_string(),
-        model: model.to_string(),
-        api_key: std::env::var("OPENAI_API_KEY").ok(),
+    let key = if api_url.contains("api.anthropic.com") {
+        std::env::var("ANTHROPIC_API_KEY").ok()
+    } else {
+        std::env::var("OPENAI_API_KEY")
+            .ok()
+            .or_else(|| std::env::var("OPENROUTER_API_KEY").ok())
     };
+    let driver = crate::aci::drivers::driver_for("auto", api_url, key, model)?;
 
     let mut agent_loop = AgentLoop::new(max_steps);
-    let outcome = agent_loop.run(&mut harness, &driver, task).await?;
+    let outcome = agent_loop.run(&mut harness, driver.as_ref(), task).await?;
 
     println!("\n------------------------------------------------------------");
     println!("Execution Finished");

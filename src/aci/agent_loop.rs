@@ -40,6 +40,8 @@ pub enum AgentStepAction {
 pub enum AgentStopReason {
     Completed,
     StepLimitExceeded,
+    /// The caller set the cancel flag (e.g. Esc in the TUI).
+    Cancelled,
     Error(String),
 }
 
@@ -55,8 +57,22 @@ pub struct AgentRunResult {
     pub trace: Vec<StepTrace>,
 }
 
+/// Token usage reported by a driver, cumulative over its lifetime.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct TokenUsage {
+    pub input: u64,
+    pub output: u64,
+    /// Input tokens of the most recent request (≈ current context size).
+    pub last_input: u64,
+}
+
 pub trait LlmDriver: Send + Sync {
     fn step(&self, history: &[AgentMessage]) -> anyhow::Result<AgentStepAction>;
+
+    /// Cumulative token usage, when the provider reports it.
+    fn usage(&self) -> TokenUsage {
+        TokenUsage::default()
+    }
 }
 
 pub fn parse_tool_call(raw: &str) -> Option<ParsedToolCall> {
@@ -207,6 +223,37 @@ pub trait ToolInterceptor: Send + Sync {
     }
 }
 
+/// Before/after contents of a file the agent wrote, for live diff display.
+#[derive(Debug, Clone)]
+pub struct FileDiff {
+    pub path: String,
+    pub before: String,
+    pub after: String,
+}
+
+/// Live progress events from [`AgentLoop::run_configured`], for UIs.
+#[derive(Debug, Clone)]
+pub enum LoopEvent {
+    /// About to ask the model for step `step`.
+    Thinking { step: usize },
+    /// The model requested a tool.
+    ToolCall {
+        step: usize,
+        name: String,
+        arguments: serde_json::Value,
+    },
+    /// The tool finished (or was blocked / simulated / rejected).
+    ToolResult {
+        trace: StepTrace,
+        /// Full tool output as the harness returned it (after redaction).
+        output: serde_json::Value,
+        error: Option<String>,
+        diff: Option<FileDiff>,
+    },
+    /// The model returned a final answer.
+    Finished { summary: String },
+}
+
 /// Options for [`AgentLoop::run_configured`]. `Default` reproduces the
 /// behaviour of [`AgentLoop::run`].
 pub struct LoopConfig<'a> {
@@ -217,6 +264,13 @@ pub struct LoopConfig<'a> {
     /// Apply the Secret Redaction Wall (egress check + output scrubbing).
     pub redaction: bool,
     pub interceptor: Option<&'a dyn ToolInterceptor>,
+    /// Earlier conversation turns (everything after the system prompt) to
+    /// continue from. The new task is appended as the next user message.
+    pub prior_history: Vec<AgentMessage>,
+    /// Receives live progress events.
+    pub events: Option<tokio::sync::mpsc::UnboundedSender<LoopEvent>>,
+    /// Checked before every step; set it to stop the run.
+    pub cancel: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
 }
 
 impl Default for LoopConfig<'_> {
@@ -226,6 +280,9 @@ impl Default for LoopConfig<'_> {
             advisories: true,
             redaction: true,
             interceptor: None,
+            prior_history: Vec::new(),
+            events: None,
+            cancel: None,
         }
     }
 }
@@ -329,25 +386,50 @@ impl AgentLoop {
         };
         let system_prompt = system_prompt_for(&tool_names);
 
-        let mut history = vec![
-            AgentMessage {
-                role: AgentRole::System,
-                content: system_prompt,
-                tool_name: None,
-            },
-            AgentMessage {
-                role: AgentRole::User,
-                content: task.to_string(),
-                tool_name: None,
-            },
-        ];
+        let mut history = vec![AgentMessage {
+            role: AgentRole::System,
+            content: system_prompt,
+            tool_name: None,
+        }];
+        history.extend(
+            cfg.prior_history
+                .iter()
+                .filter(|m| m.role != AgentRole::System)
+                .cloned(),
+        );
+        history.push(AgentMessage {
+            role: AgentRole::User,
+            content: task.to_string(),
+            tool_name: None,
+        });
+
+        let emit = |e: LoopEvent| {
+            if let Some(tx) = &cfg.events {
+                let _ = tx.send(e);
+            }
+        };
 
         let mut total_steps = 0;
         let mut taint_violations = 0;
         let mut trace: Vec<StepTrace> = Vec::new();
 
         while total_steps < self.max_steps {
+            if cfg
+                .cancel
+                .as_ref()
+                .is_some_and(|c| c.load(std::sync::atomic::Ordering::Relaxed))
+            {
+                return AgentRunResult {
+                    stop_reason: AgentStopReason::Cancelled,
+                    total_steps,
+                    final_summary: "Cancelled by user".to_string(),
+                    history,
+                    taint_violations,
+                    trace,
+                };
+            }
             total_steps += 1;
+            emit(LoopEvent::Thinking { step: total_steps });
             let action = match driver.step(&history) {
                 Ok(a) => a,
                 Err(e) => {
@@ -381,6 +463,9 @@ impl AgentLoop {
                         rule_id: None,
                         output_excerpt: excerpt(&serde_json::Value::String(summary.clone()), 500),
                     });
+                    emit(LoopEvent::Finished {
+                        summary: summary.clone(),
+                    });
                     return AgentRunResult {
                         stop_reason: AgentStopReason::Completed,
                         total_steps,
@@ -391,6 +476,11 @@ impl AgentLoop {
                     };
                 }
                 AgentStepAction::CallTool { name, arguments } => {
+                    emit(LoopEvent::ToolCall {
+                        step: total_steps,
+                        name: name.clone(),
+                        arguments: arguments.clone(),
+                    });
                     history.push(AgentMessage {
                         role: AgentRole::Assistant,
                         content: format!(
@@ -414,7 +504,7 @@ impl AgentLoop {
                             provenance: None,
                             policy_decision: None,
                         };
-                        trace.push(StepTrace {
+                        let t = StepTrace {
                             step: total_steps,
                             tool: Some(name.clone()),
                             arguments: arguments.clone(),
@@ -422,7 +512,14 @@ impl AgentLoop {
                             outcome: StepOutcome::Rejected,
                             rule_id: None,
                             output_excerpt: rejected.error.clone().unwrap_or_default(),
+                        };
+                        emit(LoopEvent::ToolResult {
+                            trace: t.clone(),
+                            output: serde_json::Value::Null,
+                            error: rejected.error.clone(),
+                            diff: None,
                         });
+                        trace.push(t);
                         history.push(AgentMessage {
                             role: AgentRole::Tool,
                             content: serde_json::to_string(&rejected).unwrap_or_default(),
@@ -474,6 +571,20 @@ impl AgentLoop {
                             });
                         }
                     }
+
+                    let diff_path = if cfg.events.is_some()
+                        && (name == "write" || name == "edit_block")
+                    {
+                        arguments
+                            .get("path")
+                            .and_then(|p| p.as_str())
+                            .map(|p| p.trim_start_matches('/').to_string())
+                    } else {
+                        None
+                    };
+                    let before = diff_path
+                        .as_ref()
+                        .map(|p| harness.runtime.read_file(p).unwrap_or_default());
 
                     let intercepted = cfg
                         .interceptor
@@ -540,12 +651,12 @@ impl AgentLoop {
                         taint_violations += 1;
                     }
 
-                    trace.push(StepTrace {
+                    let t = StepTrace {
                         step: total_steps,
                         tool: Some(name.clone()),
                         arguments: arguments.clone(),
                         status: tool_result.status.clone(),
-                        outcome,
+                        outcome: outcome.clone(),
                         rule_id: tool_result
                             .policy_decision
                             .as_ref()
@@ -555,7 +666,27 @@ impl AgentLoop {
                         } else {
                             excerpt(&tool_result.output, 500)
                         },
-                    });
+                    };
+                    if cfg.events.is_some() {
+                        let diff = match (&diff_path, before) {
+                            (Some(p), Some(b)) if outcome != StepOutcome::Blocked => {
+                                let after = harness.runtime.read_file(p).unwrap_or_default();
+                                (after != b).then(|| FileDiff {
+                                    path: p.clone(),
+                                    before: b,
+                                    after,
+                                })
+                            }
+                            _ => None,
+                        };
+                        emit(LoopEvent::ToolResult {
+                            trace: t.clone(),
+                            output: tool_result.output.clone(),
+                            error: tool_result.error.clone(),
+                            diff,
+                        });
+                    }
+                    trace.push(t);
 
                     let output_str = serde_json::to_string(&tool_result).unwrap_or_default();
                     history.push(AgentMessage {

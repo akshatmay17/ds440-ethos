@@ -3,12 +3,15 @@ pub mod benchmark;
 pub mod harness;
 pub mod schemas;
 pub mod state_tree;
+pub mod drivers;
 pub mod eval;
 pub mod synthetic;
 
 pub use agent_loop::{
     parse_tool_call, AgentLoop, AgentMessage, AgentRole, AgentRunResult, AgentStepAction,
-    AgentStopReason, LlmDriver, LoopConfig, ParsedToolCall, StepOutcome, StepTrace, ToolInterceptor,
+    AgentStopReason, FileDiff, LlmDriver, LoopConfig, LoopEvent, ParsedToolCall, StepOutcome, StepTrace,
+    TokenUsage,
+    ToolInterceptor,
 };
 pub use benchmark::{
     BenchmarkCategory, BenchmarkResult, BenchmarkRunner, BenchmarkScenario, BenchmarkSuiteReport,
