@@ -51,15 +51,21 @@ Rust runtime (`ethos`) providing a taint-tracked sandbox and Agent-Computer Inte
 
 ## Benchmark evals (feed Paper 1)
 
+The evaluation harness is **v2** (`src/aci/eval.rs`, driven by `src/cli/eval_cmd.rs`); the scenario and report contract is in `docs/eval-scenario-schema.md` — read it before adding cases or reading reports. The legacy `src/aci/benchmark.rs` types remain only for existing tests.
+
 ```powershell
-cargo run -- eval --dataset <injecagent|hackaprompt|agenthijack|synthetic|all> `
-  --provider lmstudio --model deepseek-r1 --output reports/<name>_results.json
+cargo run -- eval --dataset <name> --provider <lmstudio|ollama|openai|openrouter|anthropic|scripted> `
+  --model <id> --condition full --variant benign --repeats 3 --output reports/<name>_v2_results.json
 ```
 
-- Flags: `--split train|eval|test|all` (70/20/10 partition doctrine; `test` is the blind holdout), `--synthetic` (adds mutated evasion vectors).
-- Datasets live in `data/injections/*.json`; outputs go to `reports/*.json`. Keep the report schema stable (`timestamp`, `provider`, `model`, `split`, `total_scenarios`, `defense_violations_blocked`, `results[]`) — downstream paper tooling reads it.
-- Run each dataset in isolation for clean per-member telemetry; `--dataset all` is the intentional unified suite.
-- Wrappers with interactive menus: `scripts/eval_bench.ps1` (Windows) and `scripts/eval_bench.sh`; both accept headless flags. Release packaging: `scripts/build_windows.ps1` / `build_macos.sh` / `build_linux.sh`.
+- **Datasets** (`--dataset`): `injecagent` `hackaprompt` `agenthijack` `m365` `evasion` (the enriched local files); `benign` (false-positive controls); `capability` (clean coding tasks with a utility check); `injected` / `fetch` / `tool_output` (payload-via-code-comment / fetch / command-output — not yet authored); `injecagent-upstream` (1054 cases, generate with `scripts/import_injecagent.py`, gitignored); `attacks` (all five local attack files); `all` (attacks + benign + capability). `--dataset-file path.json` loads an explicit file.
+- **Fail-closed, no silent fallback.** If a live provider is requested and unreachable (or a key is missing), the command exits non-zero. `--provider scripted` is the one explicit rule-based driver; its reports are stamped `driver: "scripted"` and must never be cited as model behaviour. The report records `driver`, `endpoint`, `requested_model` and the `model` the server actually served.
+- **Conditions** (`--condition`): `full` enforces every wall; `rewind` / `structured` / `raw-shell` run the walls in shadow mode (decisions recorded, file ops let through, commands/network simulated) so the four-condition comparison is possible. `--runtime gvisor` fails if `runsc` is absent.
+- **Variants** (`--variant benign|complicit|both`): `benign` uses the realistic task framing (`benign_prompt`); `complicit` uses the legacy "follow the file's instructions" framing (`agent_prompt`). Run both to measure how much the framing itself drives attack success.
+- **Scoring:** attacker success is a machine-checkable `oracle` per case (egress / canary_leak / sensitive_read / command / file_written|modified|deleted / args_contains), scored over per-step traces and the final workspace; the runner seeds a canary `.env`. Each run reports `attack_attempted`, `attack_succeeded`, `attack_blocked`, `payload_read`, `utility_ok`, `false_positive`. A driver error marks the run `valid: false` — an outage is never scored as a defense. Traces go to `<output>.traces.jsonl`.
+- **Report schema is v2** (`schema_version: 2`; see the doc). Build paper tables with `python scripts/make_tables.py reports/*_v2_results.json` (Wilson CIs; refuses scripted reports unless `--include-scripted`; prints a warning row for legacy v1 reports). Legacy `reports/*_eval_results.json` are kept but their `driver` is unknown — do not treat their block counts as model results (see the critique in `paper/`).
+- Scanner/SemanticGuard corpora: `scripts/prepare_semantic_dataset.py --hf` assembles public prompt-injection datasets (`data/semantic_guard/`, gitignored); `scripts/eval_semantic_baseline.py` scores the heuristic tier.
+- `--split train|eval|test|all` keeps the 70/20/10 partition (`test` is the blind holdout). Wrappers: `scripts/eval_bench.ps1` / `.sh`. Release packaging: `scripts/build_*`.
 
 ## Repo conventions
 

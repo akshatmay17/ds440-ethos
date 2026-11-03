@@ -38,7 +38,8 @@ Hard constraints:
 | `deepset/prompt-injections` | classic ungated corpus (~660 rows, EN+DE) |
 | ProtectAI PINT benchmark (train split) | broad injection coverage |
 | `jackhhao/jailbreak-classification` | jailbreak class |
-| `lakera/gandalf_ignore_instructions` | instruction-override style |
+| `Lakera/gandalf_ignore_instructions` | instruction-override style |
+| `Lakera/mosscap_prompt_injection` | secret-extraction / game prompts (DEF CON 31) |
 | Ethos in-repo cases (34) | domain gold — seeds for generation, frozen for eval |
 | **Synthetic multiplication** | extend `src/aci/synthetic.rs` mutations to dataset scale: homoglyphs, base64, zero-width splicing, markdown cloaking, role-play frames, `<|start_system_directive|>` wrappers, multi-turn splits |
 
@@ -65,6 +66,39 @@ automatically — benign detection + risk-class mapping already handle this.
 - Exact + MinHash dedup across all sources before splitting.
 - Stratified 80/10/10 by source+label; cross-split contamination check.
 - Frozen acceptance set: 34 Ethos cases + synthetic suite (never in train).
+
+### 2.5 Public corpora
+
+These are the corpora `scripts/prepare_semantic_dataset.py --hf` pulls
+(`HF_CORPORA`). Licences were checked against the Hugging Face dataset
+API and dataset cards on 2026-11-03. Every corpus is ungated. Rows are
+counts after exact dedup from the run
+`--hf --hf-limit 5000` (`reports/semantic_dataset_manifest.json`).
+
+| HF id | Licence | Label mapping | Rows kept |
+| :--- | :--- | :--- | ---: |
+| `deepset/prompt-injections` (train) | Apache-2.0 | `label==1` → INJECTION, else BENIGN | 203 inj / 342 benign |
+| `jackhhao/jailbreak-classification` (train) | Apache-2.0 | `type=="jailbreak"` → JAILBREAK, else BENIGN | 515 jb / 516 benign |
+| `Lakera/gandalf_ignore_instructions` (train) | MIT | all INJECTION | 776 |
+| `Lakera/mosscap_prompt_injection` (train, streamed, first 5000) | MIT | all INJECTION (noisy: some rows are innocuous chat sent to the game) | 4262 |
+| `tatsu-lab/alpaca` (train) | **CC-BY-NC-4.0** (non-commercial) | BENIGN | 5000 |
+| `databricks/databricks-dolly-15k` (train) | **CC-BY-SA-3.0** (share-alike) | BENIGN | 4954 |
+
+Notes:
+
+- All of the original ids resolved. `lakera/gandalf_ignore_instructions`
+  reaches the canonical `Lakera/...` through a 307 redirect, and the script
+  now uses the canonical casing. `Lakera/mosscap_prompt_injection` is new.
+- Licence impact on weights: Alpaca's NC clause rules out commercial
+  use of a classifier trained on it. Dolly's SA clause may carry over to
+  redistributed derived data. If weights need to ship under the repo's
+  Unlicense terms, rebuild without those two corpora and substitute
+  permissively licensed negatives.
+- Mosscap takes only the first 5000 streamed rows. They are skewed
+  towards the highest game level. Increase `--hf-limit` or shuffle if
+  level coverage matters.
+- Not yet integrated: ProtectAI PINT (not an open Hub dataset) and
+  `bigcode/the-stack-smol`.
 
 ## 3. Training Recipe (RTX 3060)
 

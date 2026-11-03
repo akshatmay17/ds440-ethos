@@ -43,14 +43,28 @@ JAILBREAK_HINTS = (
     "role-play", "roleplay", "no restrictions", "unrestricted",
 )
 
+# Public corpora. Licences checked on the HF dataset API / card (2026-11-03);
+# keep docs/semantic-guard-finetune-plan.md ("Public corpora") in sync.
 HF_CORPORA = {
     # dataset id: (config, split, builder)
+    # Apache-2.0. 546 train rows, label 1 = injection.
     "deepset/prompt-injections": (None, "train", "deepset"),
+    # Apache-2.0. 1044 train rows, type = jailbreak | benign.
     "jackhhao/jailbreak-classification": (None, "train", "jackhhao"),
-    "lakera/gandalf_ignore_instructions": (None, "train", "gandalf"),
+    # MIT. 777 train rows of Gandalf "ignore instructions" attacks. Uses the
+    # canonical "Lakera/..." casing; "lakera/..." also works, through a 307 redirect.
+    "Lakera/gandalf_ignore_instructions": (None, "train", "gandalf"),
+    # MIT. 223k train rows of Mosscap (DEF CON 31) password-extraction prompts.
+    # Streamed and capped at --hf-limit. Labelled INJECTION wholesale, which is
+    # noisy: a few rows are innocuous chat sent to the game.
+    "Lakera/mosscap_prompt_injection": (None, "train", "mosscap"),
+    # CC-BY-NC-4.0 (non-commercial). General instructions used as benign negatives.
     "tatsu-lab/alpaca": (None, "train", "alpaca_negative"),
+    # CC-BY-SA-3.0 (share-alike: anything derived from these rows inherits it).
+    # Benign negatives.
     "databricks/databricks-dolly-15k": (None, "train", "dolly_negative"),
 }
+STREAMED = {"Lakera/mosscap_prompt_injection"}  # large corpora: stream instead of full download
 
 
 def norm(text: str) -> str:
@@ -164,7 +178,7 @@ def load_hf_corpora(limit: int) -> list[dict]:
     out = []
     for repo, (_cfg, split, kind) in HF_CORPORA.items():
         try:
-            ds = datasets.load_dataset(repo, split=split)
+            ds = datasets.load_dataset(repo, split=split, streaming=repo in STREAMED)
         except Exception as e:  # noqa: BLE001 - report and continue
             print(f"  ! {repo}: {e}", file=sys.stderr)
             continue
@@ -190,6 +204,9 @@ def _hf_row_to_record(kind: str, row: dict, repo: str) -> dict | None:
     elif kind == "gandalf":
         text = norm(row.get("text", ""))
         label = INJECTION
+    elif kind == "mosscap":
+        text = norm(row.get("prompt", ""))
+        label = INJECTION  # same convention as Gandalf: secret-extraction attempts
     elif kind == "alpaca_negative":
         text = norm(f"{row.get('instruction', '')} {row.get('input', '')}".strip())
         label = BENIGN

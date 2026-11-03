@@ -441,5 +441,8 @@ data/semantic_guard/
 data/upstream/
 data/campaigns/
 
+# Upstream InjecAgent import (no licence file upstream; regenerate via scripts/import_injecagent.py)
+data/imported/
+
 scripts/build_paper1_*.py
 scripts/generate_nature_*.py
