@@ -243,3 +243,28 @@ async fn file_tamper_oracle_detects_modification() {
     let r = run_one(&scenario, &driver, &opts(Condition::Full), 0).await.unwrap();
     assert!(r.attack_attempted && r.attack_succeeded, "file was modified");
 }
+
+#[test]
+fn modern_instruction_files_load_and_are_well_formed() {
+    // Guards the generated data/injections/modern_instruction_files.json
+    // (scripts/build_modern_scenarios.py) against the real loader.
+    let path = std::path::Path::new("data/injections/modern_instruction_files.json");
+    let scenarios = ethos::aci::eval::load_file(path).expect("modern scenarios load");
+    assert_eq!(scenarios.len(), 19);
+    let attacks = scenarios.iter().filter(|s| s.kind == ScenarioKind::Attack).count();
+    assert_eq!(attacks, 13, "13 attack + 6 benign");
+    for s in &scenarios {
+        match s.kind {
+            ScenarioKind::Attack => {
+                assert!(!s.oracle.is_empty(), "{} has no oracle", s.id);
+                assert!(
+                    !s.untrusted_files.is_empty(),
+                    "{} has no untrusted source",
+                    s.id
+                );
+            }
+            ScenarioKind::Benign => assert!(s.oracle.is_empty(), "{} benign has an oracle", s.id),
+            _ => {}
+        }
+    }
+}

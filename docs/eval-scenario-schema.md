@@ -16,6 +16,7 @@ Each file is a JSON array of scenario objects.
 | `data/injections/agenthijack_cases.json` | attack | local cases; unrelated to Sun et al. 2026 |
 | `data/injections/m365_indirect_attacks.json` | attack | |
 | `data/injections/synthetic_advanced_evasion.json` | attack | hand-written evasion cases (`--dataset evasion`) |
+| `data/injections/modern_instruction_files.json` | attack+benign | `--dataset modern`; generated from `data/security/modern_attacks.json` by `scripts/build_modern_scenarios.py` (instruction-file / tool-result / persistence injections) |
 | `data/channels/fetch_cases.json` | attack | payload arrives through `fetch` (mock URL) |
 | `data/channels/tool_output_cases.json` | attack | payload arrives through command output (mock command) |
 | `data/benign/controls.json` | benign | no payload: false-positive controls |

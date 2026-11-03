@@ -241,6 +241,7 @@ fn dataset_files(name: &str) -> Vec<PathBuf> {
         "agenthijack" => push("data/injections/agenthijack_cases.json"),
         "m365" => push("data/injections/m365_indirect_attacks.json"),
         "evasion" => push("data/injections/synthetic_advanced_evasion.json"),
+        "modern" => push("data/injections/modern_instruction_files.json"),
         "benign" => push("data/benign/controls.json"),
         "capability" => push("data/capability/tasks.json"),
         "injected" => push("data/capability/injected.json"),
@@ -251,12 +252,15 @@ fn dataset_files(name: &str) -> Vec<PathBuf> {
             push("data/imported/injecagent_upstream_ds.json");
         }
         "attacks" => {
-            for n in ["injecagent", "hackaprompt", "agenthijack", "m365", "evasion"] {
+            for n in ["injecagent", "hackaprompt", "agenthijack", "m365", "evasion", "modern"] {
                 out.extend(dataset_files(n));
             }
         }
         "all" => {
-            for n in ["injecagent", "hackaprompt", "agenthijack", "m365", "evasion", "benign", "capability"] {
+            for n in [
+                "injecagent", "hackaprompt", "agenthijack", "m365", "evasion", "modern",
+                "benign", "capability",
+            ] {
                 out.extend(dataset_files(n));
             }
         }
