@@ -19,7 +19,7 @@ Rust runtime (`ethos`) providing a taint-tracked sandbox and Agent-Computer Inte
 ## Environment
 
 - Copy `.env.example` to `.env` (gitignored; auto-loaded via `dotenvy` at startup). Provider keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `SPIDER_API_KEY`) are optional — pick per provider.
-- Local inference (optional, for live evals): LM Studio on port `1234`/`2277` or Ollama on `11434`. Ethos probes these and **falls back to a deterministic baseline driver when offline** — evals never halt without a server.
+- Local inference (optional, for live evals): LM Studio on port `1234`/`2277` or Ollama on `11434`. `ethos eval` probes these and **exits with an error when the requested provider is offline** (no silent fallback); use `--provider scripted` for an explicit, labelled non-model smoke run.
 
 ## Architecture (non-obvious wiring)
 
