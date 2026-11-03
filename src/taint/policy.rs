@@ -8,6 +8,16 @@ pub enum PolicyProfile {
     AuditOnly,
 }
 
+/// Env-file templates that are safe to read (placeholder values only).
+pub const ENV_TEMPLATE_NAMES: &[&str] = &[
+    ".env.example",
+    ".env.sample",
+    ".env.template",
+    ".env.dist",
+    "example.env",
+    "sample.env",
+];
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TaintPolicyConfig {
     pub profile: PolicyProfile,
@@ -81,6 +91,21 @@ impl TaintPolicyConfig {
         // Case-folded: NTFS/APFS resolve ".ENV" to ".env", so a raw-argument
         // case twist must not slip the secret-path read guard.
         let normalized = path.replace('\\', "/").to_lowercase();
+
+        // Committed env templates (`.env.example` and friends) document the
+        // variable names a project needs and hold placeholder values; reading
+        // them is routine and blocking it was the most common false positive.
+        // Only the file name is exempt — the directory part is still checked,
+        // and real env files (`.env`, `.env.local`, `.env.production`) stay
+        // sensitive.
+        let (dir, file) = match normalized.rsplit_once('/') {
+            Some((d, f)) => (d.to_string(), f.to_string()),
+            None => (String::new(), normalized.clone()),
+        };
+        if ENV_TEMPLATE_NAMES.contains(&file.as_str()) {
+            return !dir.is_empty() && self.is_path_sensitive(&format!("{}/", dir));
+        }
+
         for sensitive in &self.sensitive_paths {
             let s = sensitive.to_lowercase();
             if normalized == s || normalized.ends_with(&s) || normalized.contains(&s) {

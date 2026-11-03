@@ -9,6 +9,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 pub mod eval_cmd;
+pub mod scanner_eval;
 pub mod interactive;
 
 #[derive(Parser)]
@@ -93,6 +94,12 @@ pub enum Commands {
         /// Repeat each scenario this many times (for confidence intervals).
         #[arg(long, default_value = "1")]
         repeats: usize,
+        /// Run a stratified sample of N scenarios (proportional by source).
+        #[arg(long)]
+        sample: Option<usize>,
+        /// Seed for --sample (same seed, same cases).
+        #[arg(long, default_value = "440")]
+        seed: u64,
         /// Optional path to export the JSON report.
         #[arg(short, long)]
         output: Option<String>,
@@ -115,6 +122,21 @@ pub enum Commands {
         /// Exit non-zero at/above this severity: none, low, medium, high
         #[arg(long, default_value = "none")]
         fail_on: String,
+    },
+    /// Score the PromptInjectScanner (and optionally SemanticGuard) on a labelled JSONL corpus
+    ScannerEval {
+        /// Corpus path (defaults to data/semantic_guard/test.jsonl)
+        #[arg(short, long)]
+        data: Option<String>,
+        /// Also score the advisory SemanticGuard tier
+        #[arg(long)]
+        semantic: bool,
+        /// SemanticGuard risk threshold for a positive (0.0–1.0)
+        #[arg(long, default_value = "0.7")]
+        threshold: f32,
+        /// Optional JSON report path
+        #[arg(short, long)]
+        output: Option<String>,
     },
 }
 
@@ -149,11 +171,13 @@ pub async fn run_cli() -> anyhow::Result<()> {
             split,
             max_steps,
             repeats,
+            sample,
+            seed,
             output,
         } => {
             eval_cmd::run_eval(
                 &dataset, dataset_file, &provider, &model, endpoint, &condition, &runtime,
-                &variant, &split, max_steps, repeats, output,
+                &variant, &split, max_steps, repeats, sample, seed, output,
             )
             .await
         }
@@ -165,6 +189,12 @@ pub async fn run_cli() -> anyhow::Result<()> {
             exclude,
             fail_on,
         } => run_scan(&dir, &output, &exclude, &fail_on),
+        Commands::ScannerEval {
+            data,
+            semantic,
+            threshold,
+            output,
+        } => scanner_eval::run_scanner_eval(data, semantic, threshold, output),
     }
 }
 

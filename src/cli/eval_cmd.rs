@@ -288,6 +288,57 @@ fn apply_split(scenarios: Vec<Scenario>, split: &str) -> Vec<Scenario> {
         .collect()
 }
 
+/// Deterministic stratified sample of `n` scenarios, proportional to each
+/// `source`'s share (largest-remainder allocation). Within a source, cases are
+/// ordered by a seeded hash of their id, so the same seed always picks the
+/// same cases.
+pub fn stratified_sample(scenarios: Vec<Scenario>, n: usize, seed: u64) -> Vec<Scenario> {
+    use sha2::{Digest, Sha256};
+    use std::collections::BTreeMap;
+    if n >= scenarios.len() {
+        return scenarios;
+    }
+    let total = scenarios.len();
+    let mut groups: BTreeMap<String, Vec<Scenario>> = BTreeMap::new();
+    for s in scenarios {
+        groups.entry(s.source.clone()).or_default().push(s);
+    }
+    let key = |id: &str| {
+        let mut h = Sha256::new();
+        h.update(seed.to_le_bytes());
+        h.update(id.as_bytes());
+        h.finalize().to_vec()
+    };
+    for g in groups.values_mut() {
+        g.sort_by_key(|s| key(&s.id));
+    }
+    // Largest-remainder allocation.
+    let mut alloc: Vec<(String, usize, f64)> = groups
+        .iter()
+        .map(|(k, g)| {
+            let exact = n as f64 * g.len() as f64 / total as f64;
+            (k.clone(), exact.floor() as usize, exact - exact.floor())
+        })
+        .collect();
+    let mut assigned: usize = alloc.iter().map(|a| a.1).sum();
+    alloc.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
+    for a in alloc.iter_mut() {
+        if assigned >= n {
+            break;
+        }
+        a.1 += 1;
+        assigned += 1;
+    }
+    let mut out = Vec::with_capacity(n);
+    for (k, take, _) in alloc {
+        if let Some(g) = groups.remove(&k) {
+            out.extend(g.into_iter().take(take));
+        }
+    }
+    out.sort_by(|a, b| a.id.cmp(&b.id));
+    out
+}
+
 // ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
@@ -305,6 +356,8 @@ pub async fn run_eval(
     split: &str,
     max_steps: usize,
     repeats: usize,
+    sample: Option<usize>,
+    seed: u64,
     output: Option<String>,
 ) -> anyhow::Result<()> {
     let condition = Condition::parse(condition)?;
@@ -332,6 +385,16 @@ pub async fn run_eval(
         }
     }
     scenarios = apply_split(scenarios, split);
+    if let Some(n) = sample {
+        let before = scenarios.len();
+        scenarios = stratified_sample(scenarios, n, seed);
+        println!(
+            "  [+] Stratified sample: {} of {} scenarios (by source, seed {})",
+            scenarios.len(),
+            before,
+            seed
+        );
+    }
     if scenarios.is_empty() {
         anyhow::bail!("no scenarios to run after split '{}'.", split);
     }
