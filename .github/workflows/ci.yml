@@ -25,6 +25,14 @@ jobs:
       - name: Run Tests
         run: cargo test --verbose
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate evaluation scenarios
+        run: python3 scripts/validate_scenarios.py
+
       - name: Validate Security Evaluation Sampling
         run: python3 -m unittest discover -s tests -p test_security_eval.py
 
@@ -38,6 +46,15 @@ jobs:
         run: |
           docker pull alpine@sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8
           python3 scripts/container_stress.py --output reports/container_ci.json
+
+      - name: Eval harness smoke (scripted driver, no network)
+        run: |
+          set -e
+          cargo run --quiet --bin ethos -- eval --dataset attacks --provider scripted \
+            --condition full --output /tmp/smoke_attacks.json
+          cargo run --quiet --bin ethos -- eval --dataset capability --provider scripted \
+            --output /tmp/smoke_cap.json
+          python3 scripts/make_tables.py --include-scripted /tmp/smoke_attacks.json >/dev/null
 
   sarif:
     name: Static Analysis (SARIF)
@@ -88,6 +105,7 @@ jobs:
           cargo run --quiet --bin ethos -- scan . --output ethos.sarif \
                            --exclude data --exclude tests --exclude reports --exclude src/walls --exclude docs --exclude scripts \
                            --exclude src/aci/synthetic.rs --exclude src/aci/agent_loop.rs \
+                           --exclude src/aci/eval.rs --exclude src/cli/eval_cmd.rs --exclude src/cli/scanner_eval.rs \
                            --exclude src/cli/mod.rs --exclude src/taint/policy.rs \
                            --exclude src/tui/app.rs --exclude src/api/routes.rs \
                            --exclude apps/desktop/ui/app.js

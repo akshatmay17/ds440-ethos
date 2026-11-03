@@ -369,6 +369,62 @@ def render_latex(rows: list[dict], by_source: bool) -> str:
 # Main
 # --------------------------------------------------------------------------
 
+def mcnemar_pairs(reports: list[dict], cond_a: str, cond_b: str):
+    """Pair each (scenario_id, trial, variant) attack run under condition A
+    with the same unit under condition B. Returns (b, c, pairs) where b is the
+    count where A succeeded and B did not, c where B succeeded and A did not.
+    'Success' here means the attacker's objective was reached."""
+    def outcomes(cond):
+        out = {}
+        for rep in reports:
+            if int(rep.get("schema_version", 0)) != 2:
+                continue
+            rc = str(rep.get("condition", "?"))
+            for r in rep.get("results", []):
+                if not r.get("valid", True) or r.get("kind") != "attack":
+                    continue
+                if str(r.get("condition", rc)) != cond:
+                    continue
+                key = (r.get("scenario_id"), r.get("trial", 0), r.get("variant", "?"))
+                out[key] = bool(r.get("attack_succeeded"))
+        return out
+    oa, ob = outcomes(cond_a), outcomes(cond_b)
+    common = sorted(set(oa) & set(ob))
+    b = sum(1 for k in common if oa[k] and not ob[k])
+    c = sum(1 for k in common if ob[k] and not oa[k])
+    return b, c, len(common)
+
+
+def mcnemar_report(reports: list[dict], cond_a: str, cond_b: str) -> str:
+    b, c, n = mcnemar_pairs(reports, cond_a, cond_b)
+    if n == 0:
+        return (f"McNemar {cond_a} vs {cond_b}: no paired attack runs found "
+                f"(need the same scenarios run under both conditions).")
+    # Exact binomial two-sided p-value on the discordant pairs (no SciPy).
+    disc = b + c
+    if disc == 0:
+        p = 1.0
+    else:
+        from math import comb
+        k = min(b, c)
+        tail = sum(comb(disc, i) for i in range(0, k + 1)) / (2 ** disc)
+        p = min(1.0, 2.0 * tail)
+    lines = [
+        f"McNemar paired test — attacker success, {cond_a} vs {cond_b}",
+        f"  paired units        : {n}",
+        f"  {cond_a}-only successes : {b}",
+        f"  {cond_b}-only successes : {c}",
+        f"  discordant pairs    : {disc}",
+        f"  two-sided exact p   : {p:.4g}",
+    ]
+    if p < 0.05 and disc:
+        more = cond_b if c > b else cond_a
+        lines.append(f"  => {more} lets significantly more attacks through (p < 0.05).")
+    else:
+        lines.append("  => no significant difference at p < 0.05.")
+    return "\n".join(lines)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("reports", nargs="+", help="report JSON paths or globs")
@@ -383,6 +439,9 @@ def main() -> int:
                     help="include driver=scripted reports (rows are marked as not model results)")
     ap.add_argument("--by-source", action="store_true", help="break attack rows down by result source")
     ap.add_argument("--per-round", action="store_true", help="do not collapse adaptive rounds")
+    ap.add_argument("--mcnemar", nargs=2, metavar=("COND_A", "COND_B"),
+                    help="paired McNemar test of attacker success between two conditions "
+                         "(same scenarios must appear under both)")
     args = ap.parse_args()
 
     paths = expand_inputs(args.reports)
@@ -393,6 +452,7 @@ def main() -> int:
         ap.error(f"--label given {len(args.label)} times for {len(paths)} input files")
 
     rows: list[dict] = []
+    parsed_reports: list[dict] = []
     refused = 0
     for i, path in enumerate(paths):
         label = (args.label[i] if len(args.label) == len(paths) and len(paths) > 1
@@ -405,6 +465,8 @@ def main() -> int:
         if not isinstance(report, dict) or not isinstance(report.get("results"), list):
             print(f"warning: skip {path}: not an ethos eval report (no results[] list)", file=sys.stderr)
             continue
+        if isinstance(report, dict) and int(report.get("schema_version", 0) or 0) == 2:
+            parsed_reports.append(report)
         version = report.get("schema_version")
         if version is None:
             print(f"warning: {path} is a legacy v1 report ({LEGACY_NOTE}); only blocked-case counts shown",
@@ -424,7 +486,13 @@ def main() -> int:
             print(f"warning: {path} has no 'driver' field", file=sys.stderr)
         rows.extend(rows_for_v2(report, label, args.by_source, args.per_round, scripted))
 
+    if args.mcnemar:
+        print(mcnemar_report(parsed_reports, args.mcnemar[0], args.mcnemar[1]))
+        print()
+
     if not rows:
+        if args.mcnemar:
+            return 0
         print("error: nothing to tabulate" + (f" ({refused} scripted report(s) refused)" if refused else ""),
               file=sys.stderr)
         return 1
