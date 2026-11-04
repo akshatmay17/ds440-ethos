@@ -41,7 +41,7 @@ Ethos wraps autonomous agents in an ironclad Agent-Computer Interface (ACI) feat
 - **Command Isolation**: Optional disposable Linux Docker containers with pinned images, no network, resource limits and filtered workspace copies. Missing confinement never falls back to a host command; execution is disabled until configured.
 - **Multi-Surface Interfaces**: Native Cyber Obsidian TUI (`ethos tui`), Tauri v2 cross-platform desktop app, and Axum REST API daemon on port 8000.
 
-> **CLI Binary Note:** The primary binary is `ethos`, with `tbox` fully retained as a legacy and short typing alias (`cargo run --bin ethos -- ...` or `cargo run --bin tbox -- ...`).
+> **CLI Binary Note:** The sole binary is `ethos` (`Cargo.toml` sets `default-run = "ethos"`, so `cargo run -- ...` works with no `--bin`). There is **no `tbox` binary** — older docs that mention one are stale.
 
 ---
 
@@ -101,7 +101,7 @@ The project scope has been sharpened to maximize engineering quality and academi
 
 | Member | Primary Domain | Core Deliverables | Active Work |
 | :--- | :--- | :--- | :--- |
-| **Harsh Rathi** | **Principal Engineer & Architect** | **100% of Software Engineering**: CLI runtime (`ethos` & `tbox`), TUI, Desktop GUI, REST API daemon, gVisor integration, Windows/macOS/Linux installers, GitHub Actions, Onboarding Wizard. Executes **InjecAgent** and **HackAPrompt** benchmarks. | **Active & Shipping** *(Not authoring Paper 1)* |
+| **Harsh Rathi** | **Principal Engineer & Architect** | **100% of Software Engineering**: CLI runtime (`ethos`), TUI, Desktop GUI, REST API daemon, gVisor integration, Windows/macOS/Linux installers, GitHub Actions, Onboarding Wizard. Executes **InjecAgent** and **HackAPrompt** benchmarks. | **Active & Shipping** *(Not authoring Paper 1)* |
 | **Aryamaan** | **Research Lead & Paper 1 Lead Author** | Paper 1 execution (*Evaluating Tool Ergonomics and Context Compression*). Experimental design, hypothesis validation, and **AgentHijack** benchmark evaluation. | **Paper 1 Lead** |
 | **Ammar** | **Data & Literature Lead** | Literature review (SWE-agent, ExploitBench, gVisor), ingestion methodology, dataset documentation, and Paper 1 drafting. | **Paper 1 Co-Author** |
 | **Akshat** | **Threat & Security Modeling** | Adversarial threat taxonomy (MITRE ATLAS, indirect injection), Condition D boundary defense evaluation, Paper 1 security section. | **Paper 1 Co-Author** |
@@ -114,7 +114,7 @@ The project scope has been sharpened to maximize engineering quality and academi
 All engineering tasks belong strictly to **Harsh Rathi**.
 
 ### 4.1 Completed & Verified (Sprint 1 Production)
-- [x] **Ethos Primary Binary (`src/bin/ethos.rs`)**: Standalone binary with `ethos` command line interface, retaining `tbox` as fully functional alias.
+- [x] **Ethos Primary Binary (`src/bin/ethos.rs`)**: Standalone binary with the `ethos` command-line interface (`default-run = "ethos"`; no `tbox` binary exists).
 - [x] **Pure Rust ACI Harness (`src/aci/harness.rs`)**: 1-indexed `view_lines`, exact `edit_block`, pure-Rust `search_files`, `grep`, `fetch` with untrusted tagging, shell wrapper `-c` interceptor, and `fold_output` token compression.
 - [x] **Snapshot & Rewind (`src/runtime/base.rs`)**: SHA-256 state hashing, CoW directory snapshotting, and safe destructive rollback guarded by `.ethos_sandbox` marker (with `.taintbox_sandbox` legacy compatibility).
 - [x] **Disposable Command Runtime (`src/runtime/container.rs`)**: Configured application execution uses a non-root Docker boundary with no host fallback. Legacy `runsc` probing remains separate; it does not establish active confinement.
@@ -125,17 +125,13 @@ All engineering tasks belong strictly to **Harsh Rathi**.
 - [x] **Cyber Obsidian Terminal TUI (`src/tui/zen.rs`)**: Ratatui 0.30 interface featuring floating slash command popup (`/`), `Ctrl+X` leader key mode, multi-line prompt editing, setup wizard, and cross-platform clipboard.
 - [x] **Axum REST API Daemon (`src/api/routes.rs`)**: High-performance HTTP server on port 8000 exposing `/health`, `/v1/sandboxes`, `/v1/models`, `/v1/metrics`, and telemetry export.
 - [x] **Tauri v2 Native Desktop Application (`apps/desktop/`)**: Native desktop GUI for Windows, macOS, and Linux with reactive context inspection and onboarding wizard.
-- [x] **Four Injection Benchmark Datasets (`data/injections/`)**:
-  - `injecagent_cases.json` (UIUC Kang Lab Indirect Injections)
-  - `hackaprompt_cases.json` (Direct Jailbreaks & Evasions)
-  - `agenthijack_cases.json` (UIUC Kang Lab Multi-Turn Hijacking)
-  - `synthetic_advanced_evasion.json` (10 Modern Red-Team Evasion Vectors: Cyrillic Homoglyphs, Markdown Cloaking, Dormant Memory Poisoning, Multi-Turn Payload Splitting, Base64 Polyglot, CTF Framing, Context Dilation, Ouroboros Wall Tampering, Symlink Traversal, Recursive Scripting)
-- [x] **Automated Evaluation Runner (`ethos eval`)**: Dynamic dataset runner with `--provider`, `--model`, and `--output` flags generating structured research metrics.
+- [x] **Evaluation scenario corpus (`data/`)**: local injection families (`injecagent`, `hackaprompt`, `agenthijack`, `m365`, `evasion`, `modern`), false-positive **benign controls** (`data/benign/`), clean **capability** tasks and their injected twins (`data/capability/`), per-channel `fetch`/`tool_output` cases (`data/channels/`), and importer output for the full upstream InjecAgent set (`data/imported/`, gitignored). Each attack case carries a machine-checkable `oracle`; the schema is in [`docs/eval-scenario-schema.md`](docs/eval-scenario-schema.md) and `scripts/validate_scenarios.py` enforces it.
+- [x] **v2 Evaluation Runner (`ethos eval`)**: fail-closed provider selection (`lmstudio`/`ollama`/`openai`/`openrouter`/`anthropic`, plus an explicit labelled `scripted` smoke driver), condition switches (`--condition full|rewind|structured|raw-shell`), task framings (`--variant benign|complicit|both`), repeats/sampling for confidence intervals, and a report that records the real driver and served model. `ethos scanner-eval` separately scores the enforcing PromptInjectScanner as precision/recall/F1.
 - [x] **Turnkey Vibe-Coding Runbook (`AGENTS.md`)**: Fail-proof setup guide for Aryamaan's agent covering LM Studio, DeepSeek-R1, and local inference testing.
 - [x] **Windows Packaging (`scripts/build_windows.ps1` & `.github/workflows/release-windows.yml`)**: WiX MSI installer, NSIS setup executable, standalone binary zip, and automated GitHub Actions release workflow.
 - [x] **macOS Packaging (`scripts/build_macos.sh` & `.github/workflows/release-macos.yml`)**: Native DMG installer, `.app.tar.gz` bundle for Apple Silicon and Intel, native traffic lights, Cocoa menus, and GitHub Actions workflow.
 - [x] **Linux Packaging (`scripts/build_linux.sh` & `.github/workflows/release-linux.yml`)**: Native `.deb` package, standalone `.AppImage`, x86_64 tarball, and automated GitHub Actions workflow.
-- [x] **Test Verification**: **68 unit and integration tests across 17 test suites compile and pass with 0 warnings or failures.**
+- [x] **Test Verification**: **177 unit and integration tests across 29 test suites compile and pass with 0 warnings or failures.**
 
 ---
 
@@ -154,6 +150,8 @@ All engineering tasks belong strictly to **Harsh Rathi**.
 | **C** | Structured Typed Tools | Folded Windowed Diff | **Snapshot & Rewind (`/rewind`)** | None |
 | **D** | **Full Ethos ACI** | Folded Windowed Diff + Provenance | **Snapshot & Rewind** | **Taint Boundary Enforced** |
 
+All four conditions are **implemented** in the v2 runner as `--condition raw-shell|structured|rewind|full` (A→D): `full` enforces every wall, while the others run the walls in shadow mode (decisions recorded, denied file ops let through and commands/network simulated) so the comparison can be measured on the same scenarios. A paired **McNemar** test across two conditions is available via `python scripts/make_tables.py --mcnemar full raw-shell ...`.
+
 ### 5.3 Codified Scope Cuts & Deprecations
 To protect engineering velocity and ensure a publication-grade paper:
 1. ❌ **Paper 2 as a separate paper is CUT**: Consolidated into Paper 1 as **Condition D**.
@@ -162,28 +160,46 @@ To protect engineering velocity and ensure a publication-grade paper:
 4. ❌ **Sentry.io Cloud SaaS Tracing is CUT**: Local JSONL flight logs (`reports/flight_telemetry.jsonl`) capture all telemetry with zero external leakage.
 5. ❌ **Multi-Modal Out-of-Scope Features (TTS Audio, Video Gen) are CUT**: Audio and video generation have no relevance to software engineering or taint research.
 
-### 5.4 Empirical Cross-Model Evaluation Matrix & Findings (Paper 1 Telemetry)
+### 5.4 Evaluation status & why the earlier cross-model table was withdrawn
 
-We evaluated 8 distinct model families and reasoning conditions on our unified benchmark suite on a local RTX 3060 rig via LM Studio:
+An earlier revision of this section published an 8-model matrix reporting
+"100% BLOCKED" interception across every model and reasoning mode. **Those
+numbers have been withdrawn and must not be cited.** A re-examination of the
+stored reports (and the `paper/` critique) found that:
 
-| Model Architecture & Condition | Parameter Class | Reasoning Mode | Thinking Tokens / Step | Direct Jailbreak ASR (HackAPrompt) | Indirect Injection ASR (InjecAgent) | Memory Poisoning & Evasion ASR | Ethos Runtime Interception Rate |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **DeepSeek-R1 0528** | 8B | **ON** (Native `<think>`) | ~150–200 tokens | **0.0%** *(Refused)* | **100.0%** *(Complied)* | **0.0%** *(Refused)* | **100.0% (BLOCKED)** |
-| **DeepSeek-R1 0528** | 8B | **OFF** (`</think>` Prefill)| **0 tokens** | **80.0%** *(Collapsed)* | **100.0%** *(Complied)* | **90.0%** *(Complied)* | **100.0% (BLOCKED)** |
-| **Official Qwen 3.5 9B** | 9B | **OFF** (`</think>` Prefill)| **0 tokens** | **0.0%** *(Refused)* | **100.0%** *(Complied)* | **100.0%** *(Complied)* | **100.0% (BLOCKED)** |
-| **Official Qwen 3.5 9B** | 9B | **ON** (Native Thinking) | ~160–185 tokens | **100.0%** *(Complied)* | **100.0%** *(Complied)* | **100.0%** *(Complied)* | **100.0% (BLOCKED)** |
-| **Uncensored Qwen 3.5 9B** | 9B | **OFF** (`</think>` Prefill)| **0 tokens** | **100.0%** *(Complied)* | **100.0%** *(Complied)* | **100.0%** *(Complied)* | **100.0% (BLOCKED)** |
-| **Uncensored Qwen 3.5 9B** | 9B | **ON** (Native Thinking) | ~150–180 tokens | **100.0%** *(Complied)* | **100.0%** *(Complied)* | **100.0%** *(Complied)* | **100.0% (BLOCKED)** |
-| **Qwen 3 8B Base** | 8.2B | **OFF / ON** | 0 to ~160 tokens | **100.0%** *(Complied)* | **100.0%** *(Complied)* | **100.0%** *(Complied)* | **100.0% (BLOCKED)** |
-| **Google Gemma-4 12B** | 12B | **OFF / ON** | 0 to ~190 tokens | **50.0% – 100.0%** | **50.0% – 100.0%** | **100.0%** *(Complied)* | **100.0% (BLOCKED)** |
-| **Google Gemma-4 E4B** | 7.5B | **OFF / ON** | 0 to ~190 tokens | **100.0%** *(Complied)* | **100.0%** *(Complied)* | **100.0%** *(Complied)* | **100.0% (BLOCKED)** |
-| **NVIDIA Nemotron-3 4B** | 4.0B | **OFF / ON** | 0 to ~180 tokens | **0.0% – 100.0%** | **0.0% – 100.0%** | **100.0%** *(Complied)* | **100.0% (BLOCKED)** |
-| **Qwen 3 4B Base** | 4.0B | **OFF** (Direct) | **0 tokens** | **25.0%** Exfil | **100.0%** *(Complied)* | **60.0%** *(Complied)* | **100.0% (BLOCKED)** |
+- the early report schema recorded **no field for which inference driver ran
+  or which model was actually loaded**, and the runner silently fell back to a
+  scripted rule-based driver when the local inference server was offline — so
+  a run that never reached a model was scored as a success and counted as
+  "protection";
+- "interception" counted any tool-level policy block, which is a measure of
+  **enforcement activity, not attacker-objective prevention**; and
+- several of the single-rig ablation reports under `reports/ablation_*.json`
+  carry no driver/model/runtime metadata at all.
 
-#### Key Scientific Findings for Paper 1:
-1. **The "Thinking Collapse"**: Bypassing DeepSeek-R1's internal thinking via assistant prefill (`</think>`) eliminates reasoning compute (0 tokens) and speeds up latency by 30%, but collapses its defenses against direct jailbreaks from 0% to 80% ASR.
-2. **The "Deliberation Paradox" on General Models**: On standard autoregressive models (Gemma-4, Nemotron-3, Qwen Base), prompting them with Chain-of-Thought deliberation (`<think>`) actually *increases* compliance with indirect prompt injections, as the model uses its reasoning steps to parse and follow the injected payload rather than refusing it.
-3. **The Invariant Value of Ethos (Condition D)**: Regardless of model parameter size, reasoning mode (ON/OFF), or censorship level (abliterated vs. standard), Ethos's tool-boundary taint tracking achieves **100.0% deterministic interception** of exfiltration and tampering attempts.
+The evaluation harness was rebuilt (**v2**, `src/aci/eval.rs`) to make results
+defensible: it is fail-closed (a requested live provider that is unreachable
+errors instead of falling back), it records the driver, endpoint and the model
+the server actually served, and it scores attacker success with a
+**machine-checkable oracle per case** (egress to the attacker host, `.env`
+canary leak, protected-file modification, …) separated from a benign
+false-positive rate and a task-utility measure. See
+[`docs/eval-scenario-schema.md`](docs/eval-scenario-schema.md) for the contract
+and [`docs/security-evaluation.md`](docs/security-evaluation.md) for the
+measured results and limits.
+
+**What can be stated:** the taint/egress policy is a deterministic property of
+the runtime — once untrusted data is in the ledger, every network channel is
+walled unless an allowlist re-opens it — and the red-team regression suites
+(`tests/test_rust_redteam*.rs`) hold that boundary. What the current reports do
+**not** establish is an attack-prevention rate across models; that requires
+live-model runs through the v2 harness, which are produced with:
+
+```bash
+cargo run -- eval --dataset attacks --provider lmstudio --model deepseek-r1 \
+  --condition full --variant both --repeats 3 --output reports/attacks_v2.json
+python scripts/make_tables.py reports/*_v2_results.json        # Wilson-CI tables
+```
 
 ---
 
@@ -195,7 +211,7 @@ We evaluated 8 distinct model families and reasoning conditions on our unified b
 │   ┌───────────────────────────────────┐ ┌───────────────────────────────┐   │
 │   │   Ratatui Terminal TUI            │ │   Tauri v2 Desktop App        │   │
 │   │   (Cyber Obsidian: ethos tui)     │ │   (Windows, macOS, Linux)     │   │
-│   │   cargo run --bin ethos -- tui    │ │   apps/desktop/               │   │
+│   │   cargo run -- tui    │ │   apps/desktop/               │   │
 │   └─────────────────┬─────────────────┘ └───────────────┬───────────────┘   │
 └─────────────────────┼───────────────────────────────────┼───────────────────┘
                       │                                   │
@@ -251,8 +267,20 @@ All commands can be invoked from the bottom dock or via the Command Palette (`Ct
 | **`/walls`** | Inspects active containment walls (PromptInjectScanner, Ouroboros, E-Stop, Network Gate). |
 | **`/taint`** | Dumps the active bitmask provenance ledger and untrusted custody chains. |
 | **`/rewind`** | Rolls back sandbox filesystem and taint state to the last clean snapshot. |
+| **`/undo`** | Reverts the files changed by the last agent turn (per-turn snapshot). |
+| **`/steps <n>`** | Shows or sets the per-turn step budget (default 25). |
+| **`/new`** | Starts a fresh conversation, keeping the workspace and undo history. |
+| **`/connect`** | Connects any models.dev provider (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, …). |
 | **`/setup`** | Opens the interactive configuration wizard to select provider, model, API keys, and policy profile. |
-| **`/clear`** | Clears the session feed and resets the greeting buffer. |
+| **`/clear`** | Clears the session feed (the conversation is kept). |
+| **`/help`**, **`/exit`** | Command reference; quit. |
+
+Each typed task runs the real multi-step agent loop in the background: tool
+calls, command output, file diffs and policy blocks stream into the feed live,
+**Esc** cancels after the current step, and **Tab** cycles the mode — `Build`
+(may edit files) vs. read-only `Plan` / `Review` / `Audit`. `/attack [id]`
+stages an adversarial scenario from the injection corpus so the walls can be
+watched firing.
 
 ---
 
@@ -270,37 +298,47 @@ git clone https://github.com/xyzmr114/ds440-ethos.git
 cd ds440-ethos
 git checkout main
 
-# Run all 68 unit & integration tests
+# Run all 177 unit & integration tests (29 suites)
 cargo test
 
 # Launch the Cyber Obsidian Terminal TUI
 cargo run --bin ethos -- tui
 
 # Launch the Axum REST API Daemon (Port 8000)
-cargo run --bin ethos -- daemon --port 8000
+cargo run -- daemon --port 8000
 
 # Run System Diagnostic Doctor
-cargo run --bin ethos -- doctor
+cargo run -- doctor
 ```
 
 ### Running Benchmark Evaluation Suites
 
 ```bash
-# 1. Run HackAPrompt (10 Canonical Competition Tiers) against DeepSeek-R1
-cargo run --bin ethos -- eval --dataset hackaprompt --provider lmstudio --model deepseek-r1 --output reports/hackaprompt_eval_results.json
+# Live run against a local model (fails loudly if the server is offline):
+cargo run -- eval --dataset attacks --provider lmstudio --model deepseek-r1 \
+  --condition full --variant both --repeats 3 --output reports/attacks_v2.json
 
-# 2. Run ten locally named AgentHijack text fixtures (not the official VM benchmark)
-cargo run --bin ethos -- eval --dataset agenthijack --provider lmstudio --model deepseek-r1 --output reports/agenthijack_eval_results.json
+# One injection family, a hosted provider, benign + complicit framings:
+cargo run -- eval --dataset injecagent --provider anthropic --model claude-opus-5-5 \
+  --variant both --output reports/injecagent_v2.json
 
-# 3. Run InjecAgent (Indirect Tool Injections across 17 APIs)
-cargo run --bin ethos -- eval --dataset injecagent --output reports/injecagent_eval_results.json
+# Everything (attacks + benign controls + capability) in one suite:
+cargo run -- eval --dataset all --provider lmstudio --model deepseek-r1 --output reports/all_v2.json
 
-# 4. Run Synthetic Advanced Evasion Suite (10 Modern Evasions & Memory Traps)
-cargo run --bin ethos -- eval --dataset synthetic --output reports/synthetic_evasion_sweep_results.json
+# No model handy? An explicit, labelled smoke run (never cited as a result):
+cargo run -- eval --dataset attacks --provider scripted --output reports/smoke.json
 
-# 5. Evaluate all 4 datasets + synthetic mutations simultaneously
-cargo run --bin ethos -- eval --dataset all --synthetic --output reports/all_eval_results.json
+# Score the enforcing injection scanner on a labelled corpus:
+cargo run -- scanner-eval --semantic
+
+# Build Wilson-CI paper tables from v2 reports:
+python scripts/make_tables.py reports/*_v2_results.json
 ```
+
+Datasets: `injecagent` `hackaprompt` `agenthijack` `m365` `evasion` `modern`
+`benign` `capability` `injected` `fetch` `tool_output` `injecagent-upstream`
+`attacks` (all five local attack families) `all`. See
+[`docs/eval-scenario-schema.md`](docs/eval-scenario-schema.md).
 
 ### Packaging Production Installers
 
@@ -332,7 +370,7 @@ Pushes with tags matching `v*` (or manual triggers via GitHub Actions `workflow_
 - [**`release-windows.yml`**](.github/workflows/release-windows.yml): Compiles `ethos.exe`, builds WiX MSI and NSIS installers, and uploads release assets.
 - [**`release-macos.yml`**](.github/workflows/release-macos.yml): Compiles universal CLI, builds `.dmg` and `.app.tar.gz`, and generates SHA256 checksums.
 - [**`release-linux.yml`**](.github/workflows/release-linux.yml): Compiles Linux binary, builds `.deb` and `.AppImage`, and creates GitHub Release entries.
-- [**`ci.yml`**](.github/workflows/ci.yml): Enforces `cargo test --all-targets` and formatting checks on all pull requests.
+- [**`ci.yml`**](.github/workflows/ci.yml): On every push/PR, runs `cargo check --all-targets`, `cargo test`, the security-eval unit tests, `scripts/validate_scenarios.py`, a no-network scripted eval smoke, and the Ethos prompt-injection self-scan (SARIF).
 
 ---
 

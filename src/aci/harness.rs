@@ -16,7 +16,7 @@ pub const SHELL_WRAPPERS: &[&str] = &["bash", "sh", "dash", "zsh", "cmd", "power
 
 /// Case- and path-folded program identity. Defeats `curl.exe`,
 /// `C:\Windows\System32\cmd.exe`, `CURL`, etc.
-fn program_stem(program: &str) -> String {
+pub fn program_stem(program: &str) -> String {
     let base = program
         .rsplit(['/', '\\'])
         .next()
@@ -88,6 +88,16 @@ pub struct ACIHarness {
     estop: crate::walls::estop::EmergencyStop,
     critical_block_count: usize,
     semantic_guard: crate::walls::semantic::SemanticGuard,
+    /// When false the EmergencyStop circuit breaker never trips (used by
+    /// non-enforcing evaluation conditions, where blocks are only shadowed).
+    estop_enabled: bool,
+}
+
+/// Which sandbox runtime a harness should use.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RuntimeKind {
+    Local,
+    GVisor,
 }
 
 /// Number of attack-class policy blocks before EmergencyStop trips.
@@ -135,6 +145,7 @@ impl ACIHarness {
             estop: crate::walls::estop::EmergencyStop::new(),
             critical_block_count: 0,
             semantic_guard: crate::walls::semantic::SemanticGuard::default(),
+            estop_enabled: true,
         })
     }
 
@@ -156,7 +167,36 @@ impl ACIHarness {
             estop: crate::walls::estop::EmergencyStop::new(),
             critical_block_count: 0,
             semantic_guard: crate::walls::semantic::SemanticGuard::default(),
+            estop_enabled: true,
         })
+    }
+
+    /// Fresh temp-dir harness on the requested runtime. `GVisor` fails when
+    /// `runsc` is not available instead of silently running on the host.
+    pub fn new_with_temp_dir_runtime(kind: RuntimeKind) -> anyhow::Result<Self> {
+        match kind {
+            RuntimeKind::Local => Self::new_with_temp_dir(),
+            RuntimeKind::GVisor => {
+                let mut h = Self::new_with_temp_dir()?;
+                let root = h
+                    .runtime
+                    .root_dir()
+                    .ok_or_else(|| anyhow::anyhow!("runtime has no root directory"))?;
+                let gv = crate::runtime::GVisorRuntime::new(&root)?;
+                if !gv.is_gvisor_available() {
+                    anyhow::bail!(
+                        "gVisor requested but `runsc` was not found on PATH (or in WSL2)"
+                    );
+                }
+                h.runtime = Box::new(gv);
+                Ok(h)
+            }
+        }
+    }
+
+    /// Enables or disables the EmergencyStop circuit breaker.
+    pub fn set_estop_enabled(&mut self, enabled: bool) {
+        self.estop_enabled = enabled;
     }
 
     pub fn root_dir(&self) -> Option<std::path::PathBuf> {
@@ -211,7 +251,7 @@ impl ACIHarness {
     /// EmergencyStop gate: when tripped, every tool is walled until an
     /// explicit reset. Returns the block result, or None to proceed.
     fn estop_gate(&self, call_id: String, tool_name: &str) -> Option<ToolResult> {
-        if !self.estop.is_tripped() {
+        if !self.estop_enabled || !self.estop.is_tripped() {
             return None;
         }
         let reason = format!(
@@ -269,7 +309,7 @@ impl ACIHarness {
                 "threshold": CRITICAL_TRIP_THRESHOLD
             }),
         );
-        if self.critical_block_count >= CRITICAL_TRIP_THRESHOLD {
+        if self.estop_enabled && self.critical_block_count >= CRITICAL_TRIP_THRESHOLD {
             let trip_reason = format!(
                 "{} critical policy violations (last: {} [{}])",
                 self.critical_block_count, reason, rule

