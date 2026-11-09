@@ -108,14 +108,17 @@ pub enum Commands {
     Doctor,
     /// Launch the interactive terminal UI (Ratatui Cyber Dark Dashboard)
     Tui,
-    /// Scan a directory for prompt-injection content and write a SARIF 2.1.0 report
+    /// Scan a directory for prompt-injection content and write a SARIF 2.1.0 or JSON report
     Scan {
         /// Directory to scan
         #[arg(default_value = ".")]
         dir: PathBuf,
-        /// SARIF output path
-        #[arg(short, long, default_value = "ethos.sarif")]
-        output: PathBuf,
+        /// Report format: 'sarif' (GitHub Code Scanning, VS Code) or 'json' (flat, scriptable)
+        #[arg(short, long, value_enum, default_value_t = ScanFormat::Sarif)]
+        format: ScanFormat,
+        /// Output path (default: ethos.sarif for sarif, ethos-scan.json for json)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
         /// Path (relative to DIR) to skip; repeatable
         #[arg(short, long)]
         exclude: Vec<PathBuf>,
@@ -185,10 +188,14 @@ pub async fn run_cli() -> anyhow::Result<()> {
         Commands::Tui => run_tui_command().await,
         Commands::Scan {
             dir,
+            format,
             output,
             exclude,
             fail_on,
-        } => run_scan(&dir, &output, &exclude, &fail_on),
+        } => {
+            let output = output.unwrap_or_else(|| PathBuf::from(format.default_output()));
+            run_scan(&dir, format, &output, &exclude, &fail_on)
+        }
         Commands::ScannerEval {
             data,
             semantic,
@@ -198,8 +205,24 @@ pub async fn run_cli() -> anyhow::Result<()> {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
+pub enum ScanFormat {
+    Sarif,
+    Json,
+}
+
+impl ScanFormat {
+    pub fn default_output(self) -> &'static str {
+        match self {
+            ScanFormat::Sarif => "ethos.sarif",
+            ScanFormat::Json => "ethos-scan.json",
+        }
+    }
+}
+
 fn run_scan(
     dir: &std::path::Path,
+    format: ScanFormat,
     output: &std::path::Path,
     exclude: &[PathBuf],
     fail_on: &str,
@@ -217,8 +240,11 @@ fn run_scan(
 
     let scanner = PromptInjectScanner::new();
     let hits = sarif::scan_directory(&scanner, dir, exclude)?;
-    let log = sarif::to_sarif(&scanner, &hits);
-    std::fs::write(output, serde_json::to_string_pretty(&log)?)?;
+    let report = match format {
+        ScanFormat::Sarif => sarif::to_sarif(&scanner, &hits),
+        ScanFormat::Json => sarif::to_json(&hits),
+    };
+    std::fs::write(output, serde_json::to_string_pretty(&report)?)?;
 
     let count = |s: Severity| hits.iter().filter(|h| h.finding.severity == s).count();
     println!(
@@ -416,4 +442,3 @@ async fn run_harness_task(
 
     Ok(())
 }
-
