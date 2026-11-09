@@ -1,6 +1,8 @@
 //! SARIF 2.1.0 and plain-JSON export for Ethos containment-wall findings.
-//! RT-13: `match_excerpt` is attacker-controlled text and is never written
-//! into SARIF or JSON output. Only rule ids and categories are emitted.
+//! RT-13: attacker-controlled text is never written into SARIF or JSON output
+//! in readable form. By default only rule ids and categories are emitted;
+//! `--excerpt hash|encrypt` adds a keyed fingerprint and, for `encrypt`, an
+//! AES-256-GCM ciphertext of the source line (see `ExcerptProtector`).
 
 use super::promptinject::{Finding, PromptInjectScanner, Severity};
 use serde_json::{json, Value};
@@ -177,4 +179,225 @@ pub fn scan_directory(
     }
     hits.sort_by(|a, b| a.path.cmp(&b.path).then(a.line.cmp(&b.line)));
     Ok(hits)
+}
+
+// ---------------------------------------------------------------------------
+// Protected excerpts (--excerpt hash | encrypt)
+// ---------------------------------------------------------------------------
+
+use aes_gcm::aead::{Aead, AeadCore, KeyInit, OsRng};
+use aes_gcm::{Aes256Gcm, Nonce};
+use hmac::{Hmac, Mac};
+use sha2::{Digest, Sha256};
+
+/// Env var holding the secret used to fingerprint and encrypt excerpts.
+pub const EXCERPT_KEY_ENV: &str = "ETHOS_SCAN_KEY";
+/// Minimum secret length; short secrets make the HMAC guessable.
+pub const MIN_KEY_LEN: usize = 16;
+/// Longest source line kept per finding (minified files can be one 1 MB line).
+pub const MAX_EXCERPT_CHARS: usize = 2000;
+const CIPHERTEXT_PREFIX: &str = "v1:";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExcerptMode {
+    /// No excerpt data at all (default; RT-13 original behaviour).
+    None,
+    /// Keyed HMAC-SHA256 fingerprint only. Irreversible.
+    Hash,
+    /// Fingerprint plus AES-256-GCM ciphertext of the source line.
+    Encrypt,
+}
+
+/// Holds keys derived from the operator secret. The secret itself is never
+/// written to any report; two independent keys are derived so the
+/// fingerprint and the ciphertext never share key material.
+pub struct ExcerptProtector {
+    mac_key: [u8; 32],
+    enc_key: [u8; 32],
+}
+
+impl ExcerptProtector {
+    pub fn from_secret(secret: &str) -> anyhow::Result<Self> {
+        if secret.chars().count() < MIN_KEY_LEN {
+            anyhow::bail!(
+                "{} must be at least {} characters (got {})",
+                EXCERPT_KEY_ENV,
+                MIN_KEY_LEN,
+                secret.chars().count()
+            );
+        }
+        let derive = |label: &[u8]| -> [u8; 32] {
+            let mut h = Sha256::new();
+            h.update(b"ethos-scan-excerpt/v1/");
+            h.update(label);
+            h.update(secret.as_bytes());
+            h.finalize().into()
+        };
+        Ok(Self { mac_key: derive(b"mac"), enc_key: derive(b"enc") })
+    }
+
+    /// Reads the secret from `ETHOS_SCAN_KEY`.
+    pub fn from_env() -> anyhow::Result<Self> {
+        match std::env::var(EXCERPT_KEY_ENV) {
+            Ok(v) if !v.is_empty() => Self::from_secret(&v),
+            _ => anyhow::bail!(
+                "--excerpt hash/encrypt needs a secret in the {} environment variable \
+                 (refusing to write excerpts without one)",
+                EXCERPT_KEY_ENV
+            ),
+        }
+    }
+
+    /// Keyed fingerprint (hex HMAC-SHA256). Stable for the same text and key,
+    /// so duplicates can be matched across files and runs.
+    pub fn fingerprint(&self, text: &str) -> String {
+        let mut mac = <Hmac<Sha256> as Mac>::new_from_slice(&self.mac_key)
+            .expect("HMAC accepts any key length");
+        mac.update(text.as_bytes());
+        hex::encode(mac.finalize().into_bytes())
+    }
+
+    /// AES-256-GCM with a fresh random 96-bit nonce. Output: `v1:` + hex(nonce || ciphertext+tag).
+    pub fn encrypt(&self, text: &str) -> String {
+        let cipher = Aes256Gcm::new_from_slice(&self.enc_key).expect("32-byte key");
+        let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
+        let ct = cipher
+            .encrypt(&nonce, text.as_bytes())
+            .expect("AES-GCM encryption of an in-memory buffer cannot fail");
+        let mut out = nonce.to_vec();
+        out.extend_from_slice(&ct);
+        format!("{}{}", CIPHERTEXT_PREFIX, hex::encode(out))
+    }
+
+    /// Reverses `encrypt`. Fails on a wrong key or any tampering (GCM tag check).
+    pub fn decrypt(&self, token: &str) -> anyhow::Result<String> {
+        let body = token
+            .strip_prefix(CIPHERTEXT_PREFIX)
+            .ok_or_else(|| anyhow::anyhow!("unknown ciphertext format"))?;
+        let bytes = hex::decode(body)?;
+        if bytes.len() < 12 + 16 {
+            anyhow::bail!("ciphertext too short");
+        }
+        let (nonce, ct) = bytes.split_at(12);
+        let cipher = Aes256Gcm::new_from_slice(&self.enc_key).expect("32-byte key");
+        let plain = cipher
+            .decrypt(Nonce::from_slice(nonce), ct)
+            .map_err(|_| anyhow::anyhow!("decryption failed: wrong {} or tampered report", EXCERPT_KEY_ENV))?;
+        Ok(String::from_utf8(plain)?)
+    }
+}
+
+/// Original (un-folded) source line for each hit, so homoglyphs and
+/// zero-width characters survive as evidence. Files are read once each.
+pub fn source_lines(root: &Path, hits: &[ScanHit]) -> Vec<String> {
+    let mut cache: std::collections::HashMap<&str, Vec<String>> = std::collections::HashMap::new();
+    hits.iter()
+        .map(|h| {
+            let lines = cache.entry(h.path.as_str()).or_insert_with(|| {
+                std::fs::read_to_string(root.join(&h.path))
+                    .map(|t| t.lines().map(str::to_string).collect())
+                    .unwrap_or_default()
+            });
+            lines.get(h.line.saturating_sub(1)).cloned().unwrap_or_default()
+        })
+        .collect()
+}
+
+/// Builds the excerpt object for one finding. Never contains readable text.
+fn excerpt_value(mode: ExcerptMode, p: &ExcerptProtector, line: &str) -> Value {
+    let truncated = line.chars().count() > MAX_EXCERPT_CHARS;
+    let kept: String = line.chars().take(MAX_EXCERPT_CHARS).collect();
+    let mut v = json!({
+        "scheme": "hmac-sha256",
+        "fingerprint": p.fingerprint(&kept),
+        "truncated": truncated,
+    });
+    if mode == ExcerptMode::Encrypt {
+        v["scheme"] = json!("hmac-sha256+aes-256-gcm");
+        v["ciphertext"] = json!(p.encrypt(&kept));
+    }
+    v
+}
+
+/// Adds protected excerpts to a report produced by `to_sarif` or `to_json`.
+/// `lines[i]` must be the source line for `hits[i]` (see `source_lines`).
+/// SARIF: `result.properties.ethosExcerpt` plus `partialFingerprints`
+/// (which GitHub uses to de-duplicate alerts). JSON: `finding.excerpt`.
+/// Nothing is placed in `message.text`, so no UI ever renders it.
+pub fn add_excerpts(report: &mut Value, mode: ExcerptMode, p: &ExcerptProtector, lines: &[String]) {
+    if mode == ExcerptMode::None {
+        return;
+    }
+    // pointer_mut, not indexing: IndexMut panics on a missing path, and a
+    // JSON-format report has no "runs".
+    if let Some(results) = report.pointer_mut("/runs/0/results").and_then(Value::as_array_mut) {
+        for (r, line) in results.iter_mut().zip(lines) {
+            let ex = excerpt_value(mode, p, line);
+            r["partialFingerprints"] = json!({ "ethosExcerpt/v1": ex["fingerprint"].clone() });
+            r["properties"]["ethosExcerpt"] = ex;
+        }
+    } else if let Some(findings) = report.pointer_mut("/findings").and_then(Value::as_array_mut) {
+        for (f, line) in findings.iter_mut().zip(lines) {
+            f["excerpt"] = excerpt_value(mode, p, line);
+        }
+    }
+}
+
+/// One decrypted excerpt from a report.
+#[derive(Debug, Clone)]
+pub struct RevealedExcerpt {
+    pub path: String,
+    pub line: u64,
+    pub rule_id: String,
+    pub text: String,
+}
+
+/// Decrypts every excerpt in a SARIF or JSON report produced with `--excerpt encrypt`.
+pub fn reveal_excerpts(report: &Value, p: &ExcerptProtector) -> anyhow::Result<Vec<RevealedExcerpt>> {
+    let mut out = Vec::new();
+    if let Some(results) = report["runs"][0]["results"].as_array() {
+        for r in results {
+            if let Some(ct) = r["properties"]["ethosExcerpt"]["ciphertext"].as_str() {
+                let loc = &r["locations"][0]["physicalLocation"];
+                out.push(RevealedExcerpt {
+                    path: loc["artifactLocation"]["uri"].as_str().unwrap_or("?").to_string(),
+                    line: loc["region"]["startLine"].as_u64().unwrap_or(0),
+                    rule_id: r["ruleId"].as_str().unwrap_or("?").to_string(),
+                    text: p.decrypt(ct)?,
+                });
+            }
+        }
+    } else if let Some(findings) = report["findings"].as_array() {
+        for f in findings {
+            if let Some(ct) = f["excerpt"]["ciphertext"].as_str() {
+                out.push(RevealedExcerpt {
+                    path: f["path"].as_str().unwrap_or("?").to_string(),
+                    line: f["line"].as_u64().unwrap_or(0),
+                    rule_id: f["rule_id"].as_str().unwrap_or("?").to_string(),
+                    text: p.decrypt(ct)?,
+                });
+            }
+        }
+    } else {
+        anyhow::bail!("not an Ethos SARIF or JSON scan report");
+    }
+    Ok(out)
+}
+
+/// Makes revealed text safe to print: control characters (terminal escape
+/// sequences) and invisible characters are shown as `\u{..}` instead of being
+/// interpreted, so a payload cannot drive the terminal and hidden zero-width
+/// stitching stays visible as evidence.
+pub fn escape_for_terminal(text: &str) -> String {
+    text.chars()
+        .map(|c| match c {
+            '\t' => "\\t".to_string(),
+            c if c.is_control()
+                || matches!(c, '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}' | '\u{2060}'..='\u{2064}' | '\u{FEFF}') =>
+            {
+                format!("\\u{{{:04x}}}", c as u32)
+            }
+            c => c.to_string(),
+        })
+        .collect()
 }
