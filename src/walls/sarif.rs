@@ -1,6 +1,6 @@
-//! SARIF 2.1.0 export for Ethos containment-wall findings.
+//! SARIF 2.1.0 and plain-JSON export for Ethos containment-wall findings.
 //! RT-13: `match_excerpt` is attacker-controlled text and is never written
-//! into SARIF output. Only rule ids and categories are emitted.
+//! into SARIF or JSON output. Only rule ids and categories are emitted.
 
 use super::promptinject::{Finding, PromptInjectScanner, Severity};
 use serde_json::{json, Value};
@@ -87,6 +87,48 @@ pub fn to_sarif(scanner: &PromptInjectScanner, hits: &[ScanHit]) -> Value {
             }},
             "results": results
         }]
+    })
+}
+
+fn severity_name(severity: Severity) -> &'static str {
+    match severity {
+        Severity::High => "high",
+        Severity::Medium => "medium",
+        Severity::Low => "low",
+    }
+}
+
+/// Plain JSON report: a flat, scriptable alternative to SARIF for notebooks,
+/// `jq` and the paper's analysis scripts. Same RT-13 rule as SARIF — rule ids,
+/// categories and locations only, never the matched attacker text.
+pub fn to_json(hits: &[ScanHit]) -> Value {
+    let count = |s: Severity| hits.iter().filter(|h| h.finding.severity == s).count();
+    let files: std::collections::BTreeSet<&str> = hits.iter().map(|h| h.path.as_str()).collect();
+
+    let findings: Vec<Value> = hits
+        .iter()
+        .map(|h| {
+            json!({
+                "path": h.path,
+                "line": h.line,
+                "rule_id": h.finding.pattern_name,
+                "category": h.finding.category,
+                "severity": severity_name(h.finding.severity),
+            })
+        })
+        .collect();
+
+    json!({
+        "tool": "ethos-scan",
+        "version": env!("CARGO_PKG_VERSION"),
+        "summary": {
+            "total": hits.len(),
+            "files_with_findings": files.len(),
+            "high": count(Severity::High),
+            "medium": count(Severity::Medium),
+            "low": count(Severity::Low),
+        },
+        "findings": findings,
     })
 }
 
