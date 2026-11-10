@@ -250,6 +250,11 @@ impl ExcerptProtector {
 
     /// Keyed fingerprint (hex HMAC-SHA256). Stable for the same text and key,
     /// so duplicates can be matched across files and runs.
+    ///
+    /// The fingerprint depends on `ETHOS_SCAN_KEY`. It is also written to SARIF
+    /// `partialFingerprints`, which GitHub Code Scanning uses to track alerts,
+    /// so ROTATING THE KEY closes and reopens every alert once. Keep the CI key
+    /// stable, and expect one round of alert churn if it is ever changed.
     pub fn fingerprint(&self, text: &str) -> String {
         let mut mac = <Hmac<Sha256> as Mac>::new_from_slice(&self.mac_key)
             .expect("HMAC accepts any key length");
@@ -343,16 +348,20 @@ pub fn add_excerpts(report: &mut Value, mode: ExcerptMode, p: &ExcerptProtector,
     }
 }
 
-/// One decrypted excerpt from a report.
+/// One excerpt from a report. `text` is `Err` when that single entry could
+/// not be decrypted (wrong key, tampering, corruption); the others are still
+/// returned, so one bad entry does not hide the rest.
 #[derive(Debug, Clone)]
 pub struct RevealedExcerpt {
     pub path: String,
     pub line: u64,
     pub rule_id: String,
-    pub text: String,
+    pub text: Result<String, String>,
 }
 
 /// Decrypts every excerpt in a SARIF or JSON report produced with `--excerpt encrypt`.
+/// Fails only if the document is not an Ethos report; per-entry decryption
+/// failures are reported in `RevealedExcerpt::text`.
 pub fn reveal_excerpts(report: &Value, p: &ExcerptProtector) -> anyhow::Result<Vec<RevealedExcerpt>> {
     let mut out = Vec::new();
     if let Some(results) = report["runs"][0]["results"].as_array() {
@@ -363,7 +372,7 @@ pub fn reveal_excerpts(report: &Value, p: &ExcerptProtector) -> anyhow::Result<V
                     path: loc["artifactLocation"]["uri"].as_str().unwrap_or("?").to_string(),
                     line: loc["region"]["startLine"].as_u64().unwrap_or(0),
                     rule_id: r["ruleId"].as_str().unwrap_or("?").to_string(),
-                    text: p.decrypt(ct)?,
+                    text: p.decrypt(ct).map_err(|e| e.to_string()),
                 });
             }
         }
@@ -374,7 +383,7 @@ pub fn reveal_excerpts(report: &Value, p: &ExcerptProtector) -> anyhow::Result<V
                     path: f["path"].as_str().unwrap_or("?").to_string(),
                     line: f["line"].as_u64().unwrap_or(0),
                     rule_id: f["rule_id"].as_str().unwrap_or("?").to_string(),
-                    text: p.decrypt(ct)?,
+                    text: p.decrypt(ct).map_err(|e| e.to_string()),
                 });
             }
         }
@@ -384,19 +393,45 @@ pub fn reveal_excerpts(report: &Value, p: &ExcerptProtector) -> anyhow::Result<V
     Ok(out)
 }
 
-/// Makes revealed text safe to print: control characters (terminal escape
+/// True for characters that render as nothing (or reorder text) in a
+/// terminal, so a reader cannot see them: zero-width and joiner characters,
+/// all bidi controls (embeddings, overrides AND isolates), invisible math
+/// operators, Unicode tag characters (used to smuggle hidden ASCII
+/// instructions), variation selectors and similar fillers.
+fn is_invisible(c: char) -> bool {
+    matches!(c,
+        '\u{00AD}'                    // soft hyphen
+        | '\u{034F}'                  // combining grapheme joiner
+        | '\u{061C}'                  // Arabic letter mark (bidi)
+        | '\u{115F}' | '\u{1160}'     // Hangul fillers
+        | '\u{17B4}' | '\u{17B5}'     // Khmer inherent vowels
+        | '\u{180B}'..='\u{180F}'     // Mongolian variation selectors / vowel separator
+        | '\u{200B}'..='\u{200F}'     // zero-width space/joiners, LRM, RLM
+        | '\u{202A}'..='\u{202E}'     // bidi embeddings and overrides
+        | '\u{2060}'..='\u{2064}'     // word joiner, invisible math operators
+        | '\u{2066}'..='\u{2069}'     // bidi isolates (LRI, RLI, FSI, PDI)
+        | '\u{206A}'..='\u{206F}'     // deprecated format characters
+        | '\u{3164}'                  // Hangul filler
+        | '\u{FE00}'..='\u{FE0F}'     // variation selectors
+        | '\u{FEFF}'                  // zero-width no-break space / BOM
+        | '\u{FFA0}'                  // halfwidth Hangul filler
+        | '\u{FFF9}'..='\u{FFFB}'     // interlinear annotation controls
+        | '\u{1D173}'..='\u{1D17A}'   // musical format characters
+        | '\u{E0000}'..='\u{E007F}'   // Unicode tag characters (hidden ASCII)
+        | '\u{E0100}'..='\u{E01EF}'   // variation selectors supplement
+    )
+}
+
+/// Makes untrusted text safe to print: control characters (terminal escape
 /// sequences) and invisible characters are shown as `\u{..}` instead of being
-/// interpreted, so a payload cannot drive the terminal and hidden zero-width
-/// stitching stays visible as evidence.
+/// interpreted, so a payload cannot drive the terminal and hidden zero-width,
+/// bidi or tag-character smuggling stays visible as evidence. Use it for every
+/// attacker-influenced field, including file paths.
 pub fn escape_for_terminal(text: &str) -> String {
     text.chars()
         .map(|c| match c {
             '\t' => "\\t".to_string(),
-            c if c.is_control()
-                || matches!(c, '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}' | '\u{2060}'..='\u{2064}' | '\u{FEFF}') =>
-            {
-                format!("\\u{{{:04x}}}", c as u32)
-            }
+            c if c.is_control() || is_invisible(c) => format!("\\u{{{:04x}}}", c as u32),
             c => c.to_string(),
         })
         .collect()
