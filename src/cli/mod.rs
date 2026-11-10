@@ -325,9 +325,27 @@ fn run_reveal(report: &std::path::Path) -> anyhow::Result<()> {
     println!("[ethos reveal] {} excerpt(s) from {}", excerpts.len(), report.display());
     println!("WARNING: the text below is untrusted attacker content. Do not paste it into an AI tool.");
     println!("Control and invisible characters are shown as \\u{{..}}.");
+    // Path and rule id come from the report, and the path is an
+    // attacker-chosen file name, so they are escaped exactly like the text.
+    let esc = sarif::escape_for_terminal;
+    let mut failed = 0;
     for e in &excerpts {
-        println!("  {}:{}  [{}]", e.path, e.line, e.rule_id);
-        println!("    {}", sarif::escape_for_terminal(&e.text));
+        println!("  {}:{}  [{}]", esc(&e.path), e.line, esc(&e.rule_id));
+        match &e.text {
+            Ok(text) => println!("    {}", esc(text)),
+            Err(err) => {
+                failed += 1;
+                println!("    [could not decrypt: {}]", err);
+            }
+        }
+    }
+    if failed > 0 {
+        anyhow::bail!(
+            "{} of {} excerpt(s) could not be decrypted (wrong {} or tampered report)",
+            failed,
+            excerpts.len(),
+            sarif::EXCERPT_KEY_ENV
+        );
     }
     Ok(())
 }
